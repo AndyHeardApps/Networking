@@ -24,7 +24,7 @@ public struct NetworkController<Authorization: AuthorizationProvider> {
     ///   - session: The `session` the `NetworkController` uses to fetch `Data` for requests.
     ///   - authorization: The `authorization` used to authorize any requests that need it.
     ///   - jsonDecoder: The `jsondDecoder` the `NetworkController` uses to decode JSON data returned by requests.
-    public init(baseURL: URL, session: NetworkSession, authorization: Authorization, jsonDecoder: JSONDecoder = .init()) {
+    public init(baseURL: URL, session: NetworkSession = URLSession.shared, authorization: Authorization, jsonDecoder: JSONDecoder = .init()) {
         
         self.baseURL = baseURL
         self.session = session

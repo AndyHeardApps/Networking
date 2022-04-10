@@ -22,7 +22,7 @@ extension URLSession: NetworkSession {
 // MARK: - URL request
 extension URLSession {
     
-    private func urlRequest<Request: NetworkRequest>(for request: Request, withBaseURL baseURL: URL) throws -> URLRequest {
+    func urlRequest<Request: NetworkRequest>(for request: Request, withBaseURL baseURL: URL) throws -> URLRequest {
         
         var urlComponents = URLComponents()
         urlComponents.path = request.pathComponents.joined(separator: "/")
