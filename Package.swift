@@ -16,11 +16,12 @@ let package = Package(
         )
     ],
     dependencies: [
+        .package(name: "KeychainSwift", url: "https://github.com/evgenyneu/keychain-swift.git", from: "20.0.0")
     ],
     targets: [
         .target(
             name: "Networking",
-            dependencies: []
+            dependencies: ["KeychainSwift"]
         ),
         .testTarget(
             name: "NetworkingTests",
