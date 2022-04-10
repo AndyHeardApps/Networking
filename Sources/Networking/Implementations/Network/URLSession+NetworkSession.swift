@@ -12,7 +12,7 @@ extension URLSession: NetworkSession {
         let headers = httpResponse.allHeaderFields.compactMapValues { $0 as? String }
 
         return .init(
-            contents: data,
+            content: data,
             statusCode: statusCode,
             headers: headers
         )
