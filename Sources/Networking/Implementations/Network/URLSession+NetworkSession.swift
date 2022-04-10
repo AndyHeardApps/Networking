@@ -12,7 +12,7 @@ extension URLSession: NetworkSession {
         let headers = httpResponse.allHeaderFields.compactMapValues { $0 as? String }
 
         return .init(
-            contents: data,
+            content: data,
             statusCode: statusCode,
             headers: headers
         )
@@ -22,7 +22,7 @@ extension URLSession: NetworkSession {
 // MARK: - URL request
 extension URLSession {
     
-    private func urlRequest<Request: NetworkRequest>(for request: Request, withBaseURL baseURL: URL) throws -> URLRequest {
+    func urlRequest<Request: NetworkRequest>(for request: Request, withBaseURL baseURL: URL) throws -> URLRequest {
         
         var urlComponents = URLComponents()
         urlComponents.path = request.pathComponents.joined(separator: "/")
