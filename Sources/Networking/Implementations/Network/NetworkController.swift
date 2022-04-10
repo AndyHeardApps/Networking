@@ -14,7 +14,11 @@ public struct NetworkController<Authorization: AuthorizationProvider> {
     /// The `JSONDecoder` used to convert any JSON data in `NetworkRequest`s.
     public let jsonDecoder: JSONDecoder
     
+    /// The authorization method to apply to all requests with `requiresAuthorization` equal to `true`.
     public let authorization: Authorization
+    
+    /// An optional set of headers that are applied to all requests submitted through this `NetworkController`.
+    public var universalHeaders: [String : String]? = nil
     
     // MARK: - Initialisers
     
@@ -109,7 +113,22 @@ extension NetworkController {
     
     private func fetchAndTransformResponse<Request: NetworkRequest>(for request: Request) async throws -> NetworkResponse<Request.ResponseType> {
         
-        let dataResponse = try await fetchDataResponse(for: request)
+        var headers = request.headers
+        if let universalHeaders = universalHeaders {
+            headers = headers ?? [:]
+            headers?.merge(universalHeaders) { $1 }
+        }
+        let amendedRequest = AnyRequest(
+            httpMethod: request.httpMethod,
+            pathComponents: request.pathComponents,
+            headers: headers,
+            queryItems: request.queryItems,
+            body: request.body,
+            requiresAuthorization: request.requiresAuthorization,
+            transform: request.transform
+        )
+        
+        let dataResponse = try await fetchDataResponse(for: amendedRequest)
         
         let transformedContents = try request.transform(
             data: dataResponse.content,
