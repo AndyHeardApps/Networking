@@ -1,14 +1,21 @@
 import Foundation
 
+/// An `AuthorizationProvider` that implements the OAuth method of using access and refresh tokens.
 public struct OAuthAuthorizationProvider<AuthorizationRequest: OAuthAuthorizationRequest, ReauthorizationRequest: OAuthReauthorizationRequest>  {
     
     // MARK: - Properties
     private let storage: SecureStorage
     
-    // MARK: - Initialiser
+    // MARK: - Initialisers
     init(storage: SecureStorage) {
         
         self.storage = storage
+    }
+    
+    /// Creates a new `OAuthAuthorizationProvider` instance, using the keychain to store tokens.
+    public init() {
+        
+        self.storage = KeychainSecureStorage(key: OAuthAuthorizationProviderStorageKey.storage)
     }
 }
 
@@ -59,6 +66,7 @@ extension OAuthAuthorizationProvider: AuthorizationProvider {
 enum OAuthAuthorizationProviderStorageKey {
     
     static let authorizationHeader = "Authorization"
+    static let storage = "oauthStorage"
     static let accessToken = "oauth.accessToken"
     static let refreshToken = "oauth.refreshToken"
 }

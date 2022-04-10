@@ -16,7 +16,7 @@ public struct NetworkController<Authorization: AuthorizationProvider> {
     
     public let authorization: Authorization
     
-    // MARK: - Initialiser
+    // MARK: - Initialisers
     
     /// Creates a new `NetworkController` instance.
     /// - Parameters:
@@ -24,11 +24,36 @@ public struct NetworkController<Authorization: AuthorizationProvider> {
     ///   - session: The `session` the `NetworkController` uses to fetch `Data` for requests.
     ///   - authorization: The `authorization` used to authorize any requests that need it.
     ///   - jsonDecoder: The `jsondDecoder` the `NetworkController` uses to decode JSON data returned by requests.
-    public init(baseURL: URL, session: NetworkSession = URLSession.shared, authorization: Authorization, jsonDecoder: JSONDecoder = .init()) {
+    public init(
+        baseURL: URL,
+        session: NetworkSession = URLSession.shared,
+        authorization: Authorization,
+        jsonDecoder: JSONDecoder = .init()
+    ) {
         
         self.baseURL = baseURL
         self.session = session
         self.authorization = authorization
+        self.jsonDecoder = jsonDecoder
+    }
+}
+
+extension NetworkController where Authorization == EmptyAuthorizationProvider {
+    
+    /// Creates a new `NetworkController` instance.
+    /// - Parameters:
+    ///   - baseURL: The `baseURL` the `NetworkController` uses to resolve requests.
+    ///   - session: The `session` the `NetworkController` uses to fetch `Data` for requests.
+    ///   - jsonDecoder: The `jsondDecoder` the `NetworkController` uses to decode JSON data returned by requests.
+    public init(
+        baseURL: URL,
+        session: NetworkSession = URLSession.shared,
+        jsonDecoder: JSONDecoder = .init()
+    ) {
+        
+        self.baseURL = baseURL
+        self.session = session
+        self.authorization = EmptyAuthorizationProvider()
         self.jsonDecoder = jsonDecoder
     }
 }
