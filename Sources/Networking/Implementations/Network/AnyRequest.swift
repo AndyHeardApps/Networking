@@ -20,8 +20,8 @@ public struct AnyRequest<ResponseType>: NetworkRequest {
         queryItems: [String : String]?,
         body: Data?,
         requiresAuthorization: Bool,
-        transform: @escaping (Data, HTTPStatusCode, JSONDecoder) throws -> ResponseType)
-    {
+        transform: @escaping (Data, HTTPStatusCode, JSONDecoder) throws -> ResponseType
+    ) {
         self.httpMethod = httpMethod
         self.pathComponents = pathComponents
         self.headers = headers
