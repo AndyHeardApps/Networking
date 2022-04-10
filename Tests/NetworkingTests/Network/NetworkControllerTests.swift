@@ -135,7 +135,7 @@ extension NetworkControllerTests {
         )
     }
     
-    private var standardRequesResponse: NetworkResponse<Data> {
+    private var standardRequestResponse: NetworkResponse<Data> {
         
         NetworkResponse(
             content: UUID().uuidString.data(using: .utf8)!,
@@ -167,7 +167,7 @@ extension NetworkControllerTests {
     func testFetchResponse_willReturnResponse_forStandardRequest_withoutRequestAuthorization_andWithoutReauthorization() async throws {
         
         let request = standardRequest(requiresAuthorization: false)
-        let response = standardRequesResponse
+        let response = standardRequestResponse
         let expectedSubmittedRequests = [EquatableNetworkRequest(request)]
         networkSession.responses = [.success(response)]
         
@@ -187,7 +187,7 @@ extension NetworkControllerTests {
     func testFetchResponse_willReturnResponse_forStandardRequest_withRequestAuthorization_andWithoutReauthorization() async throws {
         
         let request = standardRequest(requiresAuthorization: true)
-        let response = standardRequesResponse
+        let response = standardRequestResponse
         
         let expectedSubmittedRequests = [EquatableNetworkRequest(authorizedStandardRequest(request: request))]
         networkSession.responses = [.success(response)]
@@ -208,7 +208,7 @@ extension NetworkControllerTests {
     func testFetchResponse_willReturnResponse_forStandardRequest_withRequestAuthorization_andWithReauthorization() async throws {
         
         let request = standardRequest(requiresAuthorization: true)
-        let response = standardRequesResponse
+        let response = standardRequestResponse
         
         let reauthorizationRequest = AnyRequest<Double>(
             httpMethod: .get,
@@ -329,7 +329,7 @@ extension NetworkControllerTests {
     func testFetchContent_willReturnResponse_forStandardRequest_withoutRequestAuthorization_andWithoutReauthorization() async throws {
 
         let request = standardRequest(requiresAuthorization: false)
-        let response = standardRequesResponse
+        let response = standardRequestResponse
         let expectedSubmittedRequests = [EquatableNetworkRequest(request)]
         networkSession.responses = [.success(response)]
         
@@ -344,6 +344,18 @@ extension NetworkControllerTests {
         XCTAssertFalse(authorizationProvider.handleAuthorizationResponseWasCalled)
         XCTAssertFalse(authorizationProvider.handleReauthorizationResponseWasCalled)
         XCTAssertFalse(authorizationProvider.authorizeRequestWasCalled)
+    }
+    
+    func testFetchContent_willAddUniversalHeaders_toRequest() async throws {
+        
+        let request = standardRequest(requiresAuthorization: false)
+        networkController.universalHeaders = ["UniversalHeader" : "Value"]
+        let response = standardRequestResponse
+        networkSession.responses = [.success(response)]
+
+        _ = try await networkController.fetchContent(request)
+
+        XCTAssertEqual(networkSession.submittedRequests.first?.headers, networkController.universalHeaders)
     }
 }
 
