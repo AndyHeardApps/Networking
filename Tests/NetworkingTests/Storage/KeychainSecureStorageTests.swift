@@ -13,7 +13,7 @@ extension KeychainSecureStorageTests {
     override func setUp() {
         super.setUp()
         
-        storage = KeychainSecureStorage(key: "com.andyheardapps.networking.tests")
+        storage = KeychainSecureStorage(key: "tests")
     }
     
     override func tearDown() {

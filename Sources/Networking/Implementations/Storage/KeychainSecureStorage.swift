@@ -8,7 +8,7 @@ final class KeychainSecureStorage {
     // MARK: - Initialiser
     init(key: String) {
         
-        self.keychain = .init(keyPrefix: "com.AndyHeardApps.Networking.\(key)")
+        self.keychain = .init(keyPrefix: "com.AndyHeardApps.Networking.\(key).")
     }
 }
 

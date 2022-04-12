@@ -157,7 +157,7 @@ extension OAuthAuthorizationProviderTests {
         storage[OAuthAuthorizationProviderStorageKey.accessToken] = accessToken
         
         let authorizedRequest = authorizationProvider.authorize(request)
-        XCTAssertEqual(authorizedRequest.headers?[OAuthAuthorizationProviderStorageKey.authorizationHeader], accessToken)
+        XCTAssertEqual(authorizedRequest.headers?[OAuthAuthorizationProviderStorageKey.authorizationHeader], "Bearer \(accessToken)")
     }
     
     func testAuthorizeRequest_willAddAccessTokenToHeaders_whenExistingHeadersAreNotNil_andAccessTokenIsAvailable() {
@@ -175,7 +175,7 @@ extension OAuthAuthorizationProviderTests {
         storage[OAuthAuthorizationProviderStorageKey.accessToken] = accessToken
         
         let authorizedRequest = authorizationProvider.authorize(request)
-        XCTAssertEqual(authorizedRequest.headers?[OAuthAuthorizationProviderStorageKey.authorizationHeader], accessToken)
+        XCTAssertEqual(authorizedRequest.headers?[OAuthAuthorizationProviderStorageKey.authorizationHeader], "Bearer \(accessToken)")
     }
     
     func testAuthorizeRequest_willNotAddAccessTokenToHeaders_whenAccessTokenIsNotAvailable() {

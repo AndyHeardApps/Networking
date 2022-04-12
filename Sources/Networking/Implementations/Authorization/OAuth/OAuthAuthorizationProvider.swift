@@ -46,7 +46,9 @@ extension OAuthAuthorizationProvider: AuthorizationProvider {
     public func authorize<Request: NetworkRequest>(_ request: Request) -> AnyRequest<Request.ResponseType> {
         
         var headers = request.headers ?? [:]
-        headers[OAuthAuthorizationProviderStorageKey.authorizationHeader] = storage[OAuthAuthorizationProviderStorageKey.accessToken]
+        if let accessToken = storage[OAuthAuthorizationProviderStorageKey.accessToken] {
+            headers[OAuthAuthorizationProviderStorageKey.authorizationHeader] = "Bearer \(accessToken)"
+        }
         
         let request = AnyRequest(
             httpMethod: request.httpMethod,
