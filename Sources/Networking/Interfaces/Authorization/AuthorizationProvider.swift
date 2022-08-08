@@ -17,16 +17,18 @@ public protocol AuthorizationProvider {
     /// Implementations should extract and store authorization credentials from the provided response for use in later request authorization. This is called by the `NetworkController` when an `AuthorizationRequest` is submitted and a response recieved.
     /// - Parameters:
     ///   - authorizationResponse: The `NetworkResponse` that should be used to extract authorization credentials.
-    func handle(authorizationResponse: NetworkResponse<AuthorizationRequest.ResponseType>)
+    ///   - request: The request that procured the response.
+    func handle(authorizationResponse: NetworkResponse<AuthorizationRequest.ResponseType>, from request: AuthorizationRequest)
     
     /// Implementations should extract and store authorization credentials from the provided response for use in later request authorization. This is called by the `NetworkController` when a `ReauthorizationRequest` is submitted and a response recieved.
     /// - Parameters:
     ///   - reauthorizationResponse: The `NetworkResponse` that should be used to extract authorization credentials.
-    func handle(reauthorizationResponse: NetworkResponse<ReauthorizationRequest.ResponseType>)
+    ///   - request: The request that procured the response.
+    func handle(reauthorizationResponse: NetworkResponse<ReauthorizationRequest.ResponseType>, from request: ReauthorizationRequest)
     
     /// Implementations should use the details of the provided request and use them to construct an authorized request.
     /// - Parameters:
     ///   - request: The `NetworkRequest` that needs authorizing.
     /// - Returns: An authorized version of the network request.
-    func authorize<Request: NetworkRequest>(_ request: Request) -> AnyRequest<Request.ResponseType>
+    func authorize<Request: NetworkRequest>(_ request: Request) -> any NetworkRequest<Request.ResponseType>
 }
