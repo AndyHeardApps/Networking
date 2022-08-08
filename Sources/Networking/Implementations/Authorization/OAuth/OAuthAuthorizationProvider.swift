@@ -31,19 +31,29 @@ extension OAuthAuthorizationProvider: AuthorizationProvider {
         return ReauthorizationRequest(refreshToken: refreshToken)
     }
     
-    public func handle(authorizationResponse: NetworkResponse<AuthorizationRequest.ResponseType>) {
+    public func handle(authorizationResponse: NetworkResponse<AuthorizationRequest.ResponseType>, from request: AuthorizationRequest) {
         
-        storage[OAuthAuthorizationProviderStorageKey.accessToken] = authorizationResponse.content.accessToken
-        storage[OAuthAuthorizationProviderStorageKey.refreshToken] = authorizationResponse.content.refreshToken
+        if let newAccessToken = request.accessToken(from: authorizationResponse) {
+            storage[OAuthAuthorizationProviderStorageKey.accessToken] = newAccessToken
+        }
+        
+        if let newRefreshToken = request.refreshToken(from: authorizationResponse) {
+            storage[OAuthAuthorizationProviderStorageKey.refreshToken] = newRefreshToken
+        }
     }
     
-    public func handle(reauthorizationResponse: NetworkResponse<ReauthorizationRequest.ResponseType>) {
+    public func handle(reauthorizationResponse: NetworkResponse<ReauthorizationRequest.ResponseType>, from request: ReauthorizationRequest) {
         
-        storage[OAuthAuthorizationProviderStorageKey.accessToken] = reauthorizationResponse.content.accessToken
-        storage[OAuthAuthorizationProviderStorageKey.refreshToken] = reauthorizationResponse.content.refreshToken
+        if let newAccessToken = request.accessToken(from: reauthorizationResponse) {
+            storage[OAuthAuthorizationProviderStorageKey.accessToken] = newAccessToken
+        }
+        
+        if let newRefreshToken = request.refreshToken(from: reauthorizationResponse) {
+            storage[OAuthAuthorizationProviderStorageKey.refreshToken] = newRefreshToken
+        }
     }
     
-    public func authorize<Request: NetworkRequest>(_ request: Request) -> AnyRequest<Request.ResponseType> {
+    public func authorize<Request: NetworkRequest>(_ request: Request) -> any NetworkRequest<Request.ResponseType> {
         
         var headers = request.headers ?? [:]
         if let accessToken = storage[OAuthAuthorizationProviderStorageKey.accessToken] {

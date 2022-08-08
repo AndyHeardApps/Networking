@@ -1,23 +1,23 @@
 import XCTest
 @testable import Networking
 
-final class NetworkControllerTests: XCTestCase {
+final class AuthorizingNetworkControllerTests: XCTestCase {
     
     // MARK: - Properties
     private var authorizationProvider: MockAuthorizationProvider!
     private var networkSession: MockNetworkSession!
-    private var networkController: NetworkController<MockAuthorizationProvider>!
+    private var networkController: AuthorizingNetworkController<MockAuthorizationProvider>!
 }
 
 // MARK: - Setup
-extension NetworkControllerTests {
+extension AuthorizingNetworkControllerTests {
     
     override func setUp() {
         super.setUp()
         
         authorizationProvider = MockAuthorizationProvider()
         networkSession = MockNetworkSession()
-        networkController = NetworkController(
+        networkController = AuthorizingNetworkController(
             baseURL: URL(string: "https://www.test.com")!,
             session: networkSession,
             authorization: authorizationProvider
@@ -32,12 +32,9 @@ extension NetworkControllerTests {
 }
 
 // MARK: - Mocks
-extension NetworkControllerTests {
+extension AuthorizingNetworkControllerTests {
     
     private final class MockAuthorizationProvider: AuthorizationProvider {
-        
-        typealias AuthorizationRequest = AnyRequest<Int>
-        typealias ReauthorizationRequest = AnyRequest<Double>
         
         var reauthorizationRequest: AnyRequest<Double>?
         private(set) var makeReauthorizationRequestWasCalled = false
@@ -51,17 +48,17 @@ extension NetworkControllerTests {
             return reauthorizationRequest
         }
      
-        func handle(authorizationResponse: NetworkResponse<Int>) {
+        func handle(authorizationResponse: NetworkResponse<Int>, from request: Networking.AnyRequest<Int>) {
             
             handleAuthorizationResponseWasCalled = true
         }
         
-        func handle(reauthorizationResponse: NetworkResponse<Double>) {
+        func handle(reauthorizationResponse: NetworkResponse<Double>, from request: Networking.AnyRequest<Double>) {
             
             handleReauthorizationResponseWasCalled = true
         }
         
-        func authorize<Request: NetworkRequest>(_ request: Request) -> AnyRequest<Request.ResponseType> {
+        func authorize<Request: NetworkRequest>(_ request: Request) -> any  NetworkRequest<Request.ResponseType> {
             
             authorizeRequestWasCalled = true
             
@@ -120,7 +117,7 @@ extension NetworkControllerTests {
 }
 
 // MARK: - Mock data
-extension NetworkControllerTests {
+extension AuthorizingNetworkControllerTests {
     
     private func standardRequest(requiresAuthorization: Bool) -> AnyRequest<Data> {
         
@@ -162,7 +159,7 @@ extension NetworkControllerTests {
 }
 
 // MARK: - Tests
-extension NetworkControllerTests {
+extension AuthorizingNetworkControllerTests {
     
     func testFetchResponse_willReturnResponse_forStandardRequest_withoutRequestAuthorization_andWithoutReauthorization() async throws {
         

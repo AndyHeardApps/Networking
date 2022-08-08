@@ -1,4 +1,4 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.7
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -16,12 +16,14 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(name: "KeychainSwift", url: "https://github.com/evgenyneu/keychain-swift.git", from: "20.0.0")
+        .package(url: "https://github.com/evgenyneu/keychain-swift.git", from: "20.0.0")
     ],
     targets: [
         .target(
             name: "Networking",
-            dependencies: ["KeychainSwift"]
+            dependencies: [
+                .product(name: "KeychainSwift", package: "keychain-swift")
+            ]
         ),
         .testTarget(
             name: "NetworkingTests",

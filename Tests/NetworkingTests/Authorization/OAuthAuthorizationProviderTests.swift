@@ -41,16 +41,23 @@ extension OAuthAuthorizationProviderTests {
     
     private struct MockOAuthAuthorizationRequest: OAuthAuthorizationRequest {
         
-        let httpMethod: HTTPMethod
-        let pathComponents: [String]
-        let headers: [String : String]?
-        let queryItems: [String : String]?
-        let body: Data?
-        let requiresAuthorization: Bool
+        let httpMethod: HTTPMethod = .get
+        let pathComponents: [String] = []
+        let headers: [String : String]? = nil
+        let queryItems: [String : String]? = nil
+        let body: Data? = nil
         
         func transform(data: Data, statusCode: HTTPStatusCode, using decoder: JSONDecoder) throws -> MockOAuthAuthorizationRequestResponse {
             
             .init(accessToken: "authorizationAccessToken", refreshToken: "authorizationRefreshToken")
+        }
+        
+        func accessToken(from response: NetworkResponse<OAuthAuthorizationProviderTests.MockOAuthAuthorizationRequestResponse>) -> String? {
+            response.content.accessToken
+        }
+        
+        func refreshToken(from response: NetworkResponse<OAuthAuthorizationProviderTests.MockOAuthAuthorizationRequestResponse>) -> String? {
+            response.content.refreshToken
         }
     }
     
@@ -75,9 +82,17 @@ extension OAuthAuthorizationProviderTests {
             
             .init(accessToken: "reauthorizationAccessToken", refreshToken: "reauthorizationRefreshToken")
         }
+        
+        func accessToken(from response: NetworkResponse<OAuthAuthorizationProviderTests.MockOAuthAuthorizationRequestResponse>) -> String? {
+            response.content.accessToken
+        }
+        
+        func refreshToken(from response: NetworkResponse<OAuthAuthorizationProviderTests.MockOAuthAuthorizationRequestResponse>) -> String? {
+            response.content.refreshToken
+        }
     }
     
-    private struct MockOAuthAuthorizationRequestResponse: OAuthAuthorizationRequestResponse {
+    private struct MockOAuthAuthorizationRequestResponse {
         
         let accessToken: String
         let refreshToken: String
@@ -101,6 +116,7 @@ extension OAuthAuthorizationProviderTests {
     
     func testHandleAuthorizationResponse_willStoreTokensInStorage() {
         
+        let request = MockOAuthAuthorizationRequest()
         let responseContent = MockOAuthAuthorizationRequestResponse(
             accessToken: UUID().uuidString,
             refreshToken: UUID().uuidString
@@ -114,7 +130,7 @@ extension OAuthAuthorizationProviderTests {
         XCTAssertNil(storage[OAuthAuthorizationProviderStorageKey.accessToken])
         XCTAssertNil(storage[OAuthAuthorizationProviderStorageKey.refreshToken])
         
-        authorizationProvider.handle(authorizationResponse: response)
+        authorizationProvider.handle(authorizationResponse: response, from: request)
         
         XCTAssertEqual(storage[OAuthAuthorizationProviderStorageKey.accessToken], responseContent.accessToken)
         XCTAssertEqual(storage[OAuthAuthorizationProviderStorageKey.refreshToken], responseContent.refreshToken)
@@ -122,6 +138,7 @@ extension OAuthAuthorizationProviderTests {
 
     func testHandleReauthorizationResponse_willStoreTokensInStorage() {
         
+        let request = MockOAuthReauthorizationRequest(refreshToken: "")
         let responseContent = MockOAuthAuthorizationRequestResponse(
             accessToken: UUID().uuidString,
             refreshToken: UUID().uuidString
@@ -135,7 +152,7 @@ extension OAuthAuthorizationProviderTests {
         XCTAssertNil(storage[OAuthAuthorizationProviderStorageKey.accessToken])
         XCTAssertNil(storage[OAuthAuthorizationProviderStorageKey.refreshToken])
         
-        authorizationProvider.handle(reauthorizationResponse: response)
+        authorizationProvider.handle(reauthorizationResponse: response, from: request)
         
         XCTAssertEqual(storage[OAuthAuthorizationProviderStorageKey.accessToken], responseContent.accessToken)
         XCTAssertEqual(storage[OAuthAuthorizationProviderStorageKey.refreshToken], responseContent.refreshToken)

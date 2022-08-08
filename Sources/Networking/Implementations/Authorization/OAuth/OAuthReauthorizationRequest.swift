@@ -9,10 +9,3 @@ public protocol OAuthReauthorizationRequest: OAuthAuthorizationRequest {
     ///   - refreshToken: The refresh token to be used to attempt to reauthenticate the client.
     init(refreshToken: String)
 }
-
-extension OAuthReauthorizationRequest {
-    
-    public var requiresAuthorization: Bool {
-        false
-    }
-}

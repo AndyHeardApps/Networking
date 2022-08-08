@@ -1,7 +1,7 @@
 import Foundation
 
 /// An abstraction of a network request, this is used by `NetworkSession`s and a `NetworkController` to fetch data from an endpoint. The job of an object implementing the `NetworkRequest` protocol is to point towards an endpoint, and also know what to do with any `Data` and `HTTPStatusCode` returned.
-public protocol NetworkRequest {
+public protocol NetworkRequest<ResponseType> {
 
     associatedtype ResponseType
 
