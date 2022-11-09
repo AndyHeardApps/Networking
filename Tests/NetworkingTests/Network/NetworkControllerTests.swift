@@ -6,7 +6,7 @@ final class AuthorizingNetworkControllerTests: XCTestCase {
     // MARK: - Properties
     private var authorizationProvider: MockAuthorizationProvider!
     private var networkSession: MockNetworkSession!
-    private var networkController: AuthorizingNetworkController<MockAuthorizationProvider>!
+    private var networkController: AuthorizingNetworkController<MockAuthorizationProvider, BasicNetworkError>!
 }
 
 // MARK: - Setup
