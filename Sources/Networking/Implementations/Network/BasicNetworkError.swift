@@ -1,7 +1,7 @@
 import Foundation
 
 /// An error containing a message from a network response.
-public struct NetworkError: Decodable, LocalizedError {
+public struct BasicNetworkError: Decodable, LocalizedError {
     
     // MARK: - Static properties
     
@@ -17,8 +17,8 @@ public struct NetworkError: Decodable, LocalizedError {
         let container = try decoder.container(keyedBy: DynamicCodingKey.self)
         
         guard
-            container.allKeys.map(\.stringValue).contains(NetworkError.errorMessageCodingKey),
-            let errorKey = DynamicCodingKey(stringValue: NetworkError.errorMessageCodingKey)
+            container.allKeys.map(\.stringValue).contains(BasicNetworkError.errorMessageCodingKey),
+            let errorKey = DynamicCodingKey(stringValue: BasicNetworkError.errorMessageCodingKey)
         else {
             self.errorDescription = nil
             return
@@ -29,7 +29,7 @@ public struct NetworkError: Decodable, LocalizedError {
 }
 
 // MARK: - Dynamic coding key
-extension NetworkError {
+extension BasicNetworkError {
     
     private struct DynamicCodingKey: CodingKey {
         

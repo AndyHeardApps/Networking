@@ -1,7 +1,11 @@
 import Foundation
 
 /// The `AuthorizingNetworkController` is what ties all of the network and converting of data together, including authorization. It accepts a `baseURL` which all submitted requests are resolved against using the provided `NetworkSession`. The `JSONDecoder` is handed to all requests to decode any JSON data.
-public struct AuthorizingNetworkController<Authorization: AuthorizationProvider> {
+public struct AuthorizingNetworkController<Authorization, NetworkError>
+where Authorization: AuthorizationProvider,
+      NetworkError: Error,
+      NetworkError: Decodable
+{
     
     // MARK: - Properties
     
