@@ -12,4 +12,16 @@ public struct NetworkResponse<Content> {
     
     /// The headers returned by the request.
     public let headers: [AnyHashable : String]
+    
+    // MARK: - Initialiser
+    public init(
+        content: Content,
+        statusCode: HTTPStatusCode,
+        headers: [AnyHashable : String]
+    ) {
+        
+        self.content = content
+        self.statusCode = statusCode
+        self.headers = headers
+    }
 }
