@@ -66,8 +66,8 @@ extension AuthorizingNetworkController where Authorization == EmptyAuthorization
     }
 }
 
-// MARK: - Submit
-extension AuthorizingNetworkController {
+// MARK: - Network controller
+extension AuthorizingNetworkController: NetworkController {
     
     public func fetchContent<Request: NetworkRequest>(_ request: Request) async throws -> Request.ResponseType {
         
