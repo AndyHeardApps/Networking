@@ -15,11 +15,14 @@ where Authorization: AuthorizationProvider,
     /// The `NetworkSession` used to fetch `NetworkResponse`s for `NetworkRequest`s.
     public let session: NetworkSession
     
+    /// The authorization method to apply to all requests with `requiresAuthorization` equal to `true`.
+    public let authorization: Authorization
+    
     /// The `JSONDecoder` used to convert any JSON data in `NetworkRequest`s.
     public let jsonDecoder: JSONDecoder
     
-    /// The authorization method to apply to all requests with `requiresAuthorization` equal to `true`.
-    public let authorization: Authorization
+    /// A closure that decides whether reauthentication should be attempted when a request returns the provided `Error`.
+    public let shouldReauthenticateOnError: (Error) -> Bool
     
     /// An optional set of headers that are applied to all requests submitted through this `AuthorizingNetworkController`.
     public var universalHeaders: [String : String]? = nil
@@ -32,17 +35,33 @@ where Authorization: AuthorizationProvider,
     ///   - session: The `session` the `AuthorizingNetworkController` uses to fetch `Data` for requests.
     ///   - authorization: The `authorization` used to authorize any requests that need it.
     ///   - jsonDecoder: The `JSONDecoder` the `AuthorizingNetworkController` uses to decode JSON data returned by requests.
+    ///   -  shouldReauthenticateOnError: A closure that decides whether reauthentication should be attempted when a request returns the provided `Error`. If `nil` is provided (the default), then a `403` response will result in reauthentication being attempted.
+
     public init(
         baseURL: URL,
         session: NetworkSession = URLSession.shared,
         authorization: Authorization,
-        jsonDecoder: JSONDecoder = .init()
+        jsonDecoder: JSONDecoder = .init(),
+        shouldReauthenticateOnError: ((Error) -> Bool)? = nil
     ) {
         
         self.baseURL = baseURL
         self.session = session
         self.authorization = authorization
         self.jsonDecoder = jsonDecoder
+        
+        if let shouldReauthenticateOnError {
+            self.shouldReauthenticateOnError = shouldReauthenticateOnError
+        } else {
+            self.shouldReauthenticateOnError = { error in
+                switch error {
+                case HTTPStatusCode.unauthorized:
+                    return true
+                default:
+                    return false
+                }
+            }
+        }
     }
 }
 
@@ -63,6 +82,7 @@ extension AuthorizingNetworkController where Authorization == EmptyAuthorization
         self.session = session
         self.authorization = EmptyAuthorizationProvider()
         self.jsonDecoder = jsonDecoder
+        self.shouldReauthenticateOnError = { _ in false }
     }
 }
 
@@ -88,10 +108,15 @@ extension AuthorizingNetworkController: NetworkController {
                 decodeNetworkErrors: !request.requiresAuthorization
             )
             return response
+                        
+        } catch {
             
-        } catch HTTPStatusCode.unauthorized {
+            guard shouldReauthenticateOnError(error) else {
+                throw error
+            }
+
             try await reauthorize()
-            
+
             let reauthorizedRequest = authorize(request: requestWithUniversalHeaders)
             let dataResponse = try await session.submit(request: reauthorizedRequest, to: baseURL)
             let response = try transform(
@@ -99,12 +124,8 @@ extension AuthorizingNetworkController: NetworkController {
                 from: request,
                 decodeNetworkErrors: true
             )
-            
+
             return response
-            
-        } catch {
-            throw error
-            
         }
     }
 }
