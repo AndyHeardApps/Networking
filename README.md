@@ -94,10 +94,10 @@ When a `NetworkController` encounters a `401 unauthorized` `HTTPStatusCode`, the
 ### `EmptyAuthorizationProvider`
 An `AuthorizationProver` that performs no authorization, and is used for non-secure APIs.
 
-### `NetworkController`
+### `AuthorizingNetworkController`
 
 A `NetworkController` is what is used to carry out the networking with `NetworkRequest`s. It contains two slightly different functions, both of which accept some `NetworkRequest`, and uses the provided `networkSession` to fetch the response. One returns a full `NetworkResponse` for the request, and the other returns just the `content` for the request.
 
-Both requests will perform authorization and reauthorization using the provided `AuthorizationProvider`.
+Both requests on `AuthorizingNetworkController` will perform authorization and reauthorization using the provided `AuthorizationProvider`.
 
-The `JSONDecoder` in the `NetworkController` is provided to all `NetworkRequest` `transform` function calls to allow it to decode JSON data in a consistent manner.
+The `JSONDecoder` in the `AuthorizingNetworkController` is provided to all `NetworkRequest` `transform` function calls to allow it to decode JSON data in a consistent manner.
