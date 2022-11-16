@@ -104,8 +104,7 @@ extension AuthorizingNetworkController: NetworkController {
             let dataResponse = try await session.submit(request: authorizedRequest, to: baseURL)
             let response = try transform(
                 dataResponse: dataResponse,
-                from: request,
-                decodeNetworkErrors: !request.requiresAuthorization
+                from: request
             )
             return response
                         
@@ -121,8 +120,7 @@ extension AuthorizingNetworkController: NetworkController {
             let dataResponse = try await session.submit(request: reauthorizedRequest, to: baseURL)
             let response = try transform(
                 dataResponse: dataResponse,
-                from: request,
-                decodeNetworkErrors: true
+                from: request
             )
 
             return response
@@ -170,7 +168,7 @@ extension AuthorizingNetworkController {
 // MARK: - Response transform
 extension AuthorizingNetworkController {
     
-    private func transform<Request: NetworkRequest>(dataResponse: NetworkResponse<Data>, from request: Request, decodeNetworkErrors: Bool) throws -> NetworkResponse<Request.ResponseType> {
+    private func transform<Request: NetworkRequest>(dataResponse: NetworkResponse<Data>, from request: Request) throws -> NetworkResponse<Request.ResponseType> {
         
         do {
             let transformedContents = try request.transform(
@@ -189,7 +187,7 @@ extension AuthorizingNetworkController {
             return transformedResponse
             
         } catch {
-            guard decodeNetworkErrors, let networkError = try? jsonDecoder.decode(NetworkError.self, from: dataResponse.content) else {
+            guard let networkError = try? jsonDecoder.decode(NetworkError.self, from: dataResponse.content) else {
                 throw error
             }
             
@@ -209,7 +207,7 @@ extension AuthorizingNetworkController {
         }
         
         let dataResponse = try await session.submit(request: reauthorizationRequest, to: baseURL)
-        _ = try transform(dataResponse: dataResponse, from: reauthorizationRequest, decodeNetworkErrors: false)
+        _ = try transform(dataResponse: dataResponse, from: reauthorizationRequest)
     }
 }
 
