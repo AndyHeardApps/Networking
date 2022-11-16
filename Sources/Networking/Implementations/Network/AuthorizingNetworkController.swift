@@ -205,8 +205,9 @@ extension AuthorizingNetworkController {
         guard let reauthorizationRequest = authorization.makeReauthorizationRequest(), !reauthorizationRequest.requiresAuthorization else {
             throw HTTPStatusCode.unauthorized
         }
+        let requestWithUniversalHeaders = addUniversalHeadersTo(request: reauthorizationRequest)
         
-        let dataResponse = try await session.submit(request: reauthorizationRequest, to: baseURL)
+        let dataResponse = try await session.submit(request: requestWithUniversalHeaders, to: baseURL)
         _ = try transform(dataResponse: dataResponse, from: reauthorizationRequest)
     }
 }
