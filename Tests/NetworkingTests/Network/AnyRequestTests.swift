@@ -3,44 +3,54 @@ import XCTest
 
 final class AnyRequestTests: XCTestCase {}
 
-// MARK: - Mocks
-extension AnyRequestTests {
-    
-    private struct MockRequest: NetworkRequest {
-        
-        let httpMethod: HTTPMethod = .delete
-        let pathComponents: [String] = [UUID().uuidString, UUID().uuidString]
-        let headers: [String : String]? = [UUID().uuidString : UUID().uuidString]
-        let queryItems: [String : String]? = [UUID().uuidString : UUID().uuidString]
-        let body: Data? = UUID().uuidString.data(using: .utf8)
-        let requiresAuthorization: Bool = .random()
-        
-        func transform(data: Data, statusCode: HTTPStatusCode, using decoder: JSONDecoder) throws -> String {
-            
-            String(data: data, encoding: .utf8)!
-        }
-    }
-}
-
 // MARK: - Tests
 extension AnyRequestTests {
     
-    func testAnyRequestInitWithRequest_willUseInjectedRequestParameters_andTransform() throws {
+    func testInitWithParameters_willAssignProperties_andTransformCorrectly() throws {
         
-        let request = MockRequest()
-        let anyRequest = AnyRequest(request)
+        let body = UUID().uuidString.data(using: .utf8)
+        let request = AnyRequest(
+            httpMethod: .connect,
+            pathComponents: ["path1", "path2"],
+            headers: ["header1" : "headerValue1", "header2" : "headerValue2"],
+            queryItems: ["query1" : "queryValue1", "query2" : "queryValue2"],
+            body: body,
+            requiresAuthorization: true
+        ) { data, _, _ in
+            data + data
+        }
         
-        XCTAssertEqual(request.httpMethod, anyRequest.httpMethod)
-        XCTAssertEqual(request.pathComponents, anyRequest.pathComponents)
-        XCTAssertEqual(request.headers, anyRequest.headers)
-        XCTAssertEqual(request.queryItems, anyRequest.queryItems)
-        XCTAssertEqual(request.body, anyRequest.body)
-        XCTAssertEqual(request.requiresAuthorization, anyRequest.requiresAuthorization)
+        XCTAssertEqual(request.httpMethod, .connect)
+        XCTAssertEqual(request.pathComponents, ["path1", "path2"])
+        XCTAssertEqual(request.headers, ["header1" : "headerValue1", "header2" : "headerValue2"])
+        XCTAssertEqual(request.queryItems, ["query1" : "queryValue1", "query2" : "queryValue2"])
+        XCTAssertEqual(request.body, body)
+        XCTAssertTrue(request.requiresAuthorization)
 
-        let transformString = UUID().uuidString
-        let transformData = transformString.data(using: .utf8)!
+        let mockData = UUID().uuidString.data(using: .utf8)!
+        let transformedContent = try request.transform(data: mockData, statusCode: .ok, using: .init())
         
-        XCTAssertEqual(try request.transform(data: transformData, statusCode: .ok, using: .init()), transformString)
-        XCTAssertEqual(try anyRequest.transform(data: transformData, statusCode: .ok, using: .init()), transformString)
+        XCTAssertEqual(transformedContent, mockData + mockData)
+    }
+    
+    func testInitWithRequest_willAssignProperties_andTransformCorrectly() throws {
+        
+        let mockRequest = MockNetworkRequest { data, _, _ in
+            data + data
+        }
+        let anyRequest = AnyRequest(mockRequest)
+        
+        XCTAssertEqual(anyRequest.httpMethod, mockRequest.httpMethod)
+        XCTAssertEqual(anyRequest.pathComponents, mockRequest.pathComponents)
+        XCTAssertEqual(anyRequest.headers, mockRequest.headers)
+        XCTAssertEqual(anyRequest.queryItems, mockRequest.queryItems)
+        XCTAssertEqual(anyRequest.body, mockRequest.body)
+        XCTAssertEqual(anyRequest.requiresAuthorization, mockRequest.requiresAuthorization)
+
+        let mockData = UUID().uuidString.data(using: .utf8)!
+        let transformedRequestContent = try mockRequest.transform(data: mockData, statusCode: .ok, using: .init())
+        let transformedAnyRequestContent = try anyRequest.transform(data: mockData, statusCode: .ok, using: .init())
+
+        XCTAssertEqual(transformedRequestContent, transformedAnyRequestContent)
     }
 }
