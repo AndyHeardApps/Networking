@@ -22,7 +22,7 @@ extension URLSession: NetworkSession {
 // MARK: - URL request
 extension URLSession {
     
-    func urlRequest<Request: NetworkRequest>(for request: Request, withBaseURL baseURL: URL) throws -> URLRequest {
+    private func urlRequest<Request: NetworkRequest>(for request: Request, withBaseURL baseURL: URL) throws -> URLRequest {
         
         var urlComponents = URLComponents()
         urlComponents.path = request.pathComponents.joined(separator: "/")
@@ -82,7 +82,7 @@ extension HTTPMethod {
 // MARK: - Errors
 extension URLSession {
     
-    public enum NetworkSessionError: LocalizedError {
+    enum NetworkSessionError: LocalizedError {
         
         case failedToCreateURLFromComponents
     }

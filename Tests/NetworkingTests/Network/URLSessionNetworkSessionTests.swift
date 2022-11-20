@@ -4,8 +4,8 @@ import XCTest
 final class URLSessionNetworkSessionTests: XCTestCase {
     
     // MARK: - Properties
-    private let baseURL = URL(string: "https://www.test.com")!
-    private var session: URLSession!
+    private var baseURL: URL!
+    private var urlSession: URLSession!
 }
 
 // MARK: - Setup
@@ -14,37 +14,90 @@ extension URLSessionNetworkSessionTests {
     override func setUp() {
         super.setUp()
         
-        session = .shared
+        self.baseURL = URL(string: "https://test.domain.com")
+        let configuration = URLSessionConfiguration.default
+        configuration.protocolClasses = [MockURLProtocol.self]
+        self.urlSession = URLSession(configuration: configuration)
     }
     
     override func tearDown() {
         super.tearDown()
         
-        session = nil
+        self.baseURL = nil
+        self.urlSession = nil
     }
 }
 
 // MARK: - Mocks
 extension URLSessionNetworkSessionTests {
     
-    private func request(httpMethod: HTTPMethod) -> AnyRequest<Void> {
+    final class MockURLProtocol: URLProtocol {
         
-        AnyRequest(
-            httpMethod: httpMethod,
-            pathComponents: ["path1", "path2"],
-            headers: ["header1" : "value1", "header2" : "value2"],
-            queryItems: ["query" : "value"],
-            body: UUID().uuidString.data(using: .utf8),
-            requiresAuthorization: false,
-            transform: { _, _, _ in }
-        )
+        // Properties
+        static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data?))?
+        
+        // URL protocol
+        override class func canInit(with request: URLRequest) -> Bool {
+            true
+        }
+        
+        override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+            
+            var request = request
+            if let bodyStream = request.httpBodyStream {
+                
+                bodyStream.open()
+                
+                let bufferSize: Int = 16
+                let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
+                var data = Data()
+
+                while bodyStream.hasBytesAvailable {
+
+                    let readData = bodyStream.read(buffer, maxLength: bufferSize)
+                    data.append(buffer, count: readData)
+                }
+
+                buffer.deallocate()
+                bodyStream.close()
+                
+                request.httpBody = data
+            }
+            
+            return request
+        }
+        
+        override func startLoading() {
+            
+            guard let handler = MockURLProtocol.requestHandler else {
+                fatalError("Handler is unavailable.")
+            }
+            
+            do {
+
+                let (response, data) = try handler(request)
+                client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+                
+                if let data {
+                    client?.urlProtocol(self, didLoad: data)
+                }
+                
+                client?.urlProtocolDidFinishLoading(self)
+                
+            } catch {
+                client?.urlProtocol(self, didFailWithError: error)
+                
+            }
+        }
+        
+        override func stopLoading() {}
     }
 }
 
 // MARK: - Tests
 extension URLSessionNetworkSessionTests {
     
-    func testURLSession_willCreateCorrectURLRequests_forRequests() throws {
+    func testSubmitRequest_willCorrectlyCreateURLRequest_andSubmitIt() async throws {
         
         let httpMethods: [HTTPMethod : String] = [
             .get : "GET",
@@ -60,15 +113,28 @@ extension URLSessionNetworkSessionTests {
         
         for (httpMethod, httpMethodString) in httpMethods {
             
-            let request = request(httpMethod: httpMethod)
-            let urlRequest = try session.urlRequest(for: request, withBaseURL: baseURL)
+            var receivedURLRequest: URLRequest?
+            MockURLProtocol.requestHandler = { urlRequest in
+                receivedURLRequest = urlRequest
+                return (HTTPURLResponse(), nil)
+            }
             
-            let expectedURL = URL(string: "\(baseURL.absoluteString)/path1/path2?query=value")
+            let request = MockNetworkRequest(httpMethod: httpMethod)
+            _ = try await urlSession.submit(request: request, to: baseURL)
+                    
+            let expectedURLString = baseURL.absoluteString
+                + "/"
+                + request.pathComponents.joined(separator: "/")
+                + "?"
+                + request.queryItems!.map { "\($0)=\($1)" }.joined(separator: "/")
+            var expectedHeaders = request.headers
+            expectedHeaders?["Content-Length"] = "36"
             
-            XCTAssertEqual(urlRequest.url, expectedURL)
-            XCTAssertEqual(urlRequest.httpMethod, httpMethodString)
-            XCTAssertEqual(urlRequest.allHTTPHeaderFields, request.headers)
-            XCTAssertEqual(urlRequest.httpBody, request.body)
+            XCTAssertNotNil(receivedURLRequest)
+            XCTAssertEqual(receivedURLRequest?.url?.absoluteString, expectedURLString)
+            XCTAssertEqual(receivedURLRequest?.httpMethod, httpMethodString)
+            XCTAssertEqual(receivedURLRequest?.httpBody, request.body)
+            XCTAssertEqual(receivedURLRequest?.allHTTPHeaderFields, expectedHeaders)
         }
     }
 }

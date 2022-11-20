@@ -1,11 +1,7 @@
 import Foundation
 
 /// The `AuthorizingNetworkController` is what ties all of the network and converting of data together, including authorization. It accepts a `baseURL` which all submitted requests are resolved against using the provided `NetworkSession`. The `JSONDecoder` is handed to all requests to decode any JSON data.
-public struct AuthorizingNetworkController<Authorization, NetworkError>
-where Authorization: AuthorizationProvider,
-      NetworkError: Error,
-      NetworkError: Decodable
-{
+public struct AuthorizingNetworkController<Authorization> where Authorization: AuthorizationProvider {
     
     // MARK: - Properties
     
@@ -21,8 +17,8 @@ where Authorization: AuthorizationProvider,
     /// The `JSONDecoder` used to convert any JSON data in `NetworkRequest`s.
     public let jsonDecoder: JSONDecoder
     
-    /// A closure that decides whether reauthentication should be attempted when a request returns the provided `Error`.
-    public let shouldReauthenticateOnError: (Error) -> Bool
+    /// A closure that decides how to handle an error. It is called with the `Error` that has been thrown, as well as the `NetworkResponse<Data>` that caused the error to be thrown. It can manipulate the contents to extract error messages from the response and throw a more detailed error. It returns a `Bool` indicating whether or not reauthentication should be attempted. If `false` is returned without throwing, then the provided `Error` is thrown.
+    public let errorHandler: (NetworkResponse<Data>, Error) throws -> Bool
     
     /// An optional set of headers that are applied to all requests submitted through this `AuthorizingNetworkController`.
     public var universalHeaders: [String : String]? = nil
@@ -32,17 +28,16 @@ where Authorization: AuthorizationProvider,
     /// Creates a new `NetworkController` instance.
     /// - Parameters:
     ///   - baseURL: The `baseURL` the `AuthorizingNetworkController` uses to resolve requests.
-    ///   - session: The `session` the `AuthorizingNetworkController` uses to fetch `Data` for requests.
+    ///   - session: The `session` the `AuthorizingNetworkController` uses to fetch the request `Data`.
     ///   - authorization: The `authorization` used to authorize any requests that need it.
     ///   - jsonDecoder: The `JSONDecoder` the `AuthorizingNetworkController` uses to decode JSON data returned by requests.
-    ///   -  shouldReauthenticateOnError: A closure that decides whether reauthentication should be attempted when a request returns the provided `Error`. If `nil` is provided (the default), then a `403` response will result in reauthentication being attempted.
-
+    ///   - errorHandler: A closure that decides how to handle an error. It is called with the `Error` that has been thrown, as well as the `NetworkResponse<Data>` that caused the error to be thrown. It can manipulate the contents to extract error messages from the response and throw a more detailed error. It returns a `Bool` indicating whether or not reauthentication should be attempted. If `false` is returned without throwing, then the provided `Error` is thrown. If `nil` is specified for the closure (the default), then the controller will attempt to reauthenticate only when a 401 unauthorized `HTTPStatusCode` is encountered.
     public init(
         baseURL: URL,
         session: NetworkSession = URLSession.shared,
         authorization: Authorization,
         jsonDecoder: JSONDecoder = .init(),
-        shouldReauthenticateOnError: ((Error) -> Bool)? = nil
+        errorHandler: ((NetworkResponse<Data>, Error) throws -> Bool)? = nil
     ) {
         
         self.baseURL = baseURL
@@ -50,16 +45,11 @@ where Authorization: AuthorizationProvider,
         self.authorization = authorization
         self.jsonDecoder = jsonDecoder
         
-        if let shouldReauthenticateOnError {
-            self.shouldReauthenticateOnError = shouldReauthenticateOnError
+        if let errorHandler {
+            self.errorHandler = errorHandler
         } else {
-            self.shouldReauthenticateOnError = { error in
-                switch error {
-                case HTTPStatusCode.unauthorized:
-                    return true
-                default:
-                    return false
-                }
+            self.errorHandler = { _, error in
+                error as? HTTPStatusCode == .unauthorized
             }
         }
     }
@@ -70,7 +60,7 @@ extension AuthorizingNetworkController where Authorization == EmptyAuthorization
     /// Creates a new `NetworkController` instance.
     /// - Parameters:
     ///   - baseURL: The `baseURL` the `AuthorizingNetworkController` uses to resolve requests.
-    ///   - session: The `session` the `AuthorizingNetworkController` uses to fetch `Data` for requests.
+    ///   - session: The `session` the `AuthorizingNetworkController` uses to fetch the request `Data`.
     ///   - jsonDecoder: The `JSONDecoder` the `AuthorizingNetworkController` uses to decode JSON data returned by requests.
     public init(
         baseURL: URL,
@@ -82,7 +72,7 @@ extension AuthorizingNetworkController where Authorization == EmptyAuthorization
         self.session = session
         self.authorization = EmptyAuthorizationProvider()
         self.jsonDecoder = jsonDecoder
-        self.shouldReauthenticateOnError = { _ in false }
+        self.errorHandler = { _, _ in false }
     }
 }
 
@@ -92,6 +82,7 @@ extension AuthorizingNetworkController: NetworkController {
     public func fetchContent<Request: NetworkRequest>(_ request: Request) async throws -> Request.ResponseType {
         
         let response = try await fetchResponse(request)
+        
         return response.content
     }
     
@@ -100,24 +91,33 @@ extension AuthorizingNetworkController: NetworkController {
         let requestWithUniversalHeaders = addUniversalHeadersTo(request: request)
         let authorizedRequest = authorize(request: requestWithUniversalHeaders)
         
+        // Errors thrown here cannot be fixed with reauth
+        let dataResponse = try await session.submit(
+            request: authorizedRequest,
+            to: baseURL
+        )
+        
         do {
-            let dataResponse = try await session.submit(request: authorizedRequest, to: baseURL)
             let response = try transform(
                 dataResponse: dataResponse,
                 from: request
             )
+            
             return response
                         
         } catch {
             
-            guard shouldReauthenticateOnError(error) else {
+            guard try errorHandler(dataResponse, error) else {
                 throw error
             }
 
             try await reauthorize()
 
             let reauthorizedRequest = authorize(request: requestWithUniversalHeaders)
-            let dataResponse = try await session.submit(request: reauthorizedRequest, to: baseURL)
+            let dataResponse = try await session.submit(
+                request: reauthorizedRequest,
+                to: baseURL
+            )
             let response = try transform(
                 dataResponse: dataResponse,
                 from: request
@@ -149,7 +149,9 @@ extension AuthorizingNetworkController {
         }
         
         var headers = request.headers ?? [:]
-        headers.merge(universalHeaders) { $1 }
+        headers.merge(universalHeaders) { requestHeader, universalHeader in
+            requestHeader
+        }
         
         let updatedRequest = AnyRequest(
             httpMethod: request.httpMethod,
@@ -170,30 +172,20 @@ extension AuthorizingNetworkController {
     
     private func transform<Request: NetworkRequest>(dataResponse: NetworkResponse<Data>, from request: Request) throws -> NetworkResponse<Request.ResponseType> {
         
-        do {
-            let transformedContents = try request.transform(
-                data: dataResponse.content,
-                statusCode: dataResponse.statusCode,
-                using: jsonDecoder
-            )
-            
-            let transformedResponse = NetworkResponse(
-                content: transformedContents,
-                statusCode: dataResponse.statusCode,
-                headers: dataResponse.headers
-            )
-            extractAuthorizationContent(from: transformedResponse, returnedBy: request)
-            
-            return transformedResponse
-            
-        } catch {
-            guard let networkError = try? jsonDecoder.decode(NetworkError.self, from: dataResponse.content) else {
-                throw error
-            }
-            
-            throw networkError
-            
-        }
+        let transformedContents = try request.transform(
+            data: dataResponse.content,
+            statusCode: dataResponse.statusCode,
+            using: jsonDecoder
+        )
+        
+        let transformedResponse = NetworkResponse(
+            content: transformedContents,
+            statusCode: dataResponse.statusCode,
+            headers: dataResponse.headers
+        )
+        extractAuthorizationContent(from: transformedResponse, returnedBy: request)
+        
+        return transformedResponse
     }
 }
 
@@ -205,6 +197,7 @@ extension AuthorizingNetworkController {
         guard let reauthorizationRequest = authorization.makeReauthorizationRequest(), !reauthorizationRequest.requiresAuthorization else {
             throw HTTPStatusCode.unauthorized
         }
+        
         let requestWithUniversalHeaders = addUniversalHeadersTo(request: reauthorizationRequest)
         
         let dataResponse = try await session.submit(request: requestWithUniversalHeaders, to: baseURL)
