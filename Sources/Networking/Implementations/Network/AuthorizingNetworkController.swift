@@ -13,12 +13,12 @@ public struct AuthorizingNetworkController<Authorization> where Authorization: A
     
     /// The authorization method to apply to all requests with `requiresAuthorization` equal to `true`.
     public let authorization: Authorization
+
+    /// The `AuthorizationErrorHandler` used to handle errors and decide whether or not to attempt reauthorization and request resubmission.
+    public let errorHandler: AuthorizationErrorHandler
     
     /// The `JSONDecoder` used to convert any JSON data in `NetworkRequest`s.
     public let jsonDecoder: JSONDecoder
-    
-    /// A closure that decides how to handle an error. It is called with the `Error` that has been thrown, as well as the `NetworkResponse<Data>` that caused the error to be thrown. It can manipulate the contents to extract error messages from the response and throw a more detailed error. It returns a `Bool` indicating whether or not reauthentication should be attempted. If `false` is returned without throwing, then the provided `Error` is thrown.
-    public let errorHandler: (NetworkResponse<Data>, Error) throws -> Bool
     
     /// An optional set of headers that are applied to all requests submitted through this `AuthorizingNetworkController`.
     public var universalHeaders: [String : String]? = nil
@@ -31,27 +31,20 @@ public struct AuthorizingNetworkController<Authorization> where Authorization: A
     ///   - session: The `session` the `AuthorizingNetworkController` uses to fetch the request `Data`.
     ///   - authorization: The `authorization` used to authorize any requests that need it.
     ///   - jsonDecoder: The `JSONDecoder` the `AuthorizingNetworkController` uses to decode JSON data returned by requests.
-    ///   - errorHandler: A closure that decides how to handle an error. It is called with the `Error` that has been thrown, as well as the `NetworkResponse<Data>` that caused the error to be thrown. It can manipulate the contents to extract error messages from the response and throw a more detailed error. It returns a `Bool` indicating whether or not reauthentication should be attempted. If `false` is returned without throwing, then the provided `Error` is thrown. If `nil` is specified for the closure (the default), then the controller will attempt to reauthenticate only when a 401 unauthorized `HTTPStatusCode` is encountered.
+    ///   - errorHandler: The `AuthorizationErrorHandler` used to handle errors and decide whether or not to attempt reauthorization and request resubmission. The default handler will try to reauthorize when a `HTTPStatusCode.unauthorized` error is recieved, otherwise, the error is thrown unmodified.
     public init(
         baseURL: URL,
         session: NetworkSession = URLSession.shared,
         authorization: Authorization,
-        jsonDecoder: JSONDecoder = .init(),
-        errorHandler: ((NetworkResponse<Data>, Error) throws -> Bool)? = nil
+        errorHandler: AuthorizationErrorHandler = DefaultAuthorizationErrorHandler(),
+        jsonDecoder: JSONDecoder = .init()
     ) {
         
         self.baseURL = baseURL
         self.session = session
         self.authorization = authorization
+        self.errorHandler = errorHandler
         self.jsonDecoder = jsonDecoder
-        
-        if let errorHandler {
-            self.errorHandler = errorHandler
-        } else {
-            self.errorHandler = { _, error in
-                error as? HTTPStatusCode == .unauthorized
-            }
-        }
     }
 }
 
@@ -71,8 +64,8 @@ extension AuthorizingNetworkController where Authorization == EmptyAuthorization
         self.baseURL = baseURL
         self.session = session
         self.authorization = EmptyAuthorizationProvider()
+        self.errorHandler = DefaultAuthorizationErrorHandler()
         self.jsonDecoder = jsonDecoder
-        self.errorHandler = { _, _ in false }
     }
 }
 
@@ -107,8 +100,14 @@ extension AuthorizingNetworkController: NetworkController {
                         
         } catch {
             
-            guard try errorHandler(dataResponse, error) else {
+            switch errorHandler.handle(error, from: dataResponse) {
+            case .attemptReauthorization:
+                break
+                
+            case .error(let error):
+                print(error)
                 throw error
+                
             }
 
             try await reauthorize()

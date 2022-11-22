@@ -7,9 +7,9 @@ final class AuthorizingNetworkControllerTests: XCTestCase {
     private let baseURL = URL(string: "https://example.domain.com")!
     private var networkSession: MockNetworkSession!
     private var authorizationProvider: MockAuthorizationProvider!
-    private var jsonDecoder: JSONDecoder!
+    private var authorizationErrorHandler: MockAuthorizationErrorHandler!
     private var networkController: AuthorizingNetworkController<MockAuthorizationProvider>!
-    private var customErrorHandlerWasCalled = false
+    private var jsonDecoder: JSONDecoder!
 }
 
 // MARK: - Setup
@@ -20,14 +20,15 @@ extension AuthorizingNetworkControllerTests {
         
         self.networkSession = MockNetworkSession()
         self.authorizationProvider = MockAuthorizationProvider()
+        self.authorizationErrorHandler = MockAuthorizationErrorHandler()
         self.jsonDecoder = JSONDecoder()
         self.networkController = AuthorizingNetworkController(
             baseURL: baseURL,
             session: networkSession,
             authorization: authorizationProvider,
+            errorHandler: authorizationErrorHandler,
             jsonDecoder: jsonDecoder
         )
-        self.customErrorHandlerWasCalled = false
     }
     
     override func tearDown() {
@@ -36,42 +37,8 @@ extension AuthorizingNetworkControllerTests {
         self.networkSession = nil
         self.authorizationProvider = nil
         self.jsonDecoder = nil
+        self.authorizationErrorHandler = nil
         self.networkController = nil
-        self.customErrorHandlerWasCalled = false
-    }
-}
-
-// MARK: - Custom error handler setup
-extension AuthorizingNetworkControllerTests {
-    
-    struct CustomError: LocalizedError, Decodable {
-        
-        let errorDescription: String?
-    }
-    
-    private func setNetworkControllerWithCustomErrorHandler() {
-        
-        networkController = AuthorizingNetworkController(
-            baseURL: baseURL,
-            session: networkSession,
-            authorization: authorizationProvider,
-            jsonDecoder: jsonDecoder
-        ) { [jsonDecoder, weak self] response, error in
-            
-            self?.customErrorHandlerWasCalled = true
-            switch error {
-            case HTTPStatusCode.badRequest:
-                let customError = try jsonDecoder!.decode(CustomError.self, from: response.content)
-                throw customError
-                
-            case HTTPStatusCode.unauthorized:
-                return true
-                
-            default:
-                return false
-                
-            }
-        }
     }
 }
 
@@ -344,84 +311,50 @@ extension AuthorizingNetworkControllerTests {
         }
     }
     
-    func testFetchResponse_willReauthorizeFailedRequest_whenCustomErrorHandlerReturnsTrue() async throws {
-        
-        setNetworkControllerWithCustomErrorHandler()
-        
+    func testFetchResponse_willReauthorizeFailedRequest_whenErrorHandlerReturnsAttemptReauthorization() async throws {
+                
         let request = MockNetworkRequest { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
-        authorizationProvider.shouldMakeReauthorizationRequest = true
-        networkSession.set(
-            response: .init(
-                content: .init(),
-                statusCode: .unauthorized, // Triggers `true` response in custom closure
-                headers: [:]
-            ),
-            for: request
+        let response = NetworkResponse(
+            content: UUID().uuidString.data(using: .utf8)!,
+            statusCode: .badRequest,
+            headers: [:]
         )
+        authorizationErrorHandler.result = .attemptReauthorization
+        authorizationProvider.shouldMakeReauthorizationRequest = true
+        networkSession.set(response: response, for: request)
         networkSession.setReauthorizationResponse()
 
         _ = try? await networkController.fetchResponse(request)
         
-        XCTAssertTrue(customErrorHandlerWasCalled)
+        XCTAssertEqual(authorizationErrorHandler.recievedResponse?.content, response.content)
+        XCTAssertEqual(authorizationErrorHandler.recievedError as? HTTPStatusCode, .badRequest)
         XCTAssertTrue(authorizationProvider.makeReauthorizationRequestWasCalled)
         XCTAssertEqual(networkSession.receivedRequests.count, 3)
     }
     
-    func testFetchResponse_willThrowUnmodifiedError_whenCustomErrorHandlerReturnsFalse() async throws {
-        
-        setNetworkControllerWithCustomErrorHandler()
-        
+    func testFetchResponse_willThrowUnmodifiedError_whenErrorHandlerReturnsError() async throws {
+                
         let request = MockNetworkRequest { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
-        networkSession.set(
-            response: .init(
-                content: .init(),
-                statusCode: .unprocessableEntity, // Triggers `false` response in custom closure
-                headers: [:]
-            ),
-            for: request
+        let response = NetworkResponse(
+            content: UUID().uuidString.data(using: .utf8)!,
+            statusCode: .badRequest,
+            headers: [:]
         )
+        authorizationErrorHandler.result = .error(MockError())
+        networkSession.set(response: response, for: request)
 
         do {
             _ = try await networkController.fetchResponse(request)
             XCTFail()
         } catch {
                  
-            XCTAssertTrue(customErrorHandlerWasCalled)
-            XCTAssertEqual(error as? HTTPStatusCode, .unprocessableEntity)
-            XCTAssertFalse(authorizationProvider.makeReauthorizationRequestWasCalled)
-            XCTAssertEqual(networkSession.receivedRequests.count, 1)
-        }
-    }
-    
-    func testFetchResponse_willThrowModifiedError_thrownByCustomErrorHandler() async throws {
-        
-        setNetworkControllerWithCustomErrorHandler()
-        
-        let request = MockNetworkRequest { _, statusCode, _ in
-            guard statusCode == .ok else { throw statusCode }
-        }
-        let responseData = try JSONEncoder().encode(["errorDescription" : "Error message"])
-        networkSession.set(
-            response: .init(
-                content: responseData,
-                statusCode: .badRequest, // Triggers custom error decoding
-                headers: [:]
-            ),
-            for: request
-        )
-
-        do {
-            _ = try await networkController.fetchResponse(request)
-            XCTFail()
-        } catch {
-                    
-            XCTAssertTrue(customErrorHandlerWasCalled)
-            XCTAssertTrue(error is CustomError)
-            XCTAssertEqual(error.localizedDescription, "Error message")
+            XCTAssertEqual(authorizationErrorHandler.recievedResponse?.content, response.content)
+            XCTAssertEqual(authorizationErrorHandler.recievedError as? HTTPStatusCode, .badRequest)
+            XCTAssertTrue(error is MockError)
             XCTAssertFalse(authorizationProvider.makeReauthorizationRequestWasCalled)
             XCTAssertEqual(networkSession.receivedRequests.count, 1)
         }
@@ -430,8 +363,6 @@ extension AuthorizingNetworkControllerTests {
     // MARK: Error reporting
     func testFetchResponse_willReportErrorThrownByNetworkSession_withoutCallingErrorHandler() async throws {
         
-        setNetworkControllerWithCustomErrorHandler()
-
         let request = MockNetworkRequest()
         networkSession.shouldThrowErrorOnSubmit = true
         
@@ -440,7 +371,8 @@ extension AuthorizingNetworkControllerTests {
             XCTFail()
         } catch {
                     
-            XCTAssertFalse(customErrorHandlerWasCalled)
+            XCTAssertNil(authorizationErrorHandler.recievedError)
+            XCTAssertNil(authorizationErrorHandler.recievedResponse)
             XCTAssertTrue(error is MockNetworkSession.SampleError)
             XCTAssertFalse(authorizationProvider.makeReauthorizationRequestWasCalled)
             XCTAssertEqual(networkSession.receivedRequests.count, 1)
