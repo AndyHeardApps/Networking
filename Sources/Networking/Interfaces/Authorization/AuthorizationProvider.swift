@@ -1,5 +1,5 @@
 
-/// Provides authorization for requests. Implementations should be able to accept a request, and use its contents to return an authorizedversion of that request as an `AnyRequest`. It also has the option of providing a `ReauthorizationRequest` which is automatically used by the `NetworkController` when an `unauthorized` `401` response code is received to try and reauthorize and retry the failed request. Implementations should also be able to accept the `ResponseTypes` from an `AuthorizationRequest` and a `ReauthorizationRequest` and extract and store any authorization credentials from them for later use in the `authorize(_ request: )` function. Any `ReauthorizationRequest` should have `requiresAuthorization` equal to `false` in order to be usable.
+/// Provides authorization for requests. Implementations should be able to accept a request, and use its contents to return an authorized version of that request. It also has the option of providing a `ReauthorizationRequest` which is automatically used by the `AuthorizingNetworkController` when the `errorHandler` returns `.attemptReauthorization` to try and reauthorize and retry the failed request. Implementations should also be able to accept the `ResponseType`s from an `AuthorizationRequest` and a `ReauthorizationRequest` and extract and store any authorization credentials from them for later use in the `authorize(_ request: )` function. Any `ReauthorizationRequest` should have `requiresAuthorization` equal to `false` in order to be usable.
 public protocol AuthorizationProvider {
     
     /// A request type that can be used to initially authorize the client.
@@ -10,7 +10,7 @@ public protocol AuthorizationProvider {
     
     // MARK: - Functions
     
-    /// Creates and returns a request that can be used to reauthorize the client when an `unauthorized` `401` status code is recieved. If `nil` is returned, reauthorization is not attempted.
+    /// Creates and returns a request that can be used to reauthorize the client when the `errorHandler` returns `.attemptReauthorization`. If `nil` is returned, reauthorization is not attempted.
     /// - Returns: A reauthorization request.
     func makeReauthorizationRequest() -> ReauthorizationRequest?
     

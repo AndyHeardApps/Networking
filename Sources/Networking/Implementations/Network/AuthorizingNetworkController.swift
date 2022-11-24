@@ -1,6 +1,6 @@
 import Foundation
 
-/// The `AuthorizingNetworkController` is what ties all of the networking and converting of data together, including authorization. It accepts a `baseURL` which all submitted requests are resolved against using the provided `NetworkSession`. The `DataDecoder` is handed to all requests to decode any `Data` returned by a request.
+/// The `AuthorizingNetworkController` is what ties all of the networking and converting of data together, including authorization. It accepts a `baseURL` which all submitted requests are resolved against using the provided `NetworkSession`. The `DataDecoder` is handed to all requests to decode any `Data` returned by a request. The `AuthorizationProvider` provided is used to authorize all requests that return `true` for `requiresAuthorization`. If a request fails, the controller can attempt to reauthorize and retry the request when the  provided`AuthorizationErrorHandler` `handle` function returns `.attemptReauthorization`.
 public struct AuthorizingNetworkController<Authorization> where Authorization: AuthorizationProvider {
     
     // MARK: - Properties
@@ -30,8 +30,9 @@ public struct AuthorizingNetworkController<Authorization> where Authorization: A
     ///   - baseURL: The `baseURL` the `AuthorizingNetworkController` uses to resolve requests.
     ///   - session: The `session` the `AuthorizingNetworkController` uses to fetch the request `Data`.
     ///   - authorization: The `authorization` used to authorize any requests that need it.
-    ///   - decoder: The `DataDecoder` provided to `NetworkRequest` `transform` methods used to convert any `Data`.
     ///   - errorHandler: The `AuthorizationErrorHandler` used to handle errors and decide whether or not to attempt reauthorization and request resubmission. The default handler will try to reauthorize when a `HTTPStatusCode.unauthorized` error is recieved, otherwise, the error is thrown unmodified.
+    ///   - decoder: The `DataDecoder` provided to `NetworkRequest` `transform` methods used to convert any `Data`.
+
     public init(
         baseURL: URL,
         session: NetworkSession = URLSession.shared,
@@ -105,7 +106,6 @@ extension AuthorizingNetworkController: NetworkController {
                 break
                 
             case .error(let error):
-                print(error)
                 throw error
                 
             }
@@ -169,7 +169,10 @@ extension AuthorizingNetworkController {
 // MARK: - Response transform
 extension AuthorizingNetworkController {
     
-    private func transform<Request: NetworkRequest>(dataResponse: NetworkResponse<Data>, from request: Request) throws -> NetworkResponse<Request.ResponseType> {
+    private func transform<Request: NetworkRequest>(
+        dataResponse: NetworkResponse<Data>,
+        from request: Request
+    ) throws -> NetworkResponse<Request.ResponseType> {
         
         let transformedContents = try request.transform(
             data: dataResponse.content,
@@ -193,7 +196,10 @@ extension AuthorizingNetworkController {
     
     private func reauthorize() async throws {
         
-        guard let reauthorizationRequest = authorization.makeReauthorizationRequest(), !reauthorizationRequest.requiresAuthorization else {
+        guard
+            let reauthorizationRequest = authorization.makeReauthorizationRequest(),
+            !reauthorizationRequest.requiresAuthorization
+        else {
             throw HTTPStatusCode.unauthorized
         }
         
@@ -207,7 +213,10 @@ extension AuthorizingNetworkController {
 // MARK: - Authorization content extraction
 extension AuthorizingNetworkController {
     
-    private func extractAuthorizationContent<Response>(from response: NetworkResponse<Response>, returnedBy request: some NetworkRequest) {
+    private func extractAuthorizationContent<Response>(
+        from response: NetworkResponse<Response>,
+        returnedBy request: some NetworkRequest
+    ) {
         
         if
             let authorizationRequest = request as? Authorization.AuthorizationRequest,
