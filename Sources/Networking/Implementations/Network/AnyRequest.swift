@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 /// A type-erased request that can wrap any other request to allow for concrete `NetworkRequest` implementations to be passed around.
 public struct AnyRequest<ResponseType>: NetworkRequest {
@@ -10,7 +11,7 @@ public struct AnyRequest<ResponseType>: NetworkRequest {
     public let queryItems: [String : String]?
     public let body: Data?
     public let requiresAuthorization: Bool
-    private let _transform: (Data, HTTPStatusCode, JSONDecoder) throws -> ResponseType
+    private let _transform: (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
     
     // MARK: Initialisers
     public init(
@@ -20,7 +21,7 @@ public struct AnyRequest<ResponseType>: NetworkRequest {
         queryItems: [String : String]?,
         body: Data?,
         requiresAuthorization: Bool,
-        transform: @escaping (Data, HTTPStatusCode, JSONDecoder) throws -> ResponseType
+        transform: @escaping (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
     ) {
         self.httpMethod = httpMethod
         self.pathComponents = pathComponents
@@ -43,7 +44,7 @@ public struct AnyRequest<ResponseType>: NetworkRequest {
     }
     
     // MARK: - Transform
-    public func transform(data: Data, statusCode: HTTPStatusCode, using decoder: JSONDecoder) throws -> ResponseType {
+    public func transform(data: Data, statusCode: HTTPStatusCode, using decoder: DataDecoder) throws -> ResponseType {
         
         try _transform(data, statusCode, decoder)
     }

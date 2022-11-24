@@ -10,7 +10,7 @@ struct MockNetworkRequest<ResponseType>: NetworkRequest {
     let queryItems: [String : String]?
     let body: Data?
     let requiresAuthorization: Bool
-    private let transformClosure: (Data, HTTPStatusCode, JSONDecoder) throws -> ResponseType
+    private let transformClosure: (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
     
     // MARK: - Initialiser
     init(
@@ -20,7 +20,7 @@ struct MockNetworkRequest<ResponseType>: NetworkRequest {
         queryItems: [String : String]? = ["query1" : "queryValue1"],
         body: Data? = UUID().uuidString.data(using: .utf8),
         requiresAuthorization: Bool = true,
-        transformClosure: @escaping (Data, HTTPStatusCode, JSONDecoder) throws -> ResponseType
+        transformClosure: @escaping (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
     ) {
        
         self.httpMethod = httpMethod
@@ -58,7 +58,7 @@ extension MockNetworkRequest where ResponseType == Void {
 // MARK: - Transform
 extension MockNetworkRequest {
     
-    func transform(data: Data, statusCode: HTTPStatusCode, using decoder: JSONDecoder) throws -> ResponseType {
+    func transform(data: Data, statusCode: HTTPStatusCode, using decoder: DataDecoder) throws -> ResponseType {
         
         try transformClosure(data, statusCode, decoder)
     }

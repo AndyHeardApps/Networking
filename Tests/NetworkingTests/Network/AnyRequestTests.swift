@@ -28,7 +28,7 @@ extension AnyRequestTests {
         XCTAssertTrue(request.requiresAuthorization)
 
         let mockData = UUID().uuidString.data(using: .utf8)!
-        let transformedContent = try request.transform(data: mockData, statusCode: .ok, using: .init())
+        let transformedContent = try request.transform(data: mockData, statusCode: .ok, using: JSONDecoder())
         
         XCTAssertEqual(transformedContent, mockData + mockData)
     }
@@ -48,8 +48,8 @@ extension AnyRequestTests {
         XCTAssertEqual(anyRequest.requiresAuthorization, mockRequest.requiresAuthorization)
 
         let mockData = UUID().uuidString.data(using: .utf8)!
-        let transformedRequestContent = try mockRequest.transform(data: mockData, statusCode: .ok, using: .init())
-        let transformedAnyRequestContent = try anyRequest.transform(data: mockData, statusCode: .ok, using: .init())
+        let transformedRequestContent = try mockRequest.transform(data: mockData, statusCode: .ok, using: JSONDecoder())
+        let transformedAnyRequestContent = try anyRequest.transform(data: mockData, statusCode: .ok, using: JSONDecoder())
 
         XCTAssertEqual(transformedRequestContent, transformedAnyRequestContent)
     }

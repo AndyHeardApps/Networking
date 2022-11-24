@@ -39,7 +39,7 @@ extension OAuthAuthorizationProviderTests {
         var shouldProvideTokens: Bool
         
         // Transform
-        func transform(data: Data, statusCode: HTTPStatusCode, using decoder: JSONDecoder) throws -> Void {}
+        func transform(data: Data, statusCode: HTTPStatusCode, using decoder: DataDecoder) throws -> Void {}
         
         // Tokens
         func accessToken(from response: NetworkResponse<Void>) -> String? {
@@ -69,7 +69,7 @@ extension OAuthAuthorizationProviderTests {
         }
         
         // Transform
-        func transform(data: Data, statusCode: HTTPStatusCode, using decoder: JSONDecoder) throws -> Void {}
+        func transform(data: Data, statusCode: HTTPStatusCode, using decoder: DataDecoder) throws -> Void {}
         
         // Tokens
         func accessToken(from response: NetworkResponse<Void>) -> String? {

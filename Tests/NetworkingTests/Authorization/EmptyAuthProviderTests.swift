@@ -94,12 +94,12 @@ extension EmptyAuthorizationProviderTests {
         let requestTransformedResponse = try request.transform(
             data: responseData,
             statusCode: .ok,
-            using: .init()
+            using: JSONDecoder()
         )
         let authorizedRequestTransformedResponse = try authorizedRequest.transform(
             data: responseData,
             statusCode: .ok,
-            using: .init()
+            using: JSONDecoder()
         )
         
         XCTAssertEqual(request.httpMethod, authorizedRequest.httpMethod)

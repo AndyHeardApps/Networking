@@ -1,6 +1,6 @@
 import Foundation
 
-/// The `AuthorizingNetworkController` is what ties all of the network and converting of data together, including authorization. It accepts a `baseURL` which all submitted requests are resolved against using the provided `NetworkSession`. The `JSONDecoder` is handed to all requests to decode any JSON data.
+/// The `AuthorizingNetworkController` is what ties all of the networking and converting of data together, including authorization. It accepts a `baseURL` which all submitted requests are resolved against using the provided `NetworkSession`. The `DataDecoder` is handed to all requests to decode any `Data` returned by a request.
 public struct AuthorizingNetworkController<Authorization> where Authorization: AuthorizationProvider {
     
     // MARK: - Properties
@@ -17,8 +17,8 @@ public struct AuthorizingNetworkController<Authorization> where Authorization: A
     /// The `AuthorizationErrorHandler` used to handle errors and decide whether or not to attempt reauthorization and request resubmission.
     public let errorHandler: AuthorizationErrorHandler
     
-    /// The `JSONDecoder` used to convert any JSON data in `NetworkRequest`s.
-    public let jsonDecoder: JSONDecoder
+    /// The `DataDecoder` provided to `NetworkRequest` `transform` methods used to convert any `Data`.
+    public let decoder: DataDecoder
     
     /// An optional set of headers that are applied to all requests submitted through this `AuthorizingNetworkController`.
     public var universalHeaders: [String : String]? = nil
@@ -30,21 +30,21 @@ public struct AuthorizingNetworkController<Authorization> where Authorization: A
     ///   - baseURL: The `baseURL` the `AuthorizingNetworkController` uses to resolve requests.
     ///   - session: The `session` the `AuthorizingNetworkController` uses to fetch the request `Data`.
     ///   - authorization: The `authorization` used to authorize any requests that need it.
-    ///   - jsonDecoder: The `JSONDecoder` the `AuthorizingNetworkController` uses to decode JSON data returned by requests.
+    ///   - decoder: The `DataDecoder` provided to `NetworkRequest` `transform` methods used to convert any `Data`.
     ///   - errorHandler: The `AuthorizationErrorHandler` used to handle errors and decide whether or not to attempt reauthorization and request resubmission. The default handler will try to reauthorize when a `HTTPStatusCode.unauthorized` error is recieved, otherwise, the error is thrown unmodified.
     public init(
         baseURL: URL,
         session: NetworkSession = URLSession.shared,
         authorization: Authorization,
         errorHandler: AuthorizationErrorHandler = DefaultAuthorizationErrorHandler(),
-        jsonDecoder: JSONDecoder = .init()
+        decoder: DataDecoder = JSONDecoder()
     ) {
         
         self.baseURL = baseURL
         self.session = session
         self.authorization = authorization
         self.errorHandler = errorHandler
-        self.jsonDecoder = jsonDecoder
+        self.decoder = decoder
     }
 }
 
@@ -54,18 +54,18 @@ extension AuthorizingNetworkController where Authorization == EmptyAuthorization
     /// - Parameters:
     ///   - baseURL: The `baseURL` the `AuthorizingNetworkController` uses to resolve requests.
     ///   - session: The `session` the `AuthorizingNetworkController` uses to fetch the request `Data`.
-    ///   - jsonDecoder: The `JSONDecoder` the `AuthorizingNetworkController` uses to decode JSON data returned by requests.
+    ///   - decoder: The `DataDecoder` provided to `NetworkRequest` `transform` methods used to convert any `Data`.
     public init(
         baseURL: URL,
         session: NetworkSession = URLSession.shared,
-        jsonDecoder: JSONDecoder = .init()
+        decoder: DataDecoder = JSONDecoder()
     ) {
         
         self.baseURL = baseURL
         self.session = session
         self.authorization = EmptyAuthorizationProvider()
         self.errorHandler = DefaultAuthorizationErrorHandler()
-        self.jsonDecoder = jsonDecoder
+        self.decoder = decoder
     }
 }
 
@@ -174,7 +174,7 @@ extension AuthorizingNetworkController {
         let transformedContents = try request.transform(
             data: dataResponse.content,
             statusCode: dataResponse.statusCode,
-            using: jsonDecoder
+            using: decoder
         )
         
         let transformedResponse = NetworkResponse(

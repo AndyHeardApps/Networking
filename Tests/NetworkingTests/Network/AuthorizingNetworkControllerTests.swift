@@ -9,7 +9,7 @@ final class AuthorizingNetworkControllerTests: XCTestCase {
     private var authorizationProvider: MockAuthorizationProvider!
     private var authorizationErrorHandler: MockAuthorizationErrorHandler!
     private var networkController: AuthorizingNetworkController<MockAuthorizationProvider>!
-    private var jsonDecoder: JSONDecoder!
+    private var decoder: DataDecoder!
 }
 
 // MARK: - Setup
@@ -21,13 +21,13 @@ extension AuthorizingNetworkControllerTests {
         self.networkSession = MockNetworkSession()
         self.authorizationProvider = MockAuthorizationProvider()
         self.authorizationErrorHandler = MockAuthorizationErrorHandler()
-        self.jsonDecoder = JSONDecoder()
+        self.decoder = JSONDecoder()
         self.networkController = AuthorizingNetworkController(
             baseURL: baseURL,
             session: networkSession,
             authorization: authorizationProvider,
             errorHandler: authorizationErrorHandler,
-            jsonDecoder: jsonDecoder
+            decoder: decoder
         )
     }
     
@@ -36,7 +36,7 @@ extension AuthorizingNetworkControllerTests {
         
         self.networkSession = nil
         self.authorizationProvider = nil
-        self.jsonDecoder = nil
+        self.decoder = nil
         self.authorizationErrorHandler = nil
         self.networkController = nil
     }
@@ -95,7 +95,7 @@ extension AuthorizingNetworkControllerTests {
         let networkController = AuthorizingNetworkController(
             baseURL: baseURL,
             session: networkSession,
-            jsonDecoder: jsonDecoder
+            decoder: decoder
         )
 
         _ = try await networkController.fetchResponse(request)
@@ -124,12 +124,12 @@ extension AuthorizingNetworkControllerTests {
         
         var transformData: Data?
         var transformStatusCode: HTTPStatusCode?
-        var transformJsonDecoder: JSONDecoder?
-        let request = MockNetworkRequest { data, statusCode, jsonDecoder in
+        var transformDecoder: DataDecoder?
+        let request = MockNetworkRequest { data, statusCode, decoder in
             
             transformData = data
             transformStatusCode = statusCode
-            transformJsonDecoder = jsonDecoder
+            transformDecoder = decoder
             return data + data
         }
         
@@ -142,7 +142,7 @@ extension AuthorizingNetworkControllerTests {
         
         XCTAssertEqual(transformData, expectedResponse.content)
         XCTAssertEqual(transformStatusCode, expectedResponse.statusCode)
-        XCTAssertTrue(transformJsonDecoder === jsonDecoder)
+        XCTAssertTrue(transformDecoder is JSONDecoder)
         
         XCTAssertEqual(response.content, responseData + responseData)
         XCTAssertEqual(response.statusCode, expectedResponse.statusCode)
