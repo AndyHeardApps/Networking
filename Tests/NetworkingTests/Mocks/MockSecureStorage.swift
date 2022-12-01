@@ -3,7 +3,7 @@
 final class MockSecureStorage {
     
     // MARK: - Properties
-    private var storage: [String : String] = [:]
+    private(set) var storage: [String : String] = [:]
 }
 
 // MARK: - Secure storage

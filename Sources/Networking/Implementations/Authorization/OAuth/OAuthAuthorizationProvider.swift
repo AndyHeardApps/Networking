@@ -1,10 +1,12 @@
 import Foundation
 
-/// An `AuthorizationProvider` that implements the OAuth method of using access and refresh tokens.
-public struct OAuthAuthorizationProvider<AuthorizationRequest: OAuthAuthorizationRequest, ReauthorizationRequest: OAuthReauthorizationRequest>  {
+public struct OAuthAuthorizationProvider<AuthorizationRequest, ReauthorizationRequest>
+where AuthorizationRequest: OAuthAuthorizationRequest,
+      ReauthorizationRequest: OAuthReauthorizationRequest
+{
     
     // MARK: - Properties
-    private let storage: SecureStorage
+    let storage: SecureStorage
     
     // MARK: - Initialisers
     init(storage: SecureStorage) {
@@ -12,16 +14,35 @@ public struct OAuthAuthorizationProvider<AuthorizationRequest: OAuthAuthorizatio
         self.storage = storage
     }
     
-    /// Creates a new `OAuthAuthorizationProvider` instance, using the keychain to store tokens.
     public init() {
         
         self.storage = KeychainSecureStorage(key: OAuthAuthorizationProviderStorageKey.storage)
     }
 }
 
-// MARK: - Authorization provider
-extension OAuthAuthorizationProvider: AuthorizationProvider {
-
+// MARK: - Reauthorization provider
+extension OAuthAuthorizationProvider: ReauthorizationProvider {
+    
+    public func authorize<Request: NetworkRequest>(_ request: Request) -> any NetworkRequest<Request.ResponseType> {
+        
+        var headers = request.headers ?? [:]
+        if let accessToken = storage[OAuthAuthorizationProviderStorageKey.accessToken] {
+            headers[OAuthAuthorizationProviderStorageKey.authorizationHeader] = "Bearer \(accessToken)"
+        }
+        
+        let request = AnyRequest(
+            httpMethod: request.httpMethod,
+            pathComponents: request.pathComponents,
+            headers: headers,
+            queryItems: request.queryItems,
+            body: request.body,
+            requiresAuthorization: request.requiresAuthorization,
+            transform: request.transform
+        )
+        
+        return request
+    }
+    
     public func makeReauthorizationRequest() -> ReauthorizationRequest? {
         
         guard let refreshToken = storage[OAuthAuthorizationProviderStorageKey.refreshToken] else {
@@ -51,26 +72,6 @@ extension OAuthAuthorizationProvider: AuthorizationProvider {
         if let newRefreshToken = request.refreshToken(from: reauthorizationResponse) {
             storage[OAuthAuthorizationProviderStorageKey.refreshToken] = newRefreshToken
         }
-    }
-    
-    public func authorize<Request: NetworkRequest>(_ request: Request) -> any NetworkRequest<Request.ResponseType> {
-        
-        var headers = request.headers ?? [:]
-        if let accessToken = storage[OAuthAuthorizationProviderStorageKey.accessToken] {
-            headers[OAuthAuthorizationProviderStorageKey.authorizationHeader] = "Bearer \(accessToken)"
-        }
-        
-        let request = AnyRequest(
-            httpMethod: request.httpMethod,
-            pathComponents: request.pathComponents,
-            headers: headers,
-            queryItems: request.queryItems,
-            body: request.body,
-            requiresAuthorization: request.requiresAuthorization,
-            transform: request.transform
-        )
-        
-        return request
     }
 }
 

@@ -22,6 +22,7 @@ extension OAuthAuthorizationProviderTests {
         super.tearDown()
         
         self.secureStorage = nil
+        self.authorizationProvider = nil
     }
 }
 
@@ -224,5 +225,12 @@ extension OAuthAuthorizationProviderTests {
         XCTAssertEqual(authorizedRequest.queryItems, request.queryItems)
         XCTAssertEqual(authorizedRequest.body, request.body)
         XCTAssertEqual(authorizedRequest.requiresAuthorization, request.requiresAuthorization)
+    }
+    
+    func testInit_willUseKeychainBackedStorage() {
+        
+        authorizationProvider = OAuthAuthorizationProvider()
+        
+        XCTAssertTrue(authorizationProvider.storage is KeychainSecureStorage)
     }
 }

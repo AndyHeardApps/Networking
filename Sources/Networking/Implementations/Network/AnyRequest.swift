@@ -1,7 +1,6 @@
 import Foundation
 import Combine
 
-/// A type-erased request that can wrap any other request to allow for concrete `NetworkRequest` implementations to be passed around.
 public struct AnyRequest<ResponseType>: NetworkRequest {
     
     // MARK: Properties
