@@ -277,23 +277,26 @@ extension ReauthorizingNetworkControllerTests {
         }
         let response = NetworkResponse(
             content: UUID().uuidString.data(using: .utf8)!,
-            statusCode: .badRequest,
+            statusCode: .ok,
             headers: [:]
         )
-        errorHandler.result = .attemptReauthorization
+        errorHandler.shouldAttemptReauthorizationResult = true
+        authorizationProvider.authorizationFailsUntilReauthorizationRequestIsMade = true
         authorizationProvider.shouldMakeReauthorizationRequest = true
         networkSession.set(response: response, for: request)
         networkSession.setReauthorizationResponse()
 
         _ = try? await networkController.fetchResponse(request)
 
-        XCTAssertEqual(errorHandler.recievedResponse?.content, response.content)
-        XCTAssertEqual(errorHandler.recievedError as? HTTPStatusCode, .badRequest)
+        XCTAssertEqual(errorHandler.recievedAttemptReauthorizationResponse?.content.isEmpty, true)
+        XCTAssertEqual(errorHandler.recievedAttemptReauthorizationError as? HTTPStatusCode, .unauthorized)
+        XCTAssertNil(errorHandler.recievedMappingResponse)
+        XCTAssertNil(errorHandler.recievedMappingError)
         XCTAssertTrue(authorizationProvider.makeReauthorizationRequestWasCalled)
         XCTAssertEqual(networkSession.receivedRequests.count, 3)
     }
 
-    func testFetchResponse_willThrowErrorReturnedByErrorHandler() async throws {
+    func testFetchResponse_willThrowErrorReturnedByErrorHandler_whenInitialRequestFails() async throws {
 
         let request = MockNetworkRequest { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
@@ -303,7 +306,8 @@ extension ReauthorizingNetworkControllerTests {
             statusCode: .badRequest,
             headers: [:]
         )
-        errorHandler.result = .error(MockError())
+        errorHandler.shouldAttemptReauthorizationResult = false
+        errorHandler.mapResult = MockError()
         networkSession.set(response: response, for: request)
 
         do {
@@ -311,14 +315,46 @@ extension ReauthorizingNetworkControllerTests {
             XCTFail()
         } catch {
 
-            XCTAssertEqual(errorHandler.recievedResponse?.content, response.content)
-            XCTAssertEqual(errorHandler.recievedError as? HTTPStatusCode, .badRequest)
+            XCTAssertEqual(errorHandler.recievedAttemptReauthorizationResponse?.content, response.content)
+            XCTAssertEqual(errorHandler.recievedAttemptReauthorizationError as? HTTPStatusCode, .badRequest)
+            XCTAssertEqual(errorHandler.recievedMappingResponse?.content, response.content)
+            XCTAssertEqual(errorHandler.recievedMappingError as? HTTPStatusCode, .badRequest)
             XCTAssertTrue(error is MockError)
             XCTAssertFalse(authorizationProvider.makeReauthorizationRequestWasCalled)
             XCTAssertEqual(networkSession.receivedRequests.count, 1)
         }
     }
-    
+
+    func testFetchResponse_willThrowErrorReturnedByErrorHandler_whenRetriedRequestFails() async throws {
+
+        let request = MockNetworkRequest { _, statusCode, _ in
+            guard statusCode == .ok else { throw statusCode }
+        }
+        let response = NetworkResponse(
+            content: UUID().uuidString.data(using: .utf8)!,
+            statusCode: .badRequest,
+            headers: [:]
+        )
+        errorHandler.shouldAttemptReauthorizationResult = true
+        errorHandler.mapResult = MockError()
+        networkSession.set(response: response, for: request)
+        networkSession.setReauthorizationResponse()
+
+        do {
+            _ = try await networkController.fetchResponse(request)
+            XCTFail()
+        } catch {
+
+            XCTAssertEqual(errorHandler.recievedAttemptReauthorizationResponse?.content, response.content)
+            XCTAssertEqual(errorHandler.recievedAttemptReauthorizationError as? HTTPStatusCode, .badRequest)
+            XCTAssertEqual(errorHandler.recievedMappingResponse?.content, response.content)
+            XCTAssertEqual(errorHandler.recievedMappingError as? HTTPStatusCode, .badRequest)
+            XCTAssertTrue(error is MockError)
+            XCTAssertTrue(authorizationProvider.makeReauthorizationRequestWasCalled)
+            XCTAssertEqual(networkSession.receivedRequests.count, 3)
+        }
+    }
+
     func testFetchResponse_willUseAuthorizationProvider_toReauthorizeRequest_whenFirstAttemptThrowsUnauthorizedStatusCode_andErrorHandlerIsNil_andRetryRequestIsSuccessfullyCreated() async throws {
 
         let request = MockNetworkRequest { _, statusCode, _ in
@@ -391,7 +427,6 @@ extension ReauthorizingNetworkControllerTests {
             statusCode: .badRequest,
             headers: [:]
         )
-        errorHandler.result = .error(MockError())
         networkSession.set(response: response, for: request)
 
         networkController = ReauthorizingNetworkController(
@@ -408,8 +443,10 @@ extension ReauthorizingNetworkControllerTests {
             XCTFail()
         } catch {
 
-            XCTAssertNil(errorHandler.recievedResponse)
-            XCTAssertNil(errorHandler.recievedError)
+            XCTAssertNil(errorHandler.recievedAttemptReauthorizationResponse)
+            XCTAssertNil(errorHandler.recievedAttemptReauthorizationError)
+            XCTAssertNil(errorHandler.recievedMappingResponse)
+            XCTAssertNil(errorHandler.recievedMappingError)
             XCTAssertEqual(error as? HTTPStatusCode, .badRequest)
             XCTAssertFalse(authorizationProvider.makeReauthorizationRequestWasCalled)
             XCTAssertEqual(networkSession.receivedRequests.count, 1)
@@ -427,8 +464,10 @@ extension ReauthorizingNetworkControllerTests {
             XCTFail()
         } catch {
 
-            XCTAssertNil(errorHandler.recievedError)
-            XCTAssertNil(errorHandler.recievedResponse)
+            XCTAssertNil(errorHandler.recievedAttemptReauthorizationResponse)
+            XCTAssertNil(errorHandler.recievedAttemptReauthorizationError)
+            XCTAssertNil(errorHandler.recievedMappingResponse)
+            XCTAssertNil(errorHandler.recievedMappingError)
             XCTAssertTrue(error is MockNetworkSession.SampleError)
             XCTAssertFalse(authorizationProvider.makeReauthorizationRequestWasCalled)
             XCTAssertEqual(networkSession.receivedRequests.count, 1)

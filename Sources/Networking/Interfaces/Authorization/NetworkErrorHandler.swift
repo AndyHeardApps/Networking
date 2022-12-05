@@ -1,0 +1,18 @@
+import Foundation
+
+/// Describes a type that handles errors produced by a ``NetworkController``.
+///
+/// Implementations of this protocol define a function that accepts an `Error` and the ``NetworkResponse`` containing `Data` that caused the error to be thrown, and attempts to extract more information and map it into a more detailed `Error` type. Usually the data in in the ``NetworkResponse/content`` can be used to extract an error message or futher information on the failure, that can then be passed on in another error.
+public protocol NetworkErrorHandler {
+    
+    // MARK: - Functions
+    
+    /// Attempts to map an `Error` and the ``NetworkResponse`` that caused it to be thrown into a more detailed error.
+    ///
+    /// This function should use the provided `error` and `response` to extract additional information that can explain why the error was thrown, and return an `Error` type containing that information.
+    /// - Parameters:
+    ///   - error: The error that has been thrown by some request, and needs handling.
+    ///   - response: The response that the request produced, potentially containing further details about what went wrong.
+    /// - Returns: An error containing as much information on the request failure as possible. As a minium, the provided error should be returned if no more information can be extracted from the response.
+    func map(_ error: Error, from response: NetworkResponse<Data>) -> Error
+}

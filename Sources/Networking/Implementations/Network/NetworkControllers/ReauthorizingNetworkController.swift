@@ -12,7 +12,7 @@ public struct ReauthorizingNetworkController<Authorization: ReauthorizationProvi
     
     public let decoder: DataDecoder
     
-    public let errorHandler: (any NetworkErrorHandler<ReauthorizationErrorHandlerResult>)?
+    public let errorHandler: ReauthorizationNetworkErrorHandler?
     
     public let universalHeaders: [String : String]?
     
@@ -23,7 +23,7 @@ public struct ReauthorizingNetworkController<Authorization: ReauthorizationProvi
         session: NetworkSession = URLSession.shared,
         authorization: Authorization,
         decoder: DataDecoder = JSONDecoder(),
-        errorHandler: (any NetworkErrorHandler<ReauthorizationErrorHandlerResult>)? = nil,
+        errorHandler: ReauthorizationNetworkErrorHandler? = nil,
         universalHeaders: [String : String]? = nil
     ) {
         
@@ -40,6 +40,14 @@ public struct ReauthorizingNetworkController<Authorization: ReauthorizationProvi
 extension ReauthorizingNetworkController: NetworkController {
     
     public func fetchResponse<Request: NetworkRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType> {
+        
+        try await fetchResponse(request, shouldAttemptReauthorization: true)
+    }
+    
+    public func fetchResponse<Request: NetworkRequest>(
+        _ request: Request,
+        shouldAttemptReauthorization: Bool
+    ) async throws -> NetworkResponse<Request.ResponseType> {
         
         let requestWithUniversalHeaders = add(universalHeaders: universalHeaders, to: request)
         let authorizedRequest = authorize(request: requestWithUniversalHeaders)
@@ -66,7 +74,12 @@ extension ReauthorizingNetworkController: NetworkController {
             
         } catch {
             
-            switch handle(error, from: dataResponse) {
+            let errorHandlingResult = handle(
+                error,
+                from: dataResponse,
+                shouldAttemptReauthorization: shouldAttemptReauthorization
+            )
+            switch errorHandlingResult {
             case .attemptReauthorization:
                 break
                 
@@ -77,21 +90,9 @@ extension ReauthorizingNetworkController: NetworkController {
             
             try await reauthorize()
             
-            let reauthorizedRequest = authorize(request: requestWithUniversalHeaders)
-            let dataResponse = try await session.submit(
-                request: reauthorizedRequest,
-                to: baseURL
-            )
-            
-            let response = try transform(
-                dataResponse: dataResponse,
-                from: request,
-                using: decoder
-            )
-            
-            extractAuthorizationContent(
-                from: response,
-                returnedBy: request
+            let response = try await fetchResponse(
+                request,
+                shouldAttemptReauthorization: false
             )
             
             return response
@@ -114,22 +115,39 @@ extension ReauthorizingNetworkController {
     }
 }
 
-// MARK: - Error handler
+// MARK: - Error handling
 extension ReauthorizingNetworkController {
+
+    private enum ErrorHandlingResult {
+        
+        case attemptReauthorization
+        case error(Error)
+    }
     
-    private func handle(_ error: Error, from response: NetworkResponse<Data>) -> ReauthorizationErrorHandlerResult {
+    private func handle(
+        _ error: Error,
+        from response: NetworkResponse<Data>,
+        shouldAttemptReauthorization: Bool
+    ) -> ErrorHandlingResult {
         
-        if let errorHandler {
-            return errorHandler.handle(error, from: response)
-        }
-        
-        switch error {
-        case HTTPStatusCode.unauthorized:
+        switch (shouldAttemptReauthorization, errorHandler) {
+        case (true, let errorHandler?):
+            guard errorHandler.shouldAttemptReauthorization(afterCatching: error, from: response) else {
+                let mappedError = errorHandler.map(error, from: response)
+                return .error(mappedError)
+            }
+            return .attemptReauthorization
+
+        case (false, let errorHandler?):
+            let mappedError = errorHandler.map(error, from: response)
+            return .error(mappedError)
+
+        case (true, nil) where error as? HTTPStatusCode == .unauthorized:
             return .attemptReauthorization
             
-        default:
+        case (_, nil):
             return .error(error)
-            
+
         }
     }
 }
@@ -152,10 +170,16 @@ extension ReauthorizingNetworkController {
             request: requestWithUniversalHeaders,
             to: baseURL
         )
-        _ = try transform(
+        
+        let reauthorizationResponse = try transform(
             dataResponse: dataResponse,
             from: reauthorizationRequest,
             using: decoder
+        )
+        
+        extractAuthorizationContent(
+            from: reauthorizationResponse,
+            returnedBy: reauthorizationRequest
         )
     }
 }

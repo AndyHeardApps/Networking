@@ -4,19 +4,31 @@ import Networking
 final class MockReauthorizationNetworkErrorHandler {
 
     // MARK: - Properties
-    private(set) var recievedError: Error?
-    private(set) var recievedResponse: NetworkResponse<Data>?
-    var result: ReauthorizationErrorHandlerResult = .attemptReauthorization
+    private(set) var recievedMappingError: Error?
+    private(set) var recievedMappingResponse: NetworkResponse<Data>?
+    var mapResult: Error!
+    
+    private(set) var recievedAttemptReauthorizationError: Error?
+    private(set) var recievedAttemptReauthorizationResponse: NetworkResponse<Data>?
+    var shouldAttemptReauthorizationResult = true
 }
 
 // MARK: - Network error handler
-extension MockReauthorizationNetworkErrorHandler: NetworkErrorHandler {
+extension MockReauthorizationNetworkErrorHandler: ReauthorizationNetworkErrorHandler {
 
-    func handle(_ error: Error, from response: NetworkResponse<Data>) -> ReauthorizationErrorHandlerResult {
+    func map(_ error: Error, from response: NetworkResponse<Data>) -> Error {
 
-        recievedError = error
-        recievedResponse = response
+        recievedMappingError = error
+        recievedMappingResponse = response
 
-        return result
+        return mapResult
+    }
+    
+    func shouldAttemptReauthorization(afterCatching error: Error, from response: NetworkResponse<Data>) -> Bool {
+        
+        recievedAttemptReauthorizationError = error
+        recievedAttemptReauthorizationResponse = response
+        
+        return shouldAttemptReauthorizationResult
     }
 }

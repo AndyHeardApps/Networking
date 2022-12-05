@@ -12,7 +12,7 @@ public struct AuthorizingNetworkController<Authorization: AuthorizationProvider>
     
     public let decoder: DataDecoder
     
-    public let errorHandler: (any NetworkErrorHandler<Error>)?
+    public let errorHandler: NetworkErrorHandler?
 
     public let universalHeaders: [String : String]?
     
@@ -23,7 +23,7 @@ public struct AuthorizingNetworkController<Authorization: AuthorizationProvider>
         session: NetworkSession = URLSession.shared,
         authorization: Authorization,
         decoder: DataDecoder = JSONDecoder(),
-        errorHandler: (any NetworkErrorHandler<Error>)? = nil,
+        errorHandler: NetworkErrorHandler? = nil,
         universalHeaders: [String : String]? = nil
     ) {
         
@@ -72,12 +72,12 @@ extension AuthorizingNetworkController: NetworkController {
                 throw error
             }
             
-            let handledError = errorHandler.handle(
+            let mappedError = errorHandler.map(
                 error,
                 from: dataResponse
             )
             
-            throw handledError
+            throw mappedError
         }
     }
 }
