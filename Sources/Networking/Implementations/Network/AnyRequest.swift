@@ -1,6 +1,8 @@
 import Foundation
-import Combine
 
+/// A type erased ``NetworkRequest``.
+///
+/// **Note:** This is no longer widely used since the introduction of existential types in Swift.
 public struct AnyRequest<ResponseType>: NetworkRequest {
     
     // MARK: Properties

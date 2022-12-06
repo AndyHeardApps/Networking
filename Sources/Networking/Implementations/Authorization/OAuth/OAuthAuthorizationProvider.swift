@@ -1,5 +1,10 @@
 import Foundation
 
+/// A `ReauthorizationProvider` that implements the OAuth method of using access and refresh tokens. It makes use of the ``OAuthAuthorizationRequest`` and ``OAuthReauthorizationRequest`` types to delegate the extraction of tokens back to the API specific requests.
+///
+/// The `AuthorizationRequest` is usually the login request that returns access and refresh tokens, and the `ReauthorizationRequest` is usually the request that uses the refresh token to retrieve a new token pair.
+///
+/// Tokens are stored in the keychain by default under the keys `com.AndyHeardApps.Networking.oauthStorage.oauth.accessToken` and `com.AndyHeardApps.Networking.oauthStorage.oauth.accessToken`. They are not removed on logout.
 public struct OAuthAuthorizationProvider<AuthorizationRequest, ReauthorizationRequest>
 where AuthorizationRequest: OAuthAuthorizationRequest,
       ReauthorizationRequest: OAuthReauthorizationRequest
@@ -14,6 +19,7 @@ where AuthorizationRequest: OAuthAuthorizationRequest,
         self.storage = storage
     }
     
+    /// Creates a new `OAuthAuthorizationProvider` instance, using the keychain to store tokens.
     public init() {
         
         self.storage = KeychainSecureStorage(key: OAuthAuthorizationProviderStorageKey.storage)
@@ -25,11 +31,13 @@ extension OAuthAuthorizationProvider: ReauthorizationProvider {
     
     public func authorize<Request: NetworkRequest>(_ request: Request) -> any NetworkRequest<Request.ResponseType> {
         
-        var headers = request.headers ?? [:]
-        if let accessToken = storage[OAuthAuthorizationProviderStorageKey.accessToken] {
-            headers[OAuthAuthorizationProviderStorageKey.authorizationHeader] = "Bearer \(accessToken)"
+        guard let accessToken = storage[OAuthAuthorizationProviderStorageKey.accessToken] else {
+            return request
         }
         
+        var headers = request.headers ?? [:]
+        headers[OAuthAuthorizationProviderStorageKey.authorizationHeader] = "Bearer \(accessToken)"
+
         let request = AnyRequest(
             httpMethod: request.httpMethod,
             pathComponents: request.pathComponents,

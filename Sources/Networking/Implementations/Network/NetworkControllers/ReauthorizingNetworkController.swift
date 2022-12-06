@@ -88,7 +88,10 @@ extension ReauthorizingNetworkController: NetworkController {
                 
             }
             
-            try await reauthorize()
+            try await reauthorize(
+                afterError: error,
+                from: dataResponse
+            )
             
             let response = try await fetchResponse(
                 request,
@@ -155,32 +158,44 @@ extension ReauthorizingNetworkController {
 // MARK: - Reauthorization
 extension ReauthorizingNetworkController {
     
-    private func reauthorize() async throws {
+    private func reauthorize(
+        afterError originalError: Error,
+        from originalResponse: NetworkResponse<Data>
+    ) async throws {
         
-        guard
-            let reauthorizationRequest = authorization.makeReauthorizationRequest(),
-            !reauthorizationRequest.requiresAuthorization
-        else {
-            throw HTTPStatusCode.unauthorized
+        do {
+            guard
+                let reauthorizationRequest = authorization.makeReauthorizationRequest(),
+                !reauthorizationRequest.requiresAuthorization
+            else {
+                throw originalError
+            }
+            
+            let requestWithUniversalHeaders = add(universalHeaders: universalHeaders, to: reauthorizationRequest)
+            
+            let dataResponse = try await session.submit(
+                request: requestWithUniversalHeaders,
+                to: baseURL
+            )
+            
+            let reauthorizationResponse = try transform(
+                dataResponse: dataResponse,
+                from: reauthorizationRequest,
+                using: decoder
+            )
+            
+            extractAuthorizationContent(
+                from: reauthorizationResponse,
+                returnedBy: reauthorizationRequest
+            )
+        } catch {
+            guard let errorHandler else {
+                throw originalError
+            }
+            
+            let mappedError = errorHandler.map(originalError, from: originalResponse)
+            throw mappedError
         }
-        
-        let requestWithUniversalHeaders = add(universalHeaders: universalHeaders, to: reauthorizationRequest)
-        
-        let dataResponse = try await session.submit(
-            request: requestWithUniversalHeaders,
-            to: baseURL
-        )
-        
-        let reauthorizationResponse = try transform(
-            dataResponse: dataResponse,
-            from: reauthorizationRequest,
-            using: decoder
-        )
-        
-        extractAuthorizationContent(
-            from: reauthorizationResponse,
-            returnedBy: reauthorizationRequest
-        )
     }
 }
 

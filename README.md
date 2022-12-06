@@ -87,7 +87,7 @@ When the `ResponseType` of these requests is returned to a `NetworkController`, 
 
 This authorization is done by the `authorize` function, which accepts some `NetworkController` and uses it to build and return a type-erased `AnyRequest` with whatever authorization credentials that may be required.
 
-When a `NetworkController` encounters a `401 unauthorized` `HTTPStatusCode`, then it will ask for a reauthorization request from the `AuthorizationProvider` using the `makeReauthorizationRequest`. If one is returned, then reauthorization is automatically attempted before retrying the initial failed request. 
+When a `NetworkController` encounters a `401 unauthorized` `HTTPStatusCode`, then it will ask for a reauthorization request from the `AuthorizationProvider` using the `makeReauthorizationRequest`. If one is returned, then reauthorization is attempted before retrying the initial failed request. 
 
 **NOTE**: The reauthorization request must return `false` for `requiresAuthorization`.
 
