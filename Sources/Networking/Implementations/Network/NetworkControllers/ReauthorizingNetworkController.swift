@@ -37,7 +37,7 @@ public struct ReauthorizingNetworkController<Authorization: ReauthorizationProvi
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
     ///   - session: The ``NetworkSession`` the controller will use.
-    ///   - authorization: The ``ReauthorizationProvider``to use to authorize requests.
+    ///   - authorization: The ``ReauthorizationProvider`` to use to authorize requests.
     ///   - decoder: The ``DataDecoder`` the controller will hand to requests for decoding.
     ///   - errorHandler: The ``ReauthorizationNetworkErrorHandler`` that can be used to manipulate errors before they are thrown, and decide whether reauthorization should be attempted.
     ///   - universalHeaders: The headers applied to every request submitted.

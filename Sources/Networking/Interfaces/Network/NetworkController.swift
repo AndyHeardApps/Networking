@@ -17,7 +17,7 @@ public protocol NetworkController {
 // MARK: - Convenienc method
 extension NetworkController {
     
-    /// Fetches the response contents for a given ``NetworkRequest``. This is a convenience method fo when the ``NetworkResponse/headers`` and ``NetworkResponse/statusCode``of a ``NetworkResponse`` are not needed.
+    /// Fetches the response contents for a given ``NetworkRequest``. This is a convenience method fo when the ``NetworkResponse/headers`` and ``NetworkResponse/statusCode`` of a ``NetworkResponse`` are not needed.
     /// - Parameter request: The ``NetworkRequest`` to be submitted.
     /// - Returns: The ``NetworkResponse/content`` returned by the `request`.
     /// - Throws: Any errors that occurred when fetching the response. Usually this is a network or decoding error. See ``HTTPStatusCode``.

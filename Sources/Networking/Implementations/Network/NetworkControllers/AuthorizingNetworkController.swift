@@ -35,7 +35,7 @@ public struct AuthorizingNetworkController<Authorization: AuthorizationProvider>
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
     ///   - session: The ``NetworkSession`` the controller will use.
-    ///   - authorization: The ``AuthorizationProvider``to use to authorize requests.
+    ///   - authorization: The ``AuthorizationProvider`` to use to authorize requests.
     ///   - decoder: The ``DataDecoder`` the controller will hand to requests for decoding.
     ///   - errorHandler: The ``NetworkErrorHandler`` that can be used to manipulate errors before they are thrown.
     ///   - universalHeaders: The headers applied to every request submitted.

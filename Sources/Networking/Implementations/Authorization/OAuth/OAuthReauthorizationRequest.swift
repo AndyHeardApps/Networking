@@ -1,7 +1,7 @@
 
 /// A request type that can be constructed with a refresh token, that is then used to reauthorize the client by fetching new OAuth tokens.
 ///
-/// Implementations should return `false` for the ``requiresAuthorization`` property.
+/// Implementations should return `false` for the ``NetworkRequest/requiresAuthorization`` property.
 public protocol OAuthReauthorizationRequest: OAuthAuthorizationRequest {
     
     // MARK: - Initialisers
