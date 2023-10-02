@@ -48,31 +48,31 @@ extension HTTPMethod {
         
         switch self {
         case .get:
-            return "GET"
+            "GET"
             
         case .head:
-            return "HEAD"
+            "HEAD"
             
         case .post:
-            return "POST"
+            "POST"
             
         case .put:
-            return "PUT"
+            "PUT"
             
         case .delete:
-            return "DELETE"
+            "DELETE"
             
         case .connect:
-            return "CONNECT"
+            "CONNECT"
             
         case .options:
-            return "OPTIONS"
+            "OPTIONS"
             
         case .trace:
-            return "TRACE"
+            "TRACE"
             
         case .patch:
-            return "PATCH"
+            "PATCH"
             
         }
     }
