@@ -2,6 +2,9 @@ import Foundation
 
 extension URLSession: NetworkSession {
     
+    /// The `JSONEncoder` used to encode the bodies of all `NetworkRequest`s submitted to the `URLSession`.
+    public static var bodyEncoder = JSONEncoder()
+    
     public func submit<Request: NetworkRequest>(request: Request, to baseURL: URL) async throws -> NetworkResponse<Data> {
 
         let urlRequest = try self.urlRequest(for: request, withBaseURL: baseURL)
@@ -35,7 +38,7 @@ extension URLSession {
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = request.httpMethod.asString
         urlRequest.allHTTPHeaderFields = request.headers
-        urlRequest.httpBody = request.body
+        urlRequest.httpBody = try request.body.map(Self.bodyEncoder.encode)
         
         return urlRequest
     }

@@ -3,14 +3,14 @@ import Foundation
 /// A type erased ``NetworkRequest``.
 ///
 /// **Note:** This is no longer widely used since the introduction of existential types in Swift.
-public struct AnyRequest<ResponseType>: NetworkRequest {
+public struct AnyRequest<ResponseType, Body: Encodable>: NetworkRequest {
     
     // MARK: Properties
     public let httpMethod: HTTPMethod
     public let pathComponents: [String]
     public let headers: [String : String]?
     public let queryItems: [String : String]?
-    public let body: Data?
+    public let body: Body?
     public let requiresAuthorization: Bool
     private let _transform: (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
     
@@ -20,7 +20,7 @@ public struct AnyRequest<ResponseType>: NetworkRequest {
         pathComponents: [String],
         headers: [String : String]?,
         queryItems: [String : String]?,
-        body: Data?,
+        body: Body?,
         requiresAuthorization: Bool,
         transform: @escaping (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
     ) {
@@ -33,7 +33,10 @@ public struct AnyRequest<ResponseType>: NetworkRequest {
         self._transform = transform
     }
     
-    public init<Request: NetworkRequest>(_ request: Request) where Self.ResponseType == Request.ResponseType {
+    public init<Request: NetworkRequest>(_ request: Request)
+    where Self.ResponseType == Request.ResponseType,
+          Self.Body == Request.Body
+    {
         
         self.httpMethod = request.httpMethod
         self.pathComponents = request.pathComponents

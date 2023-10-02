@@ -13,6 +13,9 @@ public protocol NetworkRequest<ResponseType> {
 
     /// The strongly typed response that this request returns.
     associatedtype ResponseType
+    
+    /// The object to be encoded to the body of the request.
+    associatedtype Body: Encodable = Never
 
     // MARK: - Properties
     
@@ -29,7 +32,7 @@ public protocol NetworkRequest<ResponseType> {
     var queryItems: [String : String]? { get }
     
     /// The body of the request.
-    var body: Data? { get }
+    var body: Body? { get }
     
     /// Whether or not the request will require authorization credentials attaching. If so, then ``AuthorizingNetworkController`` and ``ReauthorizingNetworkController`` types will authorize the request before submission.
     var requiresAuthorization: Bool { get }

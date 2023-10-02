@@ -128,12 +128,12 @@ extension URLSessionNetworkSessionTests {
                 + "?"
                 + request.queryItems!.map { "\($0)=\($1)" }.joined(separator: "/")
             var expectedHeaders = request.headers
-            expectedHeaders?["Content-Length"] = "36"
+            expectedHeaders?["Content-Length"] = "38"
             
             XCTAssertNotNil(receivedURLRequest)
             XCTAssertEqual(receivedURLRequest?.url?.absoluteString, expectedURLString)
             XCTAssertEqual(receivedURLRequest?.httpMethod, httpMethodString)
-            XCTAssertEqual(receivedURLRequest?.httpBody, request.body)
+            XCTAssertEqual(receivedURLRequest?.httpBody, try URLSession.bodyEncoder.encode(request.body))
             XCTAssertEqual(receivedURLRequest?.allHTTPHeaderFields, expectedHeaders)
         }
     }

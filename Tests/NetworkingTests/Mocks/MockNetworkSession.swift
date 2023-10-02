@@ -100,7 +100,7 @@ extension MockNetworkSession {
             self.httpMethod = request.httpMethod
             self.pathComponents = request.pathComponents
             self.queryItems = request.queryItems
-            self.body = request.body
+            self.body = try? JSONEncoder().encode(request.body)
             self.requiresAuthorization = request.requiresAuthorization
         }
     }

@@ -30,7 +30,7 @@ extension MockAuthorizationProvider: AuthorizationProvider {
             pathComponents: request.pathComponents,
             headers: headers,
             queryItems: request.queryItems,
-            body: request.body,
+            body: request.body as? UUID,
             requiresAuthorization: request.requiresAuthorization,
             transformClosure: request.transform
         )
