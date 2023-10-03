@@ -14,5 +14,8 @@ public protocol NetworkErrorHandler {
     ///   - error: The error that has been thrown by some request, and needs handling.
     ///   - response: The response that the request produced, potentially containing further details about what went wrong.
     /// - Returns: An error containing as much information on the request failure as possible. As a minium, the provided error should be returned if no more information can be extracted from the response.
-    func map(_ error: Error, from response: NetworkResponse<Data>) -> Error
+    func map(
+        _ error: Error,
+        from response: NetworkResponse<Data>
+    ) -> Error
 }

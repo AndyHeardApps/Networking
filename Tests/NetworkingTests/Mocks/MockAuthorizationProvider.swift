@@ -12,7 +12,10 @@ final class MockAuthorizationProvider {
 // MARK: - Authorization provider
 extension MockAuthorizationProvider: AuthorizationProvider {
     
-    func handle(authorizationResponse: NetworkResponse<MockAccessToken>, from request: MockNetworkRequest<MockAccessToken>) {
+    func handle(
+        authorizationResponse: NetworkResponse<MockAccessToken>,
+        from request: MockNetworkRequest<MockAccessToken>
+    ) {
         
         self.handledAuthorizationResponse = authorizationResponse
         self.handledAuthorizationResponseRequest = request

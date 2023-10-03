@@ -15,5 +15,8 @@ public protocol NetworkSession {
     ///   - baseURL: The base `URL` to submit the `request` against. This base `URL` will have the ``NetworkRequest/pathComponents`` and ``NetworkRequest/queryItems`` appended to build the full URL.
     /// - Returns: The ``NetworkResponse`` for the `request` containing raw `Data`.
     /// - Throws: Any network errors that occurred when fetching the request.
-    func submit<Request: NetworkRequest>(request: Request, to baseURL: URL) async throws -> NetworkResponse<Data>
+    func submit(
+        request: some NetworkRequest,
+        to baseURL: URL
+    ) async throws -> NetworkResponse<Data>
 }

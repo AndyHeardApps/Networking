@@ -58,7 +58,11 @@ extension MockNetworkRequest where ResponseType == Void {
 // MARK: - Transform
 extension MockNetworkRequest {
     
-    func transform(data: Data, statusCode: HTTPStatusCode, using decoder: DataDecoder) throws -> ResponseType {
+    func transform(
+        data: Data,
+        statusCode: HTTPStatusCode,
+        using decoder: DataDecoder
+    ) throws -> ResponseType {
         
         try transformClosure(data, statusCode, decoder)
     }

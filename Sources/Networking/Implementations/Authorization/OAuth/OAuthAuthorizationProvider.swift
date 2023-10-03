@@ -60,7 +60,10 @@ extension OAuthAuthorizationProvider: ReauthorizationProvider {
         return ReauthorizationRequest(refreshToken: refreshToken)
     }
     
-    public func handle(authorizationResponse: NetworkResponse<AuthorizationRequest.ResponseType>, from request: AuthorizationRequest) {
+    public func handle(
+        authorizationResponse: NetworkResponse<AuthorizationRequest.ResponseType>,
+        from request: AuthorizationRequest
+    ) {
         
         if let newAccessToken = request.accessToken(from: authorizationResponse) {
             storage[OAuthAuthorizationProviderStorageKey.accessToken] = newAccessToken
@@ -71,7 +74,10 @@ extension OAuthAuthorizationProvider: ReauthorizationProvider {
         }
     }
     
-    public func handle(reauthorizationResponse: NetworkResponse<ReauthorizationRequest.ResponseType>, from request: ReauthorizationRequest) {
+    public func handle(
+        reauthorizationResponse: NetworkResponse<ReauthorizationRequest.ResponseType>,
+        from request: ReauthorizationRequest
+    ) {
         
         if let newAccessToken = request.accessToken(from: reauthorizationResponse) {
             storage[OAuthAuthorizationProviderStorageKey.accessToken] = newAccessToken

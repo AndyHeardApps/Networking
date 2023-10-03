@@ -12,7 +12,10 @@ final class MockNetworkErrorHandler {
 // MARK: - Network error handler
 extension MockNetworkErrorHandler: NetworkErrorHandler {
     
-    func map(_ error: Error, from response: NetworkResponse<Data>) -> Error {
+    func map(
+        _ error: Error,
+        from response: NetworkResponse<Data>
+    ) -> Error {
         
         recievedError = error
         recievedResponse = response

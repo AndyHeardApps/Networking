@@ -14,7 +14,7 @@ public protocol NetworkController {
     func fetchResponse<Request: NetworkRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType>
 }
 
-// MARK: - Convenienc method
+// MARK: - Convenience method
 extension NetworkController {
     
     /// Fetches the response contents for a given ``NetworkRequest``. This is a convenience method fo when the ``NetworkResponse/headers`` and ``NetworkResponse/statusCode`` of a ``NetworkResponse`` are not needed.

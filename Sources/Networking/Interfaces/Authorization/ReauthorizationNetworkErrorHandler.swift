@@ -15,5 +15,8 @@ public protocol ReauthorizationNetworkErrorHandler: NetworkErrorHandler {
     ///   - error: The error thrown by a request.
     ///   - response: The response containing raw data that caused the request to throw an error.
     /// - Returns: Whether or not a ``ReauthorizingNetworkController`` should attempt reauthorization and resubmission of the failed request.
-    func shouldAttemptReauthorization(afterCatching error: Error, from response: NetworkResponse<Data>) -> Bool
+    func shouldAttemptReauthorization(
+        afterCatching error: Error,
+        from response: NetworkResponse<Data>
+    ) -> Bool
 }

@@ -10,7 +10,10 @@ public protocol DataDecoder {
     ///   - type: The type to attempt to decode.
     ///   - from: The raw `Data` that will be decoded.
     /// - Returns: The decoded object.
-    func decode<T: Decodable>(_ type: T.Type, from: Data) throws -> T
+    func decode<T: Decodable>(
+        _ type: T.Type,
+        from: Data
+    ) throws -> T
 }
 
 extension JSONDecoder: DataDecoder {}

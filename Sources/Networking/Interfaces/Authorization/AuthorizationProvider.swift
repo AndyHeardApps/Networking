@@ -26,5 +26,8 @@ public protocol AuthorizationProvider<AuthorizationRequest>  {
     /// - Parameters:
     ///   - authorizationResponse: A ``NetworkResponse``, potentially containing authorization credentials that can be extracted.
     ///   - request: The ``NetworkRequest`` that produced the `authorizationResponse`.
-    func handle(authorizationResponse: NetworkResponse<AuthorizationRequest.ResponseType>, from request: AuthorizationRequest)    
+    func handle(
+        authorizationResponse: NetworkResponse<AuthorizationRequest.ResponseType>,
+        from request: AuthorizationRequest
+    )    
 }

@@ -23,5 +23,8 @@ public protocol ReauthorizationProvider<AuthorizationRequest, ReauthorizationReq
     /// - Parameters:
     ///   - reauthorizationResponse: A ``NetworkResponse``, potentially containing authorization credentials that can be extracted.
     ///   - request: The ``NetworkRequest`` that produced the `reauthorizationResponse`.
-    func handle(reauthorizationResponse: NetworkResponse<ReauthorizationRequest.ResponseType>, from request: ReauthorizationRequest)
+    func handle(
+        reauthorizationResponse: NetworkResponse<ReauthorizationRequest.ResponseType>,
+        from request: ReauthorizationRequest
+    )
 }

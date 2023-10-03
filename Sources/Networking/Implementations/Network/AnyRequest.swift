@@ -48,7 +48,11 @@ public struct AnyRequest<ResponseType, Body: Encodable>: NetworkRequest {
     }
     
     // MARK: - Transform
-    public func transform(data: Data, statusCode: HTTPStatusCode, using decoder: DataDecoder) throws -> ResponseType {
+    public func transform(
+        data: Data,
+        statusCode: HTTPStatusCode,
+        using decoder: DataDecoder
+    ) throws -> ResponseType {
         
         try _transform(data, statusCode, decoder)
     }

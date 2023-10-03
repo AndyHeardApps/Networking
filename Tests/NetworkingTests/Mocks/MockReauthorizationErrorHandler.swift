@@ -16,7 +16,10 @@ final class MockReauthorizationNetworkErrorHandler {
 // MARK: - Network error handler
 extension MockReauthorizationNetworkErrorHandler: ReauthorizationNetworkErrorHandler {
 
-    func map(_ error: Error, from response: NetworkResponse<Data>) -> Error {
+    func map(
+        _ error: Error,
+        from response: NetworkResponse<Data>
+    ) -> Error {
 
         recievedMappingError = error
         recievedMappingResponse = response
@@ -24,7 +27,10 @@ extension MockReauthorizationNetworkErrorHandler: ReauthorizationNetworkErrorHan
         return mapResult
     }
     
-    func shouldAttemptReauthorization(afterCatching error: Error, from response: NetworkResponse<Data>) -> Bool {
+    func shouldAttemptReauthorization(
+        afterCatching error: Error,
+        from response: NetworkResponse<Data>
+    ) -> Bool {
         
         recievedAttemptReauthorizationError = error
         recievedAttemptReauthorizationResponse = response

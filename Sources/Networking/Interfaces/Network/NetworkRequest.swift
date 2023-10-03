@@ -8,7 +8,7 @@ import Foundation
 ///
 /// A ``NetworkRequest`` only defines ``pathComponents`` and ``queryItems`` and not a full `URL`. This is so that a `URL` can be constructed against some base `URL`, enabling the same request to be submitted against multiple environments, and to remove the opportunity to build a `URL` "stringily".
 ///
-/// Aim to keep any logic that is needed to construct the request in the initialisers. For instance, use a throwing initialiser and a `JSONEncoder` to encode JSON `Data` into the ``body``.
+/// Aim to keep any logic that is needed to construct the request in the initialisers.
 public protocol NetworkRequest<ResponseType> {
 
     /// The strongly typed response that this request returns.
@@ -48,5 +48,9 @@ public protocol NetworkRequest<ResponseType> {
     ///   - decoder: A ``DataDecoder`` provided by the calling ``NetworkController`` that can be used to decode the `Data`. This usually has API specific settings such as date decoding options. If the request "knows better" than to use this default decoder, then it should use some other instance.
     /// - Returns: The decoded object.
     /// - Throws: Any errors that occured during decoding. This is most likely to be an unexpeced ``HTTPStatusCode`` or a `DecodingError`.
-    func transform(data: Data, statusCode: HTTPStatusCode, using decoder: DataDecoder) throws -> ResponseType
+    func transform(
+        data: Data,
+        statusCode: HTTPStatusCode,
+        using decoder: DataDecoder
+    ) throws -> ResponseType
 }

@@ -28,7 +28,10 @@ extension NetworkController {
 // MARK: - Request modification
 extension NetworkController {
     
-    func add<Request: NetworkRequest>(universalHeaders: [String : String]?, to request: Request) -> any NetworkRequest<Request.ResponseType> {
+    func add<Request: NetworkRequest>(
+        universalHeaders: [String : String]?,
+        to request: Request
+    ) -> any NetworkRequest<Request.ResponseType> {
         
         guard let universalHeaders else {
             return request

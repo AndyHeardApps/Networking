@@ -39,13 +39,19 @@ extension MockReauthorizationProvider: ReauthorizationProvider {
         }
     }
     
-    func handle(authorizationResponse: NetworkResponse<MockAccessToken>, from request: MockNetworkRequest<MockAccessToken>) {
+    func handle(
+        authorizationResponse: NetworkResponse<MockAccessToken>,
+        from request: MockNetworkRequest<MockAccessToken>
+    ) {
         
         self.handledAuthorizationResponse = authorizationResponse
         self.handledAuthorizationResponseRequest = request
     }
     
-    func handle(reauthorizationResponse: NetworkResponse<MockRefreshToken>, from request: MockNetworkRequest<MockRefreshToken>) {
+    func handle(
+        reauthorizationResponse: NetworkResponse<MockRefreshToken>,
+        from request: MockNetworkRequest<MockRefreshToken>
+    ) {
         
         self.handledReauthorizationResponse = reauthorizationResponse
         self.handledReauthorizationResponseRequest = request
