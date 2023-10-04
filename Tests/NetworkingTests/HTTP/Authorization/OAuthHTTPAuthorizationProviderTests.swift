@@ -1,21 +1,21 @@
 import XCTest
 @testable import Networking
 
-final class OAuthAuthorizationProviderTests: XCTestCase {
+final class OAuthHTTPAuthorizationProviderTests: XCTestCase {
     
     // MARK: - Properties
     private var secureStorage: SecureStorage!
-    private var authorizationProvider: OAuthAuthorizationProvider<MockAuthorizationRequest, MockReauthorizationRequest>!
+    private var authorizationProvider: OAuthHTTPAuthorizationProvider<MockAuthorizationRequest, MockReauthorizationRequest>!
 }
 
 // MARK: - Setup
-extension OAuthAuthorizationProviderTests {
+extension OAuthHTTPAuthorizationProviderTests {
     
     override func setUp() {
         super.setUp()
         
         self.secureStorage = MockSecureStorage()
-        self.authorizationProvider = OAuthAuthorizationProvider(storage: secureStorage)
+        self.authorizationProvider = OAuthHTTPAuthorizationProvider(storage: secureStorage)
     }
     
     override func tearDown() {
@@ -27,9 +27,9 @@ extension OAuthAuthorizationProviderTests {
 }
 
 // MARK: - Mocks
-extension OAuthAuthorizationProviderTests {
+extension OAuthHTTPAuthorizationProviderTests {
     
-    private struct MockAuthorizationRequest: OAuthAuthorizationRequest {
+    private struct MockAuthorizationRequest: OAuthHTTPAuthorizationRequest {
         
         // Properties
         let httpMethod: HTTPMethod = .get
@@ -52,7 +52,7 @@ extension OAuthAuthorizationProviderTests {
         }
     }
     
-    private struct MockReauthorizationRequest: OAuthReauthorizationRequest {
+    private struct MockReauthorizationRequest: OAuthHTTPReauthorizationRequest {
         
         // Properties
         let httpMethod: HTTPMethod = .get
@@ -84,7 +84,7 @@ extension OAuthAuthorizationProviderTests {
 }
 
 // MARK: - Tests
-extension OAuthAuthorizationProviderTests {
+extension OAuthHTTPAuthorizationProviderTests {
  
     func testMakeReauthorizationRequest_willReturnNil_whenNoRefreshTokenIsAvailable() {
         
@@ -229,7 +229,7 @@ extension OAuthAuthorizationProviderTests {
     
     func testInit_willUseKeychainBackedStorage() {
         
-        authorizationProvider = OAuthAuthorizationProvider()
+        authorizationProvider = OAuthHTTPAuthorizationProvider()
         
         XCTAssertTrue(authorizationProvider.storage is KeychainSecureStorage)
     }

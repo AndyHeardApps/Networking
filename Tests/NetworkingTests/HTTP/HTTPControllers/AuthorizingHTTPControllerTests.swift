@@ -6,11 +6,11 @@ final class AuthorizingHTTPControllerTests: XCTestCase, HTTPControllerTestCase {
     // MARK: - Properties
     private let baseURL = URL(string: "https://example.domain.com")!
     private var httpSession: MockHTTPSession!
-    private var authorizationProvider: MockAuthorizationProvider!
+    private var authorizationProvider: MockHTTPAuthorizationProvider!
     private var decoder: DataDecoder!
     private var errorHandler: MockHTTPErrorHandler!
     private(set) var universalHeaders: [String : String]!
-    private var httpController: AuthorizingHTTPController<MockAuthorizationProvider>!
+    private var httpController: AuthorizingHTTPController<MockHTTPAuthorizationProvider>!
 }
 
 // MARK: - Setup
@@ -21,7 +21,7 @@ extension AuthorizingHTTPControllerTests {
 
         self.httpSession = MockHTTPSession()
         self.errorHandler = MockHTTPErrorHandler()
-        self.authorizationProvider = MockAuthorizationProvider()
+        self.authorizationProvider = MockHTTPAuthorizationProvider()
         self.decoder = JSONDecoder()
         self.universalHeaders = ["headerKey2" : "universalHeaderValue2"]
         self.httpController = AuthorizingHTTPController(

@@ -1,13 +1,13 @@
 import Foundation
 
-/// A `ReauthorizationProvider` that implements the OAuth method of using access and refresh tokens. It makes use of the ``OAuthAuthorizationRequest`` and ``OAuthReauthorizationRequest`` types to delegate the extraction of tokens back to the API specific requests.
+/// A `HTTPReauthorizationProvider` that implements the OAuth method of using access and refresh tokens. It makes use of the ``OAuthHTTPAuthorizationRequest`` and ``OAuthHTTPReauthorizationRequest`` types to delegate the extraction of tokens back to the API specific requests.
 ///
 /// The `AuthorizationRequest` is usually the login request that returns access and refresh tokens, and the `ReauthorizationRequest` is usually the request that uses the refresh token to retrieve a new token pair.
 ///
 /// Tokens are stored in the keychain by default under the keys `com.AndyHeardApps.Networking.oauthStorage.oauth.accessToken` and `com.AndyHeardApps.Networking.oauthStorage.oauth.accessToken`. They are not removed on logout.
-public struct OAuthAuthorizationProvider<AuthorizationRequest, ReauthorizationRequest>
-where AuthorizationRequest: OAuthAuthorizationRequest,
-      ReauthorizationRequest: OAuthReauthorizationRequest
+public struct OAuthHTTPAuthorizationProvider<AuthorizationRequest, ReauthorizationRequest>
+where AuthorizationRequest: OAuthHTTPAuthorizationRequest,
+      ReauthorizationRequest: OAuthHTTPReauthorizationRequest
 {
     
     // MARK: - Properties
@@ -19,24 +19,24 @@ where AuthorizationRequest: OAuthAuthorizationRequest,
         self.storage = storage
     }
     
-    /// Creates a new `OAuthAuthorizationProvider` instance, using the keychain to store tokens.
+    /// Creates a new ``OAuthHTTPAuthorizationProvider`` instance, using the keychain to store tokens.
     public init() {
         
-        self.storage = KeychainSecureStorage(key: OAuthAuthorizationProviderStorageKey.storage)
+        self.storage = KeychainSecureStorage(key: OAuthHTTPAuthorizationProviderStorageKey.storage)
     }
 }
 
-// MARK: - Reauthorization provider
-extension OAuthAuthorizationProvider: ReauthorizationProvider {
+// MARK: - HTTP Reauthorization provider
+extension OAuthHTTPAuthorizationProvider: HTTPReauthorizationProvider {
     
     public func authorize<Request: HTTPRequest>(_ request: Request) -> any HTTPRequest<Request.ResponseType> {
         
-        guard let accessToken = storage[OAuthAuthorizationProviderStorageKey.accessToken] else {
+        guard let accessToken = storage[OAuthHTTPAuthorizationProviderStorageKey.accessToken] else {
             return request
         }
         
         var headers = request.headers ?? [:]
-        headers[OAuthAuthorizationProviderStorageKey.authorizationHeader] = "Bearer \(accessToken)"
+        headers[OAuthHTTPAuthorizationProviderStorageKey.authorizationHeader] = "Bearer \(accessToken)"
 
         let request = AnyHTTPRequest(
             httpMethod: request.httpMethod,
@@ -53,7 +53,7 @@ extension OAuthAuthorizationProvider: ReauthorizationProvider {
     
     public func makeReauthorizationRequest() -> ReauthorizationRequest? {
         
-        guard let refreshToken = storage[OAuthAuthorizationProviderStorageKey.refreshToken] else {
+        guard let refreshToken = storage[OAuthHTTPAuthorizationProviderStorageKey.refreshToken] else {
             return nil
         }
         
@@ -66,11 +66,11 @@ extension OAuthAuthorizationProvider: ReauthorizationProvider {
     ) {
         
         if let newAccessToken = request.accessToken(from: authorizationResponse) {
-            storage[OAuthAuthorizationProviderStorageKey.accessToken] = newAccessToken
+            storage[OAuthHTTPAuthorizationProviderStorageKey.accessToken] = newAccessToken
         }
         
         if let newRefreshToken = request.refreshToken(from: authorizationResponse) {
-            storage[OAuthAuthorizationProviderStorageKey.refreshToken] = newRefreshToken
+            storage[OAuthHTTPAuthorizationProviderStorageKey.refreshToken] = newRefreshToken
         }
     }
     
@@ -80,17 +80,17 @@ extension OAuthAuthorizationProvider: ReauthorizationProvider {
     ) {
         
         if let newAccessToken = request.accessToken(from: reauthorizationResponse) {
-            storage[OAuthAuthorizationProviderStorageKey.accessToken] = newAccessToken
+            storage[OAuthHTTPAuthorizationProviderStorageKey.accessToken] = newAccessToken
         }
         
         if let newRefreshToken = request.refreshToken(from: reauthorizationResponse) {
-            storage[OAuthAuthorizationProviderStorageKey.refreshToken] = newRefreshToken
+            storage[OAuthHTTPAuthorizationProviderStorageKey.refreshToken] = newRefreshToken
         }
     }
 }
 
 // MARK: - Keys
-enum OAuthAuthorizationProviderStorageKey {
+enum OAuthHTTPAuthorizationProviderStorageKey {
     
     static let authorizationHeader = "Authorization"
     static let storage = "oauthStorage"

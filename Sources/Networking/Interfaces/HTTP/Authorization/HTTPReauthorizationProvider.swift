@@ -1,14 +1,14 @@
 
-/// Extends the authorizing capabilities of a ``AuthorizationProvider`` with functions to facilitate reauthorization when needed.
+/// Extends the authorizing capabilities of a ``HTTPAuthorizationProvider`` with functions to facilitate reauthorization when needed.
 ///
 /// The ``ReauthorizationRequest`` type is some ``HTTPRequest`` that can be used to reauthorize the app with the server. It should be made with existing, stored credentials where possible, and if it cannot be made, and `nil` is returned, then reauthorization is abandonded.
 ///
-/// As with ``AuthorizationProvider/handle(authorizationResponse:from:)``, the ``handle(reauthorizationResponse:from:)`` function is called by a ``ReauthorizingHTTPController`` when a ``ReauthorizationRequest`` is successfully sent and a response returned. The contents of the request and response should be used to extract and store any credentials required by future ``AuthorizationProvider/authorize(_:)`` or ``makeReauthorizationRequest()`` calls.
+/// As with ``HTTPAuthorizationProvider/handle(authorizationResponse:from:)``, the ``handle(reauthorizationResponse:from:)`` function is called by a ``ReauthorizingHTTPController`` when a ``ReauthorizationRequest`` is successfully sent and a response returned. The contents of the request and response should be used to extract and store any credentials required by future ``HTTPAuthorizationProvider/authorize(_:)`` or ``makeReauthorizationRequest()`` calls.
 ///
 /// The ``makeReauthorizationRequest()`` function is also called by a ``ReauthorizingHTTPController`` when its ``ReauthorizingHTTPController/errorHandler`` returns `true` from ``ReauthorizationHTTPErrorHandler/shouldAttemptReauthorization(afterCatching:from:)``. If the ``ReauthorizingHTTPController/errorHandler`` is `nil`, then it is called when an ``HTTPStatusCode/unauthorized`` status code is returned by a request.
-public protocol ReauthorizationProvider<AuthorizationRequest, ReauthorizationRequest>: AuthorizationProvider {
+public protocol HTTPReauthorizationProvider<AuthorizationRequest, ReauthorizationRequest>: HTTPAuthorizationProvider {
     
-    /// A type of ``HTTPRequest`` that a ``ReauthorizationProvider`` is able to create to reauthorize the app with an API.
+    /// A type of ``HTTPRequest`` that a ``HTTPReauthorizationProvider`` is able to create to reauthorize the app with an API.
     associatedtype ReauthorizationRequest: HTTPRequest
 
     // MARK: - Functions
@@ -19,7 +19,7 @@ public protocol ReauthorizationProvider<AuthorizationRequest, ReauthorizationReq
     /// - Returns: A request that can be used to reauthorize the app with an API, or nil if the request cannot be made.
     func makeReauthorizationRequest() -> ReauthorizationRequest?
         
-    /// Extracts authorization credentials from the provided ``ReauthorizationRequest`` and associated ``HTTPResponse`` where possible, and stores them for later use in ``AuthorizationProvider/authorize(_:)`` and ``makeReauthorizationRequest()``.
+    /// Extracts authorization credentials from the provided ``ReauthorizationRequest`` and associated ``HTTPResponse`` where possible, and stores them for later use in ``HTTPAuthorizationProvider/authorize(_:)`` and ``makeReauthorizationRequest()``.
     /// - Parameters:
     ///   - reauthorizationResponse: A ``HTTPResponse``, potentially containing authorization credentials that can be extracted.
     ///   - request: The ``HTTPRequest`` that produced the `reauthorizationResponse`.

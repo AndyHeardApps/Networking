@@ -1,8 +1,8 @@
 
 /// A ``HTTPRequest`` that provides OAuth tokens in its response.
 ///
-/// Implementations should return `false` for the ``requiresAuthorization`` property.
-public protocol OAuthAuthorizationRequest: HTTPRequest {
+/// Implementations should return `false` for the ``HTTPRequest/requiresAuthorization`` property.
+public protocol OAuthHTTPAuthorizationRequest: HTTPRequest {
     
     // MARK: - Functions
     
@@ -17,7 +17,7 @@ public protocol OAuthAuthorizationRequest: HTTPRequest {
     func refreshToken(from response: HTTPResponse<ResponseType>) -> String?
 }
 
-extension OAuthAuthorizationRequest {
+extension OAuthHTTPAuthorizationRequest {
     
     public var requiresAuthorization: Bool {
         false

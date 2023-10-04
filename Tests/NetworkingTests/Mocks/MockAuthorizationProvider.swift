@@ -1,7 +1,7 @@
 import Foundation
 @testable import Networking
 
-final class MockAuthorizationProvider {
+final class MockHTTPAuthorizationProvider {
     
     // MARK: - Properties
     private(set) var handledAuthorizationResponse: HTTPResponse<MockAccessToken>?
@@ -9,8 +9,8 @@ final class MockAuthorizationProvider {
     private(set) var authorizedRequest: (any HTTPRequest)?
 }
 
-// MARK: - Authorization provider
-extension MockAuthorizationProvider: AuthorizationProvider {
+// MARK: - HTTP Authorization provider
+extension MockHTTPAuthorizationProvider: HTTPAuthorizationProvider {
     
     func handle(
         authorizationResponse: HTTPResponse<MockAccessToken>,

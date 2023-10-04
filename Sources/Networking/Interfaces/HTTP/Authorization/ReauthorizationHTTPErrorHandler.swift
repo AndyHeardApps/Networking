@@ -2,11 +2,11 @@ import Foundation
 
 /// Describes a type that handles errors produced by a ``ReauthorizingHTTPController``.
 ///
-/// This protocol extends the functionality required by a ``HTTPErrorHandler`` to decide whether reauthentication should be attempted by a ``ReauthorizingHTTPController`` using its ``ReauthorizationProvider``.
+/// This protocol extends the functionality required by a ``HTTPErrorHandler`` to decide whether reauthentication should be attempted by a ``ReauthorizingHTTPController`` using its ``HTTPReauthorizationProvider``.
 ///
 /// For discussion on the ``HTTPErrorHandler/map(_:from:)`` function required by this type, refer to the ``HTTPErrorHandler`` documentation.
 ///
-/// A ``ReauthorizationProvider`` needs to know when a thrown error is recoverable by reauthorizing and retrying the request. That decision is usually specific to the API being used and the error types it provides. The ``shouldAttemptReauthorization(afterCatching:from:)`` function is called by a ``ReauthorizingHTTPController``, and should examine the provided error and response ``HTTPResponse/content`` to see if the error is one that can be recovered by reauthorizing.
+/// A ``HTTPReauthorizationProvider`` needs to know when a thrown error is recoverable by reauthorizing and retrying the request. That decision is usually specific to the API being used and the error types it provides. The ``shouldAttemptReauthorization(afterCatching:from:)`` function is called by a ``ReauthorizingHTTPController``, and should examine the provided error and response ``HTTPResponse/content`` to see if the error is one that can be recovered by reauthorizing.
 public protocol ReauthorizationHTTPErrorHandler: HTTPErrorHandler {
     
     

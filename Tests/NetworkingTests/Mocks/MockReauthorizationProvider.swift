@@ -15,8 +15,8 @@ final class MockReauthorizationProvider {
     private(set) var authorizedRequest: (any HTTPRequest)?
 }
 
-// MARK: - Reauthorization provider
-extension MockReauthorizationProvider: ReauthorizationProvider {
+// MARK: - HTTP Reauthorization provider
+extension MockReauthorizationProvider: HTTPReauthorizationProvider {
     
     func makeReauthorizationRequest() -> MockHTTPRequest<MockRefreshToken>? {
         

@@ -1,13 +1,13 @@
 import Foundation
 
-/// A ``HTTPController`` that authorizes every request submitted using the provided ``AuthorizationProvider``.
+/// A ``HTTPController`` that authorizes every request submitted using the provided ``HTTPAuthorizationProvider``.
 ///
 /// This type extends the basic implementation of the ``BasicHTTPController``, so refer to its documentation for basic usage.
 ///
-/// This difference between ``BasicHTTPController`` and ``AuthorizingHTTPController`` is that every request submitted through this type with ``HTTPRequest/requiresAuthorization`` equal to `true` will try and have authorizing credentials attached using the provided ``AuthorizationProvider`` before it is submitted.
+/// This difference between ``BasicHTTPController`` and ``AuthorizingHTTPController`` is that every request submitted through this type with ``HTTPRequest/requiresAuthorization`` equal to `true` will try and have authorizing credentials attached using the provided ``HTTPAuthorizationProvider`` before it is submitted.
 ///
-/// Requests are handed to the ``AuthorizationProvider/authorize(_:)`` function before they are submitted, and instances of ``AuthorizationProvider/AuthorizationRequest`` and assocated ``HTTPResponse`` from successful requests are passed to the ``AuthorizationProvider/handle(authorizationResponse:from:)`` function.
-public struct AuthorizingHTTPController<Authorization: AuthorizationProvider> {
+/// Requests are handed to the ``HTTPAuthorizationProvider/authorize(_:)`` function before they are submitted, and instances of ``HTTPAuthorizationProvider/AuthorizationRequest`` and assocated ``HTTPResponse`` from successful requests are passed to the ``HTTPAuthorizationProvider/handle(authorizationResponse:from:)`` function.
+public struct AuthorizingHTTPController<Authorization: HTTPAuthorizationProvider> {
     
     // MARK: - Properties
     
@@ -17,7 +17,7 @@ public struct AuthorizingHTTPController<Authorization: AuthorizationProvider> {
     /// The ``HTTPSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
     public let session: HTTPSession
         
-    /// The ``AuthorizationProvider`` used to authorize requests that need it.
+    /// The ``HTTPAuthorizationProvider`` used to authorize requests that need it.
     public let authorization: Authorization
     
     /// The ``DataDecoder`` provided to a submitted ``HTTPRequest`` for decoding. It is best to set up a decoder suitable for the API once and reuse it. The ``HTTPRequest`` may still opt not to use this decoder.
@@ -35,7 +35,7 @@ public struct AuthorizingHTTPController<Authorization: AuthorizationProvider> {
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
     ///   - session: The ``HTTPSession`` the controller will use.
-    ///   - authorization: The ``AuthorizationProvider`` to use to authorize requests.
+    ///   - authorization: The ``HTTPAuthorizationProvider`` to use to authorize requests.
     ///   - decoder: The ``DataDecoder`` the controller will hand to requests for decoding.
     ///   - errorHandler: The ``HTTPErrorHandler`` that can be used to manipulate errors before they are thrown.
     ///   - universalHeaders: The headers applied to every request submitted.
