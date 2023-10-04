@@ -54,7 +54,7 @@ extension ReauthorizingHTTPControllerTests {
     // MARK: Request authorization
     func testFetchResponse_willSubmitRequest_toNetworkSession_withoutAuthorization_whenAuthorizationIsNotRequired() async throws {
 
-        let request = MockNetworkRequest(requiresAuthorization: false)
+        let request = MockHTTPRequest(requiresAuthorization: false)
         networkSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
@@ -74,7 +74,7 @@ extension ReauthorizingHTTPControllerTests {
 
     func testFetchResponse_willUseAuthorizationProvider_toAuthorizeRequestBeforeSubmission_whenAuthorizationIsRequired() async throws {
 
-        let request = MockNetworkRequest(requiresAuthorization: true)
+        let request = MockHTTPRequest(requiresAuthorization: true)
         networkSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
@@ -106,7 +106,7 @@ extension ReauthorizingHTTPControllerTests {
         var transformData: Data?
         var transformStatusCode: HTTPStatusCode?
         var transformDecoder: DataDecoder?
-        let request = MockNetworkRequest { data, statusCode, decoder in
+        let request = MockHTTPRequest { data, statusCode, decoder in
 
             transformData = data
             transformStatusCode = statusCode
@@ -133,7 +133,7 @@ extension ReauthorizingHTTPControllerTests {
     // MARK: Universal headers
     func testFetchResponse_willNotAddUniversalHeaders_toRequestBeforeSubmission_whenHTTPControllerHasNoUniversalHeaders() async throws {
 
-        let request = MockNetworkRequest(
+        let request = MockHTTPRequest(
             headers: ["headerKey2" : "headerValue2"],
             requiresAuthorization: false
         )
@@ -162,7 +162,7 @@ extension ReauthorizingHTTPControllerTests {
 
     func testFetchResponse_willAddUniversalHeaders_toRequestBeforeSubmission_whenRequestHasExistingHeaders() async throws {
 
-        let request = MockNetworkRequest(
+        let request = MockHTTPRequest(
             headers: ["headerKey2" : "headerValue2"],
             requiresAuthorization: false
         )
@@ -185,7 +185,7 @@ extension ReauthorizingHTTPControllerTests {
 
     func testFetchResponse_willAddUniversalHeaders_toRequestBeforeSubmission_whenRequestHasNoExistingHeaders() async throws {
 
-        let request = MockNetworkRequest(
+        let request = MockHTTPRequest(
             headers: nil,
             requiresAuthorization: false
         )
@@ -206,7 +206,7 @@ extension ReauthorizingHTTPControllerTests {
 
     func testFetchResponse_willAddUniversalHeaders_toRequestBeforeSubmission_andPrioritiseRequestHeadersOnConflict() async throws {
 
-        let request = MockNetworkRequest(
+        let request = MockHTTPRequest(
             headers: ["headerKey1" : "requestHeaderValue1"],
             requiresAuthorization: false
         )
@@ -227,7 +227,7 @@ extension ReauthorizingHTTPControllerTests {
 
     func testFetchResponse_willAddUniversalHeaders_toReauthorizationRequestBeforeSubmission() async throws {
 
-        let request = MockNetworkRequest(requiresAuthorization: true) { _, statusCode, _ in
+        let request = MockHTTPRequest(requiresAuthorization: true) { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
         authorizationProvider.authorizationFailsUntilReauthorizationRequestIsMade = true
@@ -248,7 +248,7 @@ extension ReauthorizingHTTPControllerTests {
     func testFetchResponse_willSaveAccessToken_whenPossible() async throws {
 
         let accessToken = MockAccessToken(value: "accessToken")
-        let request = MockNetworkRequest { _, _, _ in
+        let request = MockHTTPRequest { _, _, _ in
             accessToken
         }
         networkSession.setBlankResponse(for: request)
@@ -261,7 +261,7 @@ extension ReauthorizingHTTPControllerTests {
     func testFetchResponse_willSaveRefreshToken_whenPossible() async throws {
 
         let refreshToken = MockRefreshToken(value: "refreshToken")
-        let request = MockNetworkRequest { _, _, _ in
+        let request = MockHTTPRequest { _, _, _ in
             refreshToken
         }
         networkSession.setBlankResponse(for: request)
@@ -274,7 +274,7 @@ extension ReauthorizingHTTPControllerTests {
     // MARK: Reauthorization
     func testFetchResponse_willReauthorizeFailedRequest_whenErrorHandlerReturnsAttemptReauthorization() async throws {
 
-        let request = MockNetworkRequest { _, statusCode, _ in
+        let request = MockHTTPRequest { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
         let response = NetworkResponse(
@@ -303,7 +303,7 @@ extension ReauthorizingHTTPControllerTests {
 
     func testFetchResponse_willThrowErrorReturnedByErrorHandler_whenInitialRequestFails() async throws {
 
-        let request = MockNetworkRequest { _, statusCode, _ in
+        let request = MockHTTPRequest { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
         let response = NetworkResponse(
@@ -332,7 +332,7 @@ extension ReauthorizingHTTPControllerTests {
 
     func testFetchResponse_willThrowErrorReturnedByErrorHandler_whenRetriedRequestFails() async throws {
 
-        let request = MockNetworkRequest { _, statusCode, _ in
+        let request = MockHTTPRequest { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
         let response = NetworkResponse(
@@ -362,7 +362,7 @@ extension ReauthorizingHTTPControllerTests {
 
     func testFetchResponse_willUseAuthorizationProvider_toReauthorizeRequest_whenFirstAttemptThrowsUnauthorizedStatusCode_andErrorHandlerIsNil_andRetryRequestIsSuccessfullyCreated() async throws {
 
-        let request = MockNetworkRequest { _, statusCode, _ in
+        let request = MockHTTPRequest { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
 
@@ -398,7 +398,7 @@ extension ReauthorizingHTTPControllerTests {
     
     func testFetchResponse_willUseAuthorizationProvider_toReauthorizeRequest_whenFirstAttemptThrowsUnauthorizedStatusCode_andErrorHandlerIsNil_andThrowsErrorIfReauthorizationFails() async throws {
         
-        let request = MockNetworkRequest { _, statusCode, _ in
+        let request = MockHTTPRequest { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
         authorizationProvider.authorizationFailsUntilReauthorizationRequestIsMade = true
@@ -424,7 +424,7 @@ extension ReauthorizingHTTPControllerTests {
 
     func testFetchResponse_willThrowUnmodifiedError_whenErrorHandlerIsNil() async throws {
 
-        let request = MockNetworkRequest { _, statusCode, _ in
+        let request = MockHTTPRequest { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
         let response = NetworkResponse(
@@ -461,7 +461,7 @@ extension ReauthorizingHTTPControllerTests {
     // MARK: Error reporting
     func testFetchResponse_willReportErrorThrownByNetworkSession_withoutCallingErrorHandler() async throws {
 
-        let request = MockNetworkRequest()
+        let request = MockHTTPRequest()
         networkSession.shouldThrowErrorOnSubmit = true
 
         do {

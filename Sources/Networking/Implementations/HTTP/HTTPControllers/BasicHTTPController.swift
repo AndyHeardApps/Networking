@@ -1,6 +1,6 @@
 import Foundation
 
-/// A basic implementation of a ``HTTPController``, with no authorization on requests. This type will submit requests using the provided ``NetworkSession`` and transform responses using the ``NetworkRequest/transform(data:statusCode:using:)`` function.
+/// A basic implementation of a ``HTTPController``, with no authorization on requests. This type will submit requests using the provided ``NetworkSession`` and transform responses using the ``HTTPRequest/transform(data:statusCode:using:)`` function.
 ///
 /// Any request errors are handed to the ``errorHandler`` to enable more information to be extracted where possible before throwing the error.
 ///
@@ -11,16 +11,16 @@ public struct BasicHTTPController {
     
     // MARK: - Properties
     
-    /// The base `URL` to submit all requests to. This is the base `URL` used to construct the full `URL` using the ``NetworkRequest/pathComponents`` and ``NetworkRequest/queryItems`` of the request.
+    /// The base `URL` to submit all requests to. This is the base `URL` used to construct the full `URL` using the ``HTTPRequest/pathComponents`` and ``HTTPRequest/queryItems`` of the request.
     public let baseURL: URL
     
     /// The ``NetworkSession`` used to fetch the raw `Data` ``NetworkResponse`` for a request.
     public let session: NetworkSession
     
-    /// The ``DataDecoder`` provided to a submitted ``NetworkRequest`` for decoding. It is best to set up a decoder suitable for the API once and reuse it. The ``NetworkRequest`` may still opt not to use this decoder.
+    /// The ``DataDecoder`` provided to a submitted ``HTTPRequest`` for decoding. It is best to set up a decoder suitable for the API once and reuse it. The ``HTTPRequest`` may still opt not to use this decoder.
     public let decoder: DataDecoder
         
-    /// The type used to handle any errors that are thrown by the ``NetworkRequest/transform(data:statusCode:using:)`` function of a request. This is used to try and extract error messages from the response if possible. If this property is `nil` then the unaltered error is thrown.
+    /// The type used to handle any errors that are thrown by the ``HTTPRequest/transform(data:statusCode:using:)`` function of a request. This is used to try and extract error messages from the response if possible. If this property is `nil` then the unaltered error is thrown.
     public let errorHandler: NetworkErrorHandler?
 
     /// The headers that will be applied to every request before submission.
@@ -54,7 +54,7 @@ public struct BasicHTTPController {
 // MARK: - HTTP controller
 extension BasicHTTPController: HTTPController {
     
-    public func fetchResponse<Request: NetworkRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType> {
+    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType> {
 
         if request.requiresAuthorization {
             throw HTTPStatusCode.unauthorized

@@ -8,7 +8,7 @@ protocol HTTPControllerTestCase {
 
 extension HTTPControllerTestCase {
     
-    func expectedHeaders(for request: some NetworkRequest, additionalHeaders: [String : String]? = nil) -> [String : String] {
+    func expectedHeaders(for request: some HTTPRequest, additionalHeaders: [String : String]? = nil) -> [String : String] {
         
         var headers = request.headers ?? [:]
         headers.merge(universalHeaders) { requestHeader, universalHeader in

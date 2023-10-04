@@ -2,11 +2,11 @@ import Foundation
 
 extension URLSession: NetworkSession {
     
-    /// The `DataEncoder` used to encode the bodies of all `NetworkRequest`s submitted to the `URLSession`.
+    /// The `DataEncoder` used to encode the bodies of all `HTTPRequest`s submitted to the `URLSession`.
     public static var bodyEncoder: any DataEncoder = JSONEncoder()
     
     public func submit(
-        request:  some NetworkRequest,
+        request:  some HTTPRequest,
         to baseURL: URL
     ) async throws -> NetworkResponse<Data> {
 
@@ -28,7 +28,7 @@ extension URLSession: NetworkSession {
 // MARK: - URL request
 extension URLSession {
     
-    private func urlRequest<Request: NetworkRequest>(
+    private func urlRequest<Request: HTTPRequest>(
         for request: Request,
         withBaseURL baseURL: URL
     ) throws -> URLRequest {

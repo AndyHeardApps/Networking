@@ -4,14 +4,14 @@ import Foundation
 ///
 /// This type extends the basic implementation of the ``BasicHTTPController``, so refer to its documentation for basic usage.
 ///
-/// This difference between ``BasicHTTPController`` and ``AuthorizingHTTPController`` is that every request submitted through this type with ``NetworkRequest/requiresAuthorization`` equal to `true` will try and have authorizing credentials attached using the provided ``AuthorizationProvider`` before it is submitted.
+/// This difference between ``BasicHTTPController`` and ``AuthorizingHTTPController`` is that every request submitted through this type with ``HTTPRequest/requiresAuthorization`` equal to `true` will try and have authorizing credentials attached using the provided ``AuthorizationProvider`` before it is submitted.
 ///
 /// Requests are handed to the ``AuthorizationProvider/authorize(_:)`` function before they are submitted, and instances of ``AuthorizationProvider/AuthorizationRequest`` and assocated ``NetworkResponse`` from successful requests are passed to the ``AuthorizationProvider/handle(authorizationResponse:from:)`` function.
 public struct AuthorizingHTTPController<Authorization: AuthorizationProvider> {
     
     // MARK: - Properties
     
-    /// The base `URL` to submit all requests to. This is the base `URL` used to construct the full `URL` using the ``NetworkRequest/pathComponents`` and ``NetworkRequest/queryItems`` of the request.
+    /// The base `URL` to submit all requests to. This is the base `URL` used to construct the full `URL` using the ``HTTPRequest/pathComponents`` and ``HTTPRequest/queryItems`` of the request.
     public let baseURL: URL
     
     /// The ``NetworkSession`` used to fetch the raw `Data` ``NetworkResponse`` for a request.
@@ -20,10 +20,10 @@ public struct AuthorizingHTTPController<Authorization: AuthorizationProvider> {
     /// The ``AuthorizationProvider`` used to authorize requests that need it.
     public let authorization: Authorization
     
-    /// The ``DataDecoder`` provided to a submitted ``NetworkRequest`` for decoding. It is best to set up a decoder suitable for the API once and reuse it. The ``NetworkRequest`` may still opt not to use this decoder.
+    /// The ``DataDecoder`` provided to a submitted ``HTTPRequest`` for decoding. It is best to set up a decoder suitable for the API once and reuse it. The ``HTTPRequest`` may still opt not to use this decoder.
     public let decoder: DataDecoder
     
-    /// The type used to handle any errors that are thrown by the ``NetworkRequest/transform(data:statusCode:using:)`` function of a request. This is used to try and extract error messages from the response if possible. If this property is `nil` then the unaltered error is thrown.
+    /// The type used to handle any errors that are thrown by the ``HTTPRequest/transform(data:statusCode:using:)`` function of a request. This is used to try and extract error messages from the response if possible. If this property is `nil` then the unaltered error is thrown.
     public let errorHandler: NetworkErrorHandler?
 
     /// The headers that will be applied to every request before submission.
@@ -60,7 +60,7 @@ public struct AuthorizingHTTPController<Authorization: AuthorizationProvider> {
 // MARK: - HTTP controller
 extension AuthorizingHTTPController: HTTPController {
     
-    public func fetchResponse<Request: NetworkRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType> {
+    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType> {
         
         let requestWithUniversalHeaders = add(
             universalHeaders: universalHeaders,
@@ -106,7 +106,7 @@ extension AuthorizingHTTPController: HTTPController {
 // MARK: - Request modification
 extension AuthorizingHTTPController {
     
-    private func authorize<Request: NetworkRequest>(request: Request) -> any NetworkRequest<Request.ResponseType> {
+    private func authorize<Request: HTTPRequest>(request: Request) -> any HTTPRequest<Request.ResponseType> {
         
         guard request.requiresAuthorization else {
             return request
@@ -123,7 +123,7 @@ extension AuthorizingHTTPController {
     
     private func extractAuthorizationContent<Response>(
         from response: NetworkResponse<Response>,
-        returnedBy request: some NetworkRequest
+        returnedBy request: some HTTPRequest
     ) {
         
         if

@@ -119,7 +119,7 @@ extension URLSessionNetworkSessionTests {
                 return (HTTPURLResponse(), nil)
             }
             
-            let request = MockNetworkRequest(httpMethod: httpMethod)
+            let request = MockHTTPRequest(httpMethod: httpMethod)
             _ = try await urlSession.submit(request: request, to: baseURL)
                     
             let expectedURLString = baseURL.absoluteString

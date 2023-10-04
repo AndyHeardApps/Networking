@@ -1,15 +1,15 @@
 import XCTest
 @testable import Networking
 
-final class AnyNetworkRequestTests: XCTestCase {}
+final class AnyHTTPRequestTests: XCTestCase {}
 
 // MARK: - Tests
-extension AnyNetworkRequestTests {
+extension AnyHTTPRequestTests {
     
     func testInitWithParameters_willAssignProperties_andTransformCorrectly() throws {
         
         let body = UUID().uuidString.data(using: .utf8)
-        let request = AnyNetworkRequest(
+        let request = AnyHTTPRequest(
             httpMethod: .connect,
             pathComponents: ["path1", "path2"],
             headers: ["header1" : "headerValue1", "header2" : "headerValue2"],
@@ -35,22 +35,22 @@ extension AnyNetworkRequestTests {
     
     func testInitWithRequest_willAssignProperties_andTransformCorrectly() throws {
         
-        let mockRequest = MockNetworkRequest { data, _, _ in
+        let mockRequest = MockHTTPRequest { data, _, _ in
             data + data
         }
-        let anyNetworkRequest = AnyNetworkRequest(mockRequest)
+        let anyHTTPRequest = AnyHTTPRequest(mockRequest)
         
-        XCTAssertEqual(anyNetworkRequest.httpMethod, mockRequest.httpMethod)
-        XCTAssertEqual(anyNetworkRequest.pathComponents, mockRequest.pathComponents)
-        XCTAssertEqual(anyNetworkRequest.headers, mockRequest.headers)
-        XCTAssertEqual(anyNetworkRequest.queryItems, mockRequest.queryItems)
-        XCTAssertEqual(anyNetworkRequest.body, mockRequest.body)
-        XCTAssertEqual(anyNetworkRequest.requiresAuthorization, mockRequest.requiresAuthorization)
+        XCTAssertEqual(anyHTTPRequest.httpMethod, mockRequest.httpMethod)
+        XCTAssertEqual(anyHTTPRequest.pathComponents, mockRequest.pathComponents)
+        XCTAssertEqual(anyHTTPRequest.headers, mockRequest.headers)
+        XCTAssertEqual(anyHTTPRequest.queryItems, mockRequest.queryItems)
+        XCTAssertEqual(anyHTTPRequest.body, mockRequest.body)
+        XCTAssertEqual(anyHTTPRequest.requiresAuthorization, mockRequest.requiresAuthorization)
 
         let mockData = UUID().uuidString.data(using: .utf8)!
         let transformedRequestContent = try mockRequest.transform(data: mockData, statusCode: .ok, using: JSONDecoder())
-        let transformedAnyNetworkRequestContent = try anyNetworkRequest.transform(data: mockData, statusCode: .ok, using: JSONDecoder())
+        let transformedAnyHTTPRequestContent = try anyHTTPRequest.transform(data: mockData, statusCode: .ok, using: JSONDecoder())
 
-        XCTAssertEqual(transformedRequestContent, transformedAnyNetworkRequestContent)
+        XCTAssertEqual(transformedRequestContent, transformedAnyHTTPRequestContent)
     }
 }

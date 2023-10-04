@@ -1,7 +1,7 @@
 
-/// Contains the response for a ``NetworkRequest``, wrapping some generic ``content``, a ``statusCode``, and the ``headers``.
+/// Contains the response for a ``HTTPRequest``, wrapping some generic ``content``, a ``statusCode``, and the ``headers``.
 ///
-/// This type is often used to wrap raw `Data` before a ``NetworkRequest`` has transformed it into some more specific type.
+/// This type is often used to wrap raw `Data` before a ``HTTPRequest`` has transformed it into some more specific type.
 public struct NetworkResponse<Content> {
     
     // MARK: - Properties

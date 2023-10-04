@@ -4,7 +4,7 @@ import Foundation
 final class MockNetworkSession {
     
     // MARK: - Properties
-    private(set) var receivedRequests: [(request: any NetworkRequest, baseURL: URL)] = []
+    private(set) var receivedRequests: [(request: any HTTPRequest, baseURL: URL)] = []
     private var responses: [HashableRequest : NetworkResponse<Data>] = [:]
     var shouldThrowErrorOnSubmit = false
 }
@@ -12,7 +12,7 @@ final class MockNetworkSession {
 // MARK: - Network session
 extension MockNetworkSession: NetworkSession {
     
-    func submit(request: some NetworkRequest, to baseURL: URL) async throws -> NetworkResponse<Data> {
+    func submit(request: some HTTPRequest, to baseURL: URL) async throws -> NetworkResponse<Data> {
         
         receivedRequests.append((request, baseURL))
         
@@ -41,13 +41,13 @@ extension MockNetworkSession: NetworkSession {
 // MARK: - Response setting
 extension MockNetworkSession {
     
-    func set(response: NetworkResponse<Data>, for request: some NetworkRequest) {
+    func set(response: NetworkResponse<Data>, for request: some HTTPRequest) {
         
         let hashableRequest = HashableRequest(request: request)
         responses[hashableRequest] = response
     }
     
-    func set(data: Data, for request: some NetworkRequest) {
+    func set(data: Data, for request: some HTTPRequest) {
         
         set(
             response: .init(
@@ -59,7 +59,7 @@ extension MockNetworkSession {
         )
     }
     
-    func setBlankResponse(for request: some NetworkRequest) {
+    func setBlankResponse(for request: some HTTPRequest) {
         
         set(
             data: .init(),
@@ -69,7 +69,7 @@ extension MockNetworkSession {
     
     func setReauthorizationResponse() {
         
-        let reauthorizationRequest = MockNetworkRequest(
+        let reauthorizationRequest = MockHTTPRequest(
             httpMethod: .get,
             pathComponents: ["mockReauthorization"],
             headers: nil,
@@ -95,7 +95,7 @@ extension MockNetworkSession {
         let requiresAuthorization: Bool
         
         // Initialiser
-        init(request: some NetworkRequest) {
+        init(request: some HTTPRequest) {
             
             self.httpMethod = request.httpMethod
             self.pathComponents = request.pathComponents

@@ -1,7 +1,7 @@
 import Foundation
 @testable import Networking
 
-struct MockNetworkRequest<ResponseType>: NetworkRequest {
+struct MockHTTPRequest<ResponseType>: HTTPRequest {
 
     // MARK: - Properties
     let httpMethod: HTTPMethod
@@ -34,7 +34,7 @@ struct MockNetworkRequest<ResponseType>: NetworkRequest {
 }
 
 // MARK: - Void initialiser
-extension MockNetworkRequest where ResponseType == Void {
+extension MockHTTPRequest where ResponseType == Void {
     
     init(
         httpMethod: HTTPMethod = .get,
@@ -56,7 +56,7 @@ extension MockNetworkRequest where ResponseType == Void {
 }
 
 // MARK: - Transform
-extension MockNetworkRequest {
+extension MockHTTPRequest {
     
     func transform(
         data: Data,

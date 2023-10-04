@@ -178,7 +178,7 @@ extension OAuthAuthorizationProviderTests {
         let existingAccessToken = "existingAccessToken"
         secureStorage["oauth.accessToken"] = existingAccessToken
         
-        let request = MockNetworkRequest(headers: ["header1" : "headerValue1"])
+        let request = MockHTTPRequest(headers: ["header1" : "headerValue1"])
         XCTAssertNil(request.headers?["Authorization"])
         
         let authorizedRequest = authorizationProvider.authorize(request)
@@ -198,7 +198,7 @@ extension OAuthAuthorizationProviderTests {
         let existingAccessToken = "existingAccessToken"
         secureStorage["oauth.accessToken"] = existingAccessToken
         
-        let request = MockNetworkRequest(headers: nil)
+        let request = MockHTTPRequest(headers: nil)
         XCTAssertNil(request.headers?["Authorization"])
         
         let authorizedRequest = authorizationProvider.authorize(request)
@@ -216,7 +216,7 @@ extension OAuthAuthorizationProviderTests {
         
         XCTAssertNil(secureStorage["oauth.accessToken"])
         
-        let request = MockNetworkRequest()
+        let request = MockHTTPRequest()
         let authorizedRequest = authorizationProvider.authorize(request)
 
         XCTAssertEqual(authorizedRequest.httpMethod, request.httpMethod)

@@ -1,9 +1,9 @@
 import Foundation
 
-/// A type erased ``NetworkRequest``.
+/// A type erased ``HTTPRequest``.
 ///
 /// **Note:** This is no longer widely used since the introduction of existential types in Swift.
-public struct AnyNetworkRequest<ResponseType, Body: Encodable>: NetworkRequest {
+public struct AnyHTTPRequest<ResponseType, Body: Encodable>: HTTPRequest {
     
     // MARK: Properties
     public let httpMethod: HTTPMethod
@@ -33,7 +33,7 @@ public struct AnyNetworkRequest<ResponseType, Body: Encodable>: NetworkRequest {
         self._transform = transform
     }
     
-    public init<Request: NetworkRequest>(_ request: Request)
+    public init<Request: HTTPRequest>(_ request: Request)
     where Self.ResponseType == Request.ResponseType,
           Self.Body == Request.Body
     {

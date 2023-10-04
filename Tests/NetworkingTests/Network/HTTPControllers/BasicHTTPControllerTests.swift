@@ -48,7 +48,7 @@ extension BasicHTTPControllerTests {
     // MARK: Request manipulation
     func testFetchResponse_willSubmitRequest_toNetworkSession_withoutAssertionFailure_whenAuthorizationIsNotRequired() async throws {
 
-        let request = MockNetworkRequest(requiresAuthorization: false)
+        let request = MockHTTPRequest(requiresAuthorization: false)
         networkSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
@@ -68,7 +68,7 @@ extension BasicHTTPControllerTests {
 
     func testFetchResponse_willCauseAssertionFailure_whenAuthorizationIsRequired() async throws {
 
-        let request = MockNetworkRequest(requiresAuthorization: true)
+        let request = MockHTTPRequest(requiresAuthorization: true)
         networkSession.setBlankResponse(for: request)
 
         do {
@@ -92,7 +92,7 @@ extension BasicHTTPControllerTests {
         var transformData: Data?
         var transformStatusCode: HTTPStatusCode?
         var transformDecoder: DataDecoder?
-        let request = MockNetworkRequest(requiresAuthorization: false) { data, statusCode, decoder in
+        let request = MockHTTPRequest(requiresAuthorization: false) { data, statusCode, decoder in
 
             transformData = data
             transformStatusCode = statusCode
@@ -119,7 +119,7 @@ extension BasicHTTPControllerTests {
     // MARK: Universal headers
     func testFetchResponse_willNotAddUniversalHeaders_toRequestBeforeSubmission_whenHTTPControllerHasNoUniversalHeaders() async throws {
 
-        let request = MockNetworkRequest(
+        let request = MockHTTPRequest(
             headers: ["headerKey2" : "headerValue2"],
             requiresAuthorization: false
         )
@@ -147,7 +147,7 @@ extension BasicHTTPControllerTests {
     
     func testFetchResponse_willAddUniversalHeaders_toRequestBeforeSubmission_whenRequestHasExistingHeaders() async throws {
 
-        let request = MockNetworkRequest(
+        let request = MockHTTPRequest(
             headers: ["headerKey2" : "headerValue2"],
             requiresAuthorization: false
         )
@@ -170,7 +170,7 @@ extension BasicHTTPControllerTests {
 
     func testFetchResponse_willAddUniversalHeaders_toRequestBeforeSubmission_whenRequestHasNoExistingHeaders() async throws {
 
-        let request = MockNetworkRequest(
+        let request = MockHTTPRequest(
             headers: nil,
             requiresAuthorization: false
         )
@@ -191,7 +191,7 @@ extension BasicHTTPControllerTests {
 
     func testFetchResponse_willAddUniversalHeaders_toRequestBeforeSubmission_andPrioritiseRequestHeadersOnConflict() async throws {
 
-        let request = MockNetworkRequest(
+        let request = MockHTTPRequest(
             headers: ["headerKey1" : "requestHeaderValue1"],
             requiresAuthorization: false
         )
@@ -213,7 +213,7 @@ extension BasicHTTPControllerTests {
     // MARK: Error handling
     func testFetchResponse_willThrowErrorReturnedByErrorHandler() async throws {
 
-        let request = MockNetworkRequest(requiresAuthorization: false) { _, statusCode, _ in
+        let request = MockHTTPRequest(requiresAuthorization: false) { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
         let response = NetworkResponse(
@@ -238,7 +238,7 @@ extension BasicHTTPControllerTests {
 
     func testFetchResponse_willThrowUnmodifiedError_whenErrorHandlerIsNil() async throws {
 
-        let request = MockNetworkRequest(requiresAuthorization: false) { _, statusCode, _ in
+        let request = MockHTTPRequest(requiresAuthorization: false) { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
         let response = NetworkResponse(
@@ -272,7 +272,7 @@ extension BasicHTTPControllerTests {
     // MARK: Error reporting
     func testFetchResponse_willReportErrorThrownByNetworkSession_withoutCallingErrorHandler() async throws {
 
-        let request = MockNetworkRequest(requiresAuthorization: false)
+        let request = MockHTTPRequest(requiresAuthorization: false)
         networkSession.shouldThrowErrorOnSubmit = true
 
         do {
