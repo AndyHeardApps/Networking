@@ -6,10 +6,10 @@ final class ReauthorizingHTTPControllerTests: XCTestCase, HTTPControllerTestCase
     // MARK: - Properties
     private let baseURL = URL(string: "https://example.domain.com")!
     private let reauthorizationBaseURL = URL(string: "https://reauth.domain.com")!
-    private var networkSession: MockNetworkSession!
+    private var httpSession: MockHTTPSession!
     private var authorizationProvider: MockReauthorizationProvider!
     private var decoder: DataDecoder!
-    private var errorHandler: MockReauthorizationNetworkErrorHandler!
+    private var errorHandler: MockReauthorizationHTTPErrorHandler!
     private(set) var universalHeaders: [String : String]!
     private var httpController: ReauthorizingHTTPController<MockReauthorizationProvider>!
 }
@@ -20,15 +20,15 @@ extension ReauthorizingHTTPControllerTests {
     override func setUp() {
         super.setUp()
 
-        self.networkSession = MockNetworkSession()
-        self.errorHandler = MockReauthorizationNetworkErrorHandler()
+        self.httpSession = MockHTTPSession()
+        self.errorHandler = MockReauthorizationHTTPErrorHandler()
         self.authorizationProvider = MockReauthorizationProvider()
         self.decoder = JSONDecoder()
         self.universalHeaders = ["headerKey2" : "universalHeaderValue2"]
         self.httpController = ReauthorizingHTTPController(
             baseURL: baseURL,
             reauthorizationBaseURL: reauthorizationBaseURL,
-            session: networkSession,
+            session: httpSession,
             authorization: authorizationProvider,
             decoder: decoder,
             errorHandler: errorHandler,
@@ -39,7 +39,7 @@ extension ReauthorizingHTTPControllerTests {
     override func tearDown() {
         super.tearDown()
 
-        self.networkSession = nil
+        self.httpSession = nil
         self.errorHandler = nil
         self.authorizationProvider = nil
         self.decoder = nil
@@ -52,17 +52,17 @@ extension ReauthorizingHTTPControllerTests {
 extension ReauthorizingHTTPControllerTests {
 
     // MARK: Request authorization
-    func testFetchResponse_willSubmitRequest_toNetworkSession_withoutAuthorization_whenAuthorizationIsNotRequired() async throws {
+    func testFetchResponse_willSubmitRequest_toHTTPSession_withoutAuthorization_whenAuthorizationIsNotRequired() async throws {
 
         let request = MockHTTPRequest(requiresAuthorization: false)
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
 
-        let lastReceivedRequest = networkSession.receivedRequests.last?.request
-        let lastReceivedBaseURL = networkSession.receivedRequests.last?.baseURL
+        let lastReceivedRequest = httpSession.receivedRequests.last?.request
+        let lastReceivedBaseURL = httpSession.receivedRequests.last?.baseURL
 
-        XCTAssertEqual(networkSession.receivedRequests.count, 1)
+        XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders(for: request))
@@ -75,15 +75,15 @@ extension ReauthorizingHTTPControllerTests {
     func testFetchResponse_willUseAuthorizationProvider_toAuthorizeRequestBeforeSubmission_whenAuthorizationIsRequired() async throws {
 
         let request = MockHTTPRequest(requiresAuthorization: true)
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
 
         let expectedHeaders = expectedHeaders(for: request, additionalHeaders: ["Authorization" : "true"])
 
-        let lastReceivedRequest = networkSession.receivedRequests.last?.request
+        let lastReceivedRequest = httpSession.receivedRequests.last?.request
 
-        XCTAssertEqual(networkSession.receivedRequests.count, 1)
+        XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders)
@@ -114,7 +114,7 @@ extension ReauthorizingHTTPControllerTests {
             return data + data
         }
 
-        networkSession.set(
+        httpSession.set(
             response: expectedResponse,
             for: request
         )
@@ -137,10 +137,10 @@ extension ReauthorizingHTTPControllerTests {
             headers: ["headerKey2" : "headerValue2"],
             requiresAuthorization: false
         )
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
         httpController = ReauthorizingHTTPController(
             baseURL: baseURL,
-            session: networkSession,
+            session: httpSession,
             authorization: authorizationProvider,
             decoder: decoder,
             errorHandler: errorHandler,
@@ -149,9 +149,9 @@ extension ReauthorizingHTTPControllerTests {
 
         _ = try await httpController.fetchResponse(request)
 
-        let lastReceivedRequest = networkSession.receivedRequests.last?.request
+        let lastReceivedRequest = httpSession.receivedRequests.last?.request
 
-        XCTAssertEqual(networkSession.receivedRequests.count, 1)
+        XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, request.headers)
@@ -166,15 +166,15 @@ extension ReauthorizingHTTPControllerTests {
             headers: ["headerKey2" : "headerValue2"],
             requiresAuthorization: false
         )
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
 
         let expectedHeaders = httpController.universalHeaders!.merging(request.headers!) { $1 }
 
-        let lastReceivedRequest = networkSession.receivedRequests.last?.request
+        let lastReceivedRequest = httpSession.receivedRequests.last?.request
 
-        XCTAssertEqual(networkSession.receivedRequests.count, 1)
+        XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders)
@@ -189,13 +189,13 @@ extension ReauthorizingHTTPControllerTests {
             headers: nil,
             requiresAuthorization: false
         )
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
 
-        let lastReceivedRequest = networkSession.receivedRequests.last?.request
+        let lastReceivedRequest = httpSession.receivedRequests.last?.request
 
-        XCTAssertEqual(networkSession.receivedRequests.count, 1)
+        XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, httpController.universalHeaders)
@@ -210,13 +210,13 @@ extension ReauthorizingHTTPControllerTests {
             headers: ["headerKey1" : "requestHeaderValue1"],
             requiresAuthorization: false
         )
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
 
-        let lastReceivedRequest = networkSession.receivedRequests.last?.request
+        let lastReceivedRequest = httpSession.receivedRequests.last?.request
 
-        XCTAssertEqual(networkSession.receivedRequests.count, 1)
+        XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders(for: request))
@@ -232,14 +232,14 @@ extension ReauthorizingHTTPControllerTests {
         }
         authorizationProvider.authorizationFailsUntilReauthorizationRequestIsMade = true
         authorizationProvider.shouldMakeReauthorizationRequest = true
-        networkSession.setBlankResponse(for: request)
-        networkSession.setReauthorizationResponse()
+        httpSession.setBlankResponse(for: request)
+        httpSession.setReauthorizationResponse()
 
         _ = try await httpController.fetchResponse(request)
 
-        let lastReceivedRequest = networkSession.receivedRequests.dropFirst().first?.request
+        let lastReceivedRequest = httpSession.receivedRequests.dropFirst().first?.request
 
-        XCTAssertEqual(networkSession.receivedRequests.count, 3)
+        XCTAssertEqual(httpSession.receivedRequests.count, 3)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, ["mockReauthorization"])
         XCTAssertEqual(lastReceivedRequest?.headers?["headerKey2"], "universalHeaderValue2")
     }
@@ -251,7 +251,7 @@ extension ReauthorizingHTTPControllerTests {
         let request = MockHTTPRequest { _, _, _ in
             accessToken
         }
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
 
@@ -264,7 +264,7 @@ extension ReauthorizingHTTPControllerTests {
         let request = MockHTTPRequest { _, _, _ in
             refreshToken
         }
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
 
@@ -285,8 +285,8 @@ extension ReauthorizingHTTPControllerTests {
         errorHandler.shouldAttemptReauthorizationResult = true
         authorizationProvider.authorizationFailsUntilReauthorizationRequestIsMade = true
         authorizationProvider.shouldMakeReauthorizationRequest = true
-        networkSession.set(response: response, for: request)
-        networkSession.setReauthorizationResponse()
+        httpSession.set(response: response, for: request)
+        httpSession.setReauthorizationResponse()
 
         _ = try? await httpController.fetchResponse(request)
 
@@ -295,10 +295,10 @@ extension ReauthorizingHTTPControllerTests {
         XCTAssertNil(errorHandler.recievedMappingResponse)
         XCTAssertNil(errorHandler.recievedMappingError)
         XCTAssertTrue(authorizationProvider.makeReauthorizationRequestWasCalled)
-        XCTAssertEqual(networkSession.receivedRequests.count, 3)
-        XCTAssertEqual(networkSession.receivedRequests.first?.baseURL, baseURL)
-        XCTAssertEqual(networkSession.receivedRequests.dropFirst().first?.baseURL, reauthorizationBaseURL)
-        XCTAssertEqual(networkSession.receivedRequests.last?.baseURL, baseURL)
+        XCTAssertEqual(httpSession.receivedRequests.count, 3)
+        XCTAssertEqual(httpSession.receivedRequests.first?.baseURL, baseURL)
+        XCTAssertEqual(httpSession.receivedRequests.dropFirst().first?.baseURL, reauthorizationBaseURL)
+        XCTAssertEqual(httpSession.receivedRequests.last?.baseURL, baseURL)
     }
 
     func testFetchResponse_willThrowErrorReturnedByErrorHandler_whenInitialRequestFails() async throws {
@@ -313,7 +313,7 @@ extension ReauthorizingHTTPControllerTests {
         )
         errorHandler.shouldAttemptReauthorizationResult = false
         errorHandler.mapResult = MockError()
-        networkSession.set(response: response, for: request)
+        httpSession.set(response: response, for: request)
 
         do {
             _ = try await httpController.fetchResponse(request)
@@ -326,7 +326,7 @@ extension ReauthorizingHTTPControllerTests {
             XCTAssertEqual(errorHandler.recievedMappingError as? HTTPStatusCode, .badRequest)
             XCTAssertTrue(error is MockError)
             XCTAssertFalse(authorizationProvider.makeReauthorizationRequestWasCalled)
-            XCTAssertEqual(networkSession.receivedRequests.count, 1)
+            XCTAssertEqual(httpSession.receivedRequests.count, 1)
         }
     }
 
@@ -342,8 +342,8 @@ extension ReauthorizingHTTPControllerTests {
         )
         errorHandler.shouldAttemptReauthorizationResult = true
         errorHandler.mapResult = MockError()
-        networkSession.set(response: response, for: request)
-        networkSession.setReauthorizationResponse()
+        httpSession.set(response: response, for: request)
+        httpSession.setReauthorizationResponse()
 
         do {
             _ = try await httpController.fetchResponse(request)
@@ -356,7 +356,7 @@ extension ReauthorizingHTTPControllerTests {
             XCTAssertEqual(errorHandler.recievedMappingError as? HTTPStatusCode, .badRequest)
             XCTAssertTrue(error is MockError)
             XCTAssertTrue(authorizationProvider.makeReauthorizationRequestWasCalled)
-            XCTAssertEqual(networkSession.receivedRequests.count, 3)
+            XCTAssertEqual(httpSession.receivedRequests.count, 3)
         }
     }
 
@@ -368,12 +368,12 @@ extension ReauthorizingHTTPControllerTests {
 
         authorizationProvider.authorizationFailsUntilReauthorizationRequestIsMade = true
         authorizationProvider.shouldMakeReauthorizationRequest = true
-        networkSession.setBlankResponse(for: request)
-        networkSession.setReauthorizationResponse()
+        httpSession.setBlankResponse(for: request)
+        httpSession.setReauthorizationResponse()
         
         httpController = ReauthorizingHTTPController(
             baseURL: baseURL,
-            session: networkSession,
+            session: httpSession,
             authorization: authorizationProvider,
             decoder: decoder,
             errorHandler: nil,
@@ -384,10 +384,10 @@ extension ReauthorizingHTTPControllerTests {
 
         let expectedHeaders = expectedHeaders(for: request, additionalHeaders: ["Authorization" : "true"])
 
-        let lastReceivedRequest = networkSession.receivedRequests.last?.request
+        let lastReceivedRequest = httpSession.receivedRequests.last?.request
 
         XCTAssertTrue(authorizationProvider.makeReauthorizationRequestWasCalled)
-        XCTAssertEqual(networkSession.receivedRequests.count, 3)
+        XCTAssertEqual(httpSession.receivedRequests.count, 3)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders)
@@ -403,11 +403,11 @@ extension ReauthorizingHTTPControllerTests {
         }
         authorizationProvider.authorizationFailsUntilReauthorizationRequestIsMade = true
         authorizationProvider.shouldMakeReauthorizationRequest = false
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
         
         httpController = ReauthorizingHTTPController(
             baseURL: baseURL,
-            session: networkSession,
+            session: httpSession,
             authorization: authorizationProvider,
             decoder: decoder,
             errorHandler: nil,
@@ -432,11 +432,11 @@ extension ReauthorizingHTTPControllerTests {
             statusCode: .badRequest,
             headers: [:]
         )
-        networkSession.set(response: response, for: request)
+        httpSession.set(response: response, for: request)
 
         httpController = ReauthorizingHTTPController(
             baseURL: baseURL,
-            session: networkSession,
+            session: httpSession,
             authorization: authorizationProvider,
             decoder: decoder,
             errorHandler: nil,
@@ -454,15 +454,15 @@ extension ReauthorizingHTTPControllerTests {
             XCTAssertNil(errorHandler.recievedMappingError)
             XCTAssertEqual(error as? HTTPStatusCode, .badRequest)
             XCTAssertFalse(authorizationProvider.makeReauthorizationRequestWasCalled)
-            XCTAssertEqual(networkSession.receivedRequests.count, 1)
+            XCTAssertEqual(httpSession.receivedRequests.count, 1)
         }
     }
 
     // MARK: Error reporting
-    func testFetchResponse_willReportErrorThrownByNetworkSession_withoutCallingErrorHandler() async throws {
+    func testFetchResponse_willReportErrorThrownByHTTPSession_withoutCallingErrorHandler() async throws {
 
         let request = MockHTTPRequest()
-        networkSession.shouldThrowErrorOnSubmit = true
+        httpSession.shouldThrowErrorOnSubmit = true
 
         do {
             _ = try await httpController.fetchResponse(request)
@@ -473,9 +473,9 @@ extension ReauthorizingHTTPControllerTests {
             XCTAssertNil(errorHandler.recievedAttemptReauthorizationError)
             XCTAssertNil(errorHandler.recievedMappingResponse)
             XCTAssertNil(errorHandler.recievedMappingError)
-            XCTAssertTrue(error is MockNetworkSession.SampleError)
+            XCTAssertTrue(error is MockHTTPSession.SampleError)
             XCTAssertFalse(authorizationProvider.makeReauthorizationRequestWasCalled)
-            XCTAssertEqual(networkSession.receivedRequests.count, 1)
+            XCTAssertEqual(httpSession.receivedRequests.count, 1)
         }
     }
 }

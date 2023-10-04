@@ -1,7 +1,7 @@
 import Foundation
 @testable import Networking
 
-final class MockNetworkSession {
+final class MockHTTPSession {
     
     // MARK: - Properties
     private(set) var receivedRequests: [(request: any HTTPRequest, baseURL: URL)] = []
@@ -9,8 +9,8 @@ final class MockNetworkSession {
     var shouldThrowErrorOnSubmit = false
 }
 
-// MARK: - Network session
-extension MockNetworkSession: NetworkSession {
+// MARK: - HTTP session
+extension MockHTTPSession: HTTPSession {
     
     func submit(request: some HTTPRequest, to baseURL: URL) async throws -> HTTPResponse<Data> {
         
@@ -39,7 +39,7 @@ extension MockNetworkSession: NetworkSession {
 }
 
 // MARK: - Response setting
-extension MockNetworkSession {
+extension MockHTTPSession {
     
     func set(response: HTTPResponse<Data>, for request: some HTTPRequest) {
         
@@ -83,7 +83,7 @@ extension MockNetworkSession {
 }
 
 // MARK: - Hashable request
-extension MockNetworkSession {
+extension MockHTTPSession {
     
     private struct HashableRequest: Hashable {
         
@@ -107,7 +107,7 @@ extension MockNetworkSession {
 }
 
 // MARK: - Errors
-extension MockNetworkSession {
+extension MockHTTPSession {
     
     struct SampleError: Error {
         

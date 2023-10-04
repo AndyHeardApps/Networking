@@ -1,6 +1,6 @@
 import Foundation
 
-extension URLSession: NetworkSession {
+extension URLSession: HTTPSession {
     
     /// The `DataEncoder` used to encode the bodies of all `HTTPRequest`s submitted to the `URLSession`.
     public static var bodyEncoder: any DataEncoder = JSONEncoder()
@@ -38,7 +38,7 @@ extension URLSession {
         urlComponents.queryItems = request.queryItems?.map(URLQueryItem.init)
         
         guard let url = urlComponents.url(relativeTo: baseURL) else {
-            throw NetworkSessionError.failedToCreateURLFromComponents
+            throw HTTPSessionError.failedToCreateURLFromComponents
         }
         
         var urlRequest = URLRequest(url: url)
@@ -90,7 +90,7 @@ extension HTTPMethod {
 // MARK: - Errors
 extension URLSession {
     
-    enum NetworkSessionError: LocalizedError {
+    enum HTTPSessionError: LocalizedError {
         
         case failedToCreateURLFromComponents
     }

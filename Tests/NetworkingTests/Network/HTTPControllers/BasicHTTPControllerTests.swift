@@ -5,9 +5,9 @@ final class BasicHTTPControllerTests: XCTestCase, HTTPControllerTestCase {
 
     // MARK: - Properties
     private let baseURL = URL(string: "https://example.domain.com")!
-    private var networkSession: MockNetworkSession!
+    private var httpSession: MockHTTPSession!
     private var decoder: DataDecoder!
-    private var errorHandler: MockNetworkErrorHandler!
+    private var errorHandler: MockHTTPErrorHandler!
     private(set) var universalHeaders: [String : String]!
     private var httpController: BasicHTTPController!
 }
@@ -18,13 +18,13 @@ extension BasicHTTPControllerTests {
     override func setUp() {
         super.setUp()
 
-        self.networkSession = MockNetworkSession()
-        self.errorHandler = MockNetworkErrorHandler()
+        self.httpSession = MockHTTPSession()
+        self.errorHandler = MockHTTPErrorHandler()
         self.decoder = JSONDecoder()
         self.universalHeaders = ["headerKey2" : "universalHeaderValue2"]
         self.httpController = BasicHTTPController(
             baseURL: baseURL,
-            session: networkSession,
+            session: httpSession,
             decoder: decoder,
             errorHandler: errorHandler,
             universalHeaders: universalHeaders
@@ -34,7 +34,7 @@ extension BasicHTTPControllerTests {
     override func tearDown() {
         super.tearDown()
 
-        self.networkSession = nil
+        self.httpSession = nil
         self.errorHandler = nil
         self.decoder = nil
         self.universalHeaders = nil
@@ -46,17 +46,17 @@ extension BasicHTTPControllerTests {
 extension BasicHTTPControllerTests {
 
     // MARK: Request manipulation
-    func testFetchResponse_willSubmitRequest_toNetworkSession_withoutAssertionFailure_whenAuthorizationIsNotRequired() async throws {
+    func testFetchResponse_willSubmitRequest_toHTTPSession_withoutAssertionFailure_whenAuthorizationIsNotRequired() async throws {
 
         let request = MockHTTPRequest(requiresAuthorization: false)
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
 
-        let lastReceivedRequest = networkSession.receivedRequests.last?.request
-        let lastReceivedBaseURL = networkSession.receivedRequests.last?.baseURL
+        let lastReceivedRequest = httpSession.receivedRequests.last?.request
+        let lastReceivedBaseURL = httpSession.receivedRequests.last?.baseURL
 
-        XCTAssertEqual(networkSession.receivedRequests.count, 1)
+        XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders(for: request))
@@ -69,7 +69,7 @@ extension BasicHTTPControllerTests {
     func testFetchResponse_willCauseAssertionFailure_whenAuthorizationIsRequired() async throws {
 
         let request = MockHTTPRequest(requiresAuthorization: true)
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
 
         do {
             _ = try await httpController.fetchResponse(request)
@@ -100,7 +100,7 @@ extension BasicHTTPControllerTests {
             return data + data
         }
 
-        networkSession.set(
+        httpSession.set(
             response: expectedResponse,
             for: request
         )
@@ -123,10 +123,10 @@ extension BasicHTTPControllerTests {
             headers: ["headerKey2" : "headerValue2"],
             requiresAuthorization: false
         )
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
         httpController = BasicHTTPController(
             baseURL: baseURL,
-            session: networkSession,
+            session: httpSession,
             decoder: decoder,
             errorHandler: errorHandler,
             universalHeaders: nil
@@ -134,9 +134,9 @@ extension BasicHTTPControllerTests {
         
         _ = try await httpController.fetchResponse(request)
 
-        let lastReceivedRequest = networkSession.receivedRequests.last?.request
+        let lastReceivedRequest = httpSession.receivedRequests.last?.request
 
-        XCTAssertEqual(networkSession.receivedRequests.count, 1)
+        XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, request.headers)
@@ -151,15 +151,15 @@ extension BasicHTTPControllerTests {
             headers: ["headerKey2" : "headerValue2"],
             requiresAuthorization: false
         )
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
 
         let expectedHeaders = httpController.universalHeaders!.merging(request.headers!) { $1 }
 
-        let lastReceivedRequest = networkSession.receivedRequests.last?.request
+        let lastReceivedRequest = httpSession.receivedRequests.last?.request
 
-        XCTAssertEqual(networkSession.receivedRequests.count, 1)
+        XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders)
@@ -174,13 +174,13 @@ extension BasicHTTPControllerTests {
             headers: nil,
             requiresAuthorization: false
         )
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
 
-        let lastReceivedRequest = networkSession.receivedRequests.last?.request
+        let lastReceivedRequest = httpSession.receivedRequests.last?.request
 
-        XCTAssertEqual(networkSession.receivedRequests.count, 1)
+        XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, httpController.universalHeaders)
@@ -195,13 +195,13 @@ extension BasicHTTPControllerTests {
             headers: ["headerKey1" : "requestHeaderValue1"],
             requiresAuthorization: false
         )
-        networkSession.setBlankResponse(for: request)
+        httpSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
 
-        let lastReceivedRequest = networkSession.receivedRequests.last?.request
+        let lastReceivedRequest = httpSession.receivedRequests.last?.request
 
-        XCTAssertEqual(networkSession.receivedRequests.count, 1)
+        XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders(for: request))
@@ -222,7 +222,7 @@ extension BasicHTTPControllerTests {
             headers: [:]
         )
         errorHandler.result = MockError()
-        networkSession.set(response: response, for: request)
+        httpSession.set(response: response, for: request)
 
         do {
             _ = try await httpController.fetchResponse(request)
@@ -232,7 +232,7 @@ extension BasicHTTPControllerTests {
             XCTAssertEqual(errorHandler.recievedResponse?.content, response.content)
             XCTAssertEqual(errorHandler.recievedError as? HTTPStatusCode, .badRequest)
             XCTAssertTrue(error is MockError)
-            XCTAssertEqual(networkSession.receivedRequests.count, 1)
+            XCTAssertEqual(httpSession.receivedRequests.count, 1)
         }
     }
 
@@ -247,11 +247,11 @@ extension BasicHTTPControllerTests {
             headers: [:]
         )
         errorHandler.result = MockError()
-        networkSession.set(response: response, for: request)
+        httpSession.set(response: response, for: request)
 
         httpController = BasicHTTPController(
             baseURL: baseURL,
-            session: networkSession,
+            session: httpSession,
             decoder: decoder,
             errorHandler: nil,
             universalHeaders: universalHeaders
@@ -265,15 +265,15 @@ extension BasicHTTPControllerTests {
             XCTAssertNil(errorHandler.recievedResponse)
             XCTAssertNil(errorHandler.recievedError)
             XCTAssertEqual(error as? HTTPStatusCode, .badRequest)
-            XCTAssertEqual(networkSession.receivedRequests.count, 1)
+            XCTAssertEqual(httpSession.receivedRequests.count, 1)
         }
     }
 
     // MARK: Error reporting
-    func testFetchResponse_willReportErrorThrownByNetworkSession_withoutCallingErrorHandler() async throws {
+    func testFetchResponse_willReportErrorThrownByHTTPSession_withoutCallingErrorHandler() async throws {
 
         let request = MockHTTPRequest(requiresAuthorization: false)
-        networkSession.shouldThrowErrorOnSubmit = true
+        httpSession.shouldThrowErrorOnSubmit = true
 
         do {
             _ = try await httpController.fetchResponse(request)
@@ -282,8 +282,8 @@ extension BasicHTTPControllerTests {
 
             XCTAssertNil(errorHandler.recievedError)
             XCTAssertNil(errorHandler.recievedResponse)
-            XCTAssertTrue(error is MockNetworkSession.SampleError)
-            XCTAssertEqual(networkSession.receivedRequests.count, 1)
+            XCTAssertTrue(error is MockHTTPSession.SampleError)
+            XCTAssertEqual(httpSession.receivedRequests.count, 1)
         }
     }
 }

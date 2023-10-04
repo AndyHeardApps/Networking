@@ -1,7 +1,7 @@
 import Foundation
 import Networking
 
-final class MockNetworkErrorHandler {
+final class MockHTTPErrorHandler {
     
     // MARK: - Properties
     private(set) var recievedError: Error?
@@ -9,8 +9,8 @@ final class MockNetworkErrorHandler {
     var result: Error!
 }
 
-// MARK: - Network error handler
-extension MockNetworkErrorHandler: NetworkErrorHandler {
+// MARK: - HTTP error handler
+extension MockHTTPErrorHandler: HTTPErrorHandler {
     
     func map(
         _ error: Error,

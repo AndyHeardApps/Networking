@@ -1,7 +1,7 @@
 import XCTest
 @testable import Networking
 
-final class URLSessionNetworkSessionTests: XCTestCase {
+final class URLSessionHTTPSessionTests: XCTestCase {
     
     // MARK: - Properties
     private var baseURL: URL!
@@ -9,7 +9,7 @@ final class URLSessionNetworkSessionTests: XCTestCase {
 }
 
 // MARK: - Setup
-extension URLSessionNetworkSessionTests {
+extension URLSessionHTTPSessionTests {
     
     override func setUp() {
         super.setUp()
@@ -29,7 +29,7 @@ extension URLSessionNetworkSessionTests {
 }
 
 // MARK: - Mocks
-extension URLSessionNetworkSessionTests {
+extension URLSessionHTTPSessionTests {
     
     final class MockURLProtocol: URLProtocol {
         
@@ -95,7 +95,7 @@ extension URLSessionNetworkSessionTests {
 }
 
 // MARK: - Tests
-extension URLSessionNetworkSessionTests {
+extension URLSessionHTTPSessionTests {
     
     func testSubmitRequest_willCorrectlyCreateURLRequest_andSubmitIt() async throws {
         

@@ -1,7 +1,7 @@
 import Foundation
 import Networking
 
-final class MockReauthorizationNetworkErrorHandler {
+final class MockReauthorizationHTTPErrorHandler {
 
     // MARK: - Properties
     private(set) var recievedMappingError: Error?
@@ -13,8 +13,8 @@ final class MockReauthorizationNetworkErrorHandler {
     var shouldAttemptReauthorizationResult = true
 }
 
-// MARK: - Network error handler
-extension MockReauthorizationNetworkErrorHandler: ReauthorizationNetworkErrorHandler {
+// MARK: - HTTP error handler
+extension MockReauthorizationHTTPErrorHandler: ReauthorizationHTTPErrorHandler {
 
     func map(
         _ error: Error,

@@ -1,6 +1,6 @@
 import Foundation
 
-/// A basic implementation of a ``HTTPController``, with no authorization on requests. This type will submit requests using the provided ``NetworkSession`` and transform responses using the ``HTTPRequest/transform(data:statusCode:using:)`` function.
+/// A basic implementation of a ``HTTPController``, with no authorization on requests. This type will submit requests using the provided ``HTTPSession`` and transform responses using the ``HTTPRequest/transform(data:statusCode:using:)`` function.
 ///
 /// Any request errors are handed to the ``errorHandler`` to enable more information to be extracted where possible before throwing the error.
 ///
@@ -14,14 +14,14 @@ public struct BasicHTTPController {
     /// The base `URL` to submit all requests to. This is the base `URL` used to construct the full `URL` using the ``HTTPRequest/pathComponents`` and ``HTTPRequest/queryItems`` of the request.
     public let baseURL: URL
     
-    /// The ``NetworkSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
-    public let session: NetworkSession
+    /// The ``HTTPSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
+    public let session: HTTPSession
     
     /// The ``DataDecoder`` provided to a submitted ``HTTPRequest`` for decoding. It is best to set up a decoder suitable for the API once and reuse it. The ``HTTPRequest`` may still opt not to use this decoder.
     public let decoder: DataDecoder
         
     /// The type used to handle any errors that are thrown by the ``HTTPRequest/transform(data:statusCode:using:)`` function of a request. This is used to try and extract error messages from the response if possible. If this property is `nil` then the unaltered error is thrown.
-    public let errorHandler: NetworkErrorHandler?
+    public let errorHandler: HTTPErrorHandler?
 
     /// The headers that will be applied to every request before submission.
     public let universalHeaders: [String : String]?
@@ -31,15 +31,15 @@ public struct BasicHTTPController {
     /// Creates a new ``BasicHTTPController`` instance.
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
-    ///   - session: The ``NetworkSession`` the controller will use.
+    ///   - session: The ``HTTPSession`` the controller will use.
     ///   - decoder: The ``DataDecoder`` the controller will hand to requests for decoding.
-    ///   - errorHandler: The ``NetworkErrorHandler`` that can be used to manipulate errors before they are thrown.
+    ///   - errorHandler: The ``HTTPErrorHandler`` that can be used to manipulate errors before they are thrown.
     ///   - universalHeaders: The headers applied to every request submitted.
     public init(
         baseURL: URL,
-        session: NetworkSession = URLSession.shared,
+        session: HTTPSession = URLSession.shared,
         decoder: DataDecoder = JSONDecoder(),
-        errorHandler: NetworkErrorHandler? = nil,
+        errorHandler: HTTPErrorHandler? = nil,
         universalHeaders: [String : String]? = nil
     ) {
         

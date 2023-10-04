@@ -14,8 +14,8 @@ public struct AuthorizingHTTPController<Authorization: AuthorizationProvider> {
     /// The base `URL` to submit all requests to. This is the base `URL` used to construct the full `URL` using the ``HTTPRequest/pathComponents`` and ``HTTPRequest/queryItems`` of the request.
     public let baseURL: URL
     
-    /// The ``NetworkSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
-    public let session: NetworkSession
+    /// The ``HTTPSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
+    public let session: HTTPSession
         
     /// The ``AuthorizationProvider`` used to authorize requests that need it.
     public let authorization: Authorization
@@ -24,7 +24,7 @@ public struct AuthorizingHTTPController<Authorization: AuthorizationProvider> {
     public let decoder: DataDecoder
     
     /// The type used to handle any errors that are thrown by the ``HTTPRequest/transform(data:statusCode:using:)`` function of a request. This is used to try and extract error messages from the response if possible. If this property is `nil` then the unaltered error is thrown.
-    public let errorHandler: NetworkErrorHandler?
+    public let errorHandler: HTTPErrorHandler?
 
     /// The headers that will be applied to every request before submission.
     public let universalHeaders: [String : String]?
@@ -34,17 +34,17 @@ public struct AuthorizingHTTPController<Authorization: AuthorizationProvider> {
     /// Creates a new ``AuthorizingHTTPController`` instance.
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
-    ///   - session: The ``NetworkSession`` the controller will use.
+    ///   - session: The ``HTTPSession`` the controller will use.
     ///   - authorization: The ``AuthorizationProvider`` to use to authorize requests.
     ///   - decoder: The ``DataDecoder`` the controller will hand to requests for decoding.
-    ///   - errorHandler: The ``NetworkErrorHandler`` that can be used to manipulate errors before they are thrown.
+    ///   - errorHandler: The ``HTTPErrorHandler`` that can be used to manipulate errors before they are thrown.
     ///   - universalHeaders: The headers applied to every request submitted.
     public init(
         baseURL: URL,
-        session: NetworkSession = URLSession.shared,
+        session: HTTPSession = URLSession.shared,
         authorization: Authorization,
         decoder: DataDecoder = JSONDecoder(),
-        errorHandler: NetworkErrorHandler? = nil,
+        errorHandler: HTTPErrorHandler? = nil,
         universalHeaders: [String : String]? = nil
     ) {
         
