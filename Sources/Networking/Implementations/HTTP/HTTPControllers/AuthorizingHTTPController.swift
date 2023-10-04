@@ -6,7 +6,7 @@ import Foundation
 ///
 /// This difference between ``BasicHTTPController`` and ``AuthorizingHTTPController`` is that every request submitted through this type with ``HTTPRequest/requiresAuthorization`` equal to `true` will try and have authorizing credentials attached using the provided ``AuthorizationProvider`` before it is submitted.
 ///
-/// Requests are handed to the ``AuthorizationProvider/authorize(_:)`` function before they are submitted, and instances of ``AuthorizationProvider/AuthorizationRequest`` and assocated ``NetworkResponse`` from successful requests are passed to the ``AuthorizationProvider/handle(authorizationResponse:from:)`` function.
+/// Requests are handed to the ``AuthorizationProvider/authorize(_:)`` function before they are submitted, and instances of ``AuthorizationProvider/AuthorizationRequest`` and assocated ``HTTPResponse`` from successful requests are passed to the ``AuthorizationProvider/handle(authorizationResponse:from:)`` function.
 public struct AuthorizingHTTPController<Authorization: AuthorizationProvider> {
     
     // MARK: - Properties
@@ -14,7 +14,7 @@ public struct AuthorizingHTTPController<Authorization: AuthorizationProvider> {
     /// The base `URL` to submit all requests to. This is the base `URL` used to construct the full `URL` using the ``HTTPRequest/pathComponents`` and ``HTTPRequest/queryItems`` of the request.
     public let baseURL: URL
     
-    /// The ``NetworkSession`` used to fetch the raw `Data` ``NetworkResponse`` for a request.
+    /// The ``NetworkSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
     public let session: NetworkSession
         
     /// The ``AuthorizationProvider`` used to authorize requests that need it.
@@ -60,7 +60,7 @@ public struct AuthorizingHTTPController<Authorization: AuthorizationProvider> {
 // MARK: - HTTP controller
 extension AuthorizingHTTPController: HTTPController {
     
-    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType> {
+    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.ResponseType> {
         
         let requestWithUniversalHeaders = add(
             universalHeaders: universalHeaders,
@@ -122,13 +122,13 @@ extension AuthorizingHTTPController {
 extension AuthorizingHTTPController {
     
     private func extractAuthorizationContent<Response>(
-        from response: NetworkResponse<Response>,
+        from response: HTTPResponse<Response>,
         returnedBy request: some HTTPRequest
     ) {
         
         if
             let authorizationRequest = request as? Authorization.AuthorizationRequest,
-            let authorizationResponse = response as? NetworkResponse<Authorization.AuthorizationRequest.ResponseType>
+            let authorizationResponse = response as? HTTPResponse<Authorization.AuthorizationRequest.ResponseType>
         {
             authorization.handle(
                 authorizationResponse: authorizationResponse,

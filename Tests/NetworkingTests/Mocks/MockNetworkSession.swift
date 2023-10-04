@@ -5,14 +5,14 @@ final class MockNetworkSession {
     
     // MARK: - Properties
     private(set) var receivedRequests: [(request: any HTTPRequest, baseURL: URL)] = []
-    private var responses: [HashableRequest : NetworkResponse<Data>] = [:]
+    private var responses: [HashableRequest : HTTPResponse<Data>] = [:]
     var shouldThrowErrorOnSubmit = false
 }
 
 // MARK: - Network session
 extension MockNetworkSession: NetworkSession {
     
-    func submit(request: some HTTPRequest, to baseURL: URL) async throws -> NetworkResponse<Data> {
+    func submit(request: some HTTPRequest, to baseURL: URL) async throws -> HTTPResponse<Data> {
         
         receivedRequests.append((request, baseURL))
         
@@ -25,7 +25,7 @@ extension MockNetworkSession: NetworkSession {
                 let hashableRequest = HashableRequest(request: request)
                 return responses[hashableRequest]!
             } else {
-                return NetworkResponse(
+                return HTTPResponse(
                     content: Data(),
                     statusCode: .unauthorized,
                     headers: [:]
@@ -41,7 +41,7 @@ extension MockNetworkSession: NetworkSession {
 // MARK: - Response setting
 extension MockNetworkSession {
     
-    func set(response: NetworkResponse<Data>, for request: some HTTPRequest) {
+    func set(response: HTTPResponse<Data>, for request: some HTTPRequest) {
         
         let hashableRequest = HashableRequest(request: request)
         responses[hashableRequest] = response

@@ -43,11 +43,11 @@ extension OAuthAuthorizationProviderTests {
         func transform(data: Data, statusCode: HTTPStatusCode, using decoder: DataDecoder) throws -> Void {}
         
         // Tokens
-        func accessToken(from response: NetworkResponse<Void>) -> String? {
+        func accessToken(from response: HTTPResponse<Void>) -> String? {
             shouldProvideTokens ? "authorizationRequestAccessToken" : nil
         }
         
-        func refreshToken(from response: NetworkResponse<Void>) -> String? {
+        func refreshToken(from response: HTTPResponse<Void>) -> String? {
             shouldProvideTokens ? "authorizationRequestRefreshToken" : nil
         }
     }
@@ -73,11 +73,11 @@ extension OAuthAuthorizationProviderTests {
         func transform(data: Data, statusCode: HTTPStatusCode, using decoder: DataDecoder) throws -> Void {}
         
         // Tokens
-        func accessToken(from response: NetworkResponse<Void>) -> String? {
+        func accessToken(from response: HTTPResponse<Void>) -> String? {
             shouldProvideTokens ? "reauthorizationRequestAccessToken" : nil
         }
         
-        func refreshToken(from response: NetworkResponse<Void>) -> String? {
+        func refreshToken(from response: HTTPResponse<Void>) -> String? {
             shouldProvideTokens ? "reauthorizationRequestRefreshToken" : nil
         }
     }
@@ -112,7 +112,7 @@ extension OAuthAuthorizationProviderTests {
 
         let authorizationRequest = MockAuthorizationRequest(shouldProvideTokens: true)
         
-        let response = NetworkResponse(content: (), statusCode: .ok, headers: [:])
+        let response = HTTPResponse(content: (), statusCode: .ok, headers: [:])
         authorizationProvider.handle(authorizationResponse: response, from: authorizationRequest)
         
         XCTAssertEqual(secureStorage["oauth.accessToken"], authorizationRequest.accessToken(from: response))
@@ -128,7 +128,7 @@ extension OAuthAuthorizationProviderTests {
         
         let authorizationRequest = MockAuthorizationRequest(shouldProvideTokens: false)
         
-        let response = NetworkResponse(content: (), statusCode: .ok, headers: [:])
+        let response = HTTPResponse(content: (), statusCode: .ok, headers: [:])
         authorizationProvider.handle(authorizationResponse: response, from: authorizationRequest)
         
         XCTAssertNil(authorizationRequest.accessToken(from: response))
@@ -146,7 +146,7 @@ extension OAuthAuthorizationProviderTests {
         var reauthorizationRequest = MockReauthorizationRequest(refreshToken: "")
         reauthorizationRequest.shouldProvideTokens = true
         
-        let response = NetworkResponse(content: (), statusCode: .ok, headers: [:])
+        let response = HTTPResponse(content: (), statusCode: .ok, headers: [:])
         authorizationProvider.handle(reauthorizationResponse: response, from: reauthorizationRequest)
         
         XCTAssertEqual(secureStorage["oauth.accessToken"], reauthorizationRequest.accessToken(from: response))
@@ -163,7 +163,7 @@ extension OAuthAuthorizationProviderTests {
         var reauthorizationRequest = MockReauthorizationRequest(refreshToken: "")
         reauthorizationRequest.shouldProvideTokens = false
         
-        let response = NetworkResponse(content: (), statusCode: .ok, headers: [:])
+        let response = HTTPResponse(content: (), statusCode: .ok, headers: [:])
         authorizationProvider.handle(reauthorizationResponse: response, from: reauthorizationRequest)
         
         XCTAssertNil(reauthorizationRequest.accessToken(from: response))

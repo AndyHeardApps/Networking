@@ -4,7 +4,7 @@ import Foundation
 final class MockAuthorizationProvider {
     
     // MARK: - Properties
-    private(set) var handledAuthorizationResponse: NetworkResponse<MockAccessToken>?
+    private(set) var handledAuthorizationResponse: HTTPResponse<MockAccessToken>?
     private(set) var handledAuthorizationResponseRequest: MockHTTPRequest<MockAccessToken>?
     private(set) var authorizedRequest: (any HTTPRequest)?
 }
@@ -13,7 +13,7 @@ final class MockAuthorizationProvider {
 extension MockAuthorizationProvider: AuthorizationProvider {
     
     func handle(
-        authorizationResponse: NetworkResponse<MockAccessToken>,
+        authorizationResponse: HTTPResponse<MockAccessToken>,
         from request: MockHTTPRequest<MockAccessToken>
     ) {
         

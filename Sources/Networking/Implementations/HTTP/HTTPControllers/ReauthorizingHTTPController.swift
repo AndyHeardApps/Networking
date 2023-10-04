@@ -6,7 +6,7 @@ import Foundation
 ///
 /// This difference between ``AuthorizingHTTPController`` and ``ReauthorizingHTTPController`` is that the ``errorHandler`` is a ``ReauthorizationNetworkErrorHandler`` that has the additional ``ReauthorizationNetworkErrorHandler/shouldAttemptReauthorization(afterCatching:from:)`` function that decides whether a thrown error can be recovered by reauthorizing and resubmitting the request. In addition, the ``authorization`` is a ``ReauthorizationProvider``, that provides the ``ReauthorizationProvider/makeReauthorizationRequest()`` and ``ReauthorizationProvider/handle(reauthorizationResponse:from:)`` functions for creating reauthorizing requests and handling their responses.
 ///
-/// As with the ``AuthorizingHTTPController``, requests are handed to the ``AuthorizationProvider/authorize(_:)`` function before they are submitted, and instances of ``AuthorizationProvider/AuthorizationRequest`` and assocated ``NetworkResponse`` from successful requests are passed to the ``AuthorizationProvider/handle(authorizationResponse:from:)`` function.
+/// As with the ``AuthorizingHTTPController``, requests are handed to the ``AuthorizationProvider/authorize(_:)`` function before they are submitted, and instances of ``AuthorizationProvider/AuthorizationRequest`` and assocated ``HTTPResponse`` from successful requests are passed to the ``AuthorizationProvider/handle(authorizationResponse:from:)`` function.
 ///
 /// If the requests ``HTTPRequest/transform(data:statusCode:using:)`` function throws an error and the ``errorHandler`` is not `nil`, it is passed to the ``ReauthorizationNetworkErrorHandler/shouldAttemptReauthorization(afterCatching:from:)`` function. If it returns `true` then the ``ReauthorizationProvider/makeReauthorizationRequest()`` function is used to create and submit a reauthorizing request. The initial failed request then has the updated credentials added to it and is resubmitted. If the ``errorHandler`` is nil, then this same logic is applied for a ``HTTPStatusCode/unauthorized`` status code by default.
 public struct ReauthorizingHTTPController<Authorization: ReauthorizationProvider> {
@@ -19,7 +19,7 @@ public struct ReauthorizingHTTPController<Authorization: ReauthorizationProvider
     /// The base `URL` to submit any reauthorization requests to. This may be some separate auth microservice. As with `baseURL` the full `URL` for a request is constructed  using the ``HTTPRequest/pathComponents`` and ``HTTPRequest/queryItems`` of the request.
     public let reauthorizationBaseURL: URL
     
-    /// The ``NetworkSession`` used to fetch the raw `Data` ``NetworkResponse`` for a request.
+    /// The ``NetworkSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
     public let session: NetworkSession
     
     /// The ``ReauthorizationProvider`` used to authorize requests that need it, and reauthorize the app whenever possible.
@@ -68,7 +68,7 @@ public struct ReauthorizingHTTPController<Authorization: ReauthorizationProvider
 // MARK: - HTTP controller
 extension ReauthorizingHTTPController: HTTPController {
     
-    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType> {
+    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.ResponseType> {
         
         try await fetchResponse(
             request,
@@ -79,7 +79,7 @@ extension ReauthorizingHTTPController: HTTPController {
     private func fetchResponse<Request: HTTPRequest>(
         _ request: Request,
         shouldAttemptReauthorization: Bool
-    ) async throws -> NetworkResponse<Request.ResponseType> {
+    ) async throws -> HTTPResponse<Request.ResponseType> {
         
         let requestWithUniversalHeaders = add(
             universalHeaders: universalHeaders,
@@ -164,7 +164,7 @@ extension ReauthorizingHTTPController {
     
     private func handle(
         _ error: Error,
-        from response: NetworkResponse<Data>,
+        from response: HTTPResponse<Data>,
         shouldAttemptReauthorization: Bool
     ) -> ErrorHandlingResult {
         
@@ -195,7 +195,7 @@ extension ReauthorizingHTTPController {
     
     private func reauthorize(
         afterError originalError: Error,
-        from originalResponse: NetworkResponse<Data>
+        from originalResponse: HTTPResponse<Data>
     ) async throws {
         
         do {
@@ -241,13 +241,13 @@ extension ReauthorizingHTTPController {
 extension ReauthorizingHTTPController {
     
     private func extractAuthorizationContent<Response>(
-        from response: NetworkResponse<Response>,
+        from response: HTTPResponse<Response>,
         returnedBy request: some HTTPRequest
     ) {
         
         if
             let authorizationRequest = request as? Authorization.AuthorizationRequest,
-            let authorizationResponse = response as? NetworkResponse<Authorization.AuthorizationRequest.ResponseType>
+            let authorizationResponse = response as? HTTPResponse<Authorization.AuthorizationRequest.ResponseType>
         {
             authorization.handle(
                 authorizationResponse: authorizationResponse,
@@ -257,7 +257,7 @@ extension ReauthorizingHTTPController {
         
         if
             let reauthorizationRequest = request as? Authorization.ReauthorizationRequest,
-            let reauthorizationResponse = response as? NetworkResponse<Authorization.ReauthorizationRequest.ResponseType>
+            let reauthorizationResponse = response as? HTTPResponse<Authorization.ReauthorizationRequest.ResponseType>
         {
             authorization.handle(
                 reauthorizationResponse: reauthorizationResponse,

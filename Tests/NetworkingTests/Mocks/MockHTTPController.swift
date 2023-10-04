@@ -13,7 +13,7 @@ final class MockHTTPController {
 // MARK: - HTTP controller
 extension MockHTTPController: HTTPController {
     
-    func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType> {
+    func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.ResponseType> {
         
         let transformedData = try request.transform(
             data: responseData,
@@ -21,7 +21,7 @@ extension MockHTTPController: HTTPController {
             using: responseDecoder
         )
         
-        let response = NetworkResponse(
+        let response = HTTPResponse(
             content: transformedData,
             statusCode: responseStatusCode,
             headers: responseHeaders

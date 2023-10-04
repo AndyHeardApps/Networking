@@ -8,9 +8,9 @@ final class MockReauthorizationProvider {
     var authorizationFailsUntilReauthorizationRequestIsMade = false
     private var hasCreatedReauthorizationRequest = false
     private(set) var makeReauthorizationRequestWasCalled = false
-    private(set) var handledAuthorizationResponse: NetworkResponse<MockAccessToken>?
+    private(set) var handledAuthorizationResponse: HTTPResponse<MockAccessToken>?
     private(set) var handledAuthorizationResponseRequest: MockHTTPRequest<MockAccessToken>?
-    private(set) var handledReauthorizationResponse: NetworkResponse<MockRefreshToken>?
+    private(set) var handledReauthorizationResponse: HTTPResponse<MockRefreshToken>?
     private(set) var handledReauthorizationResponseRequest: MockHTTPRequest<MockRefreshToken>?
     private(set) var authorizedRequest: (any HTTPRequest)?
 }
@@ -40,7 +40,7 @@ extension MockReauthorizationProvider: ReauthorizationProvider {
     }
     
     func handle(
-        authorizationResponse: NetworkResponse<MockAccessToken>,
+        authorizationResponse: HTTPResponse<MockAccessToken>,
         from request: MockHTTPRequest<MockAccessToken>
     ) {
         
@@ -49,7 +49,7 @@ extension MockReauthorizationProvider: ReauthorizationProvider {
     }
     
     func handle(
-        reauthorizationResponse: NetworkResponse<MockRefreshToken>,
+        reauthorizationResponse: HTTPResponse<MockRefreshToken>,
         from request: MockHTTPRequest<MockRefreshToken>
     ) {
         

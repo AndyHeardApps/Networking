@@ -9,17 +9,17 @@ public protocol HTTPController {
     
     /// Fetches the response for a given ``HTTPRequest``.
     /// - Parameter request: The ``HTTPRequest`` to be submitted.
-    /// - Returns: The ``NetworkResponse`` returned by the `request`.
+    /// - Returns: The ``HTTPResponse`` returned by the `request`.
     /// - Throws: Any errors that occurred when fetching the response. Usually this is a network or decoding error. See ``HTTPStatusCode``.
-    func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType>
+    func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.ResponseType>
 }
 
 // MARK: - Convenience method
 extension HTTPController {
     
-    /// Fetches the response contents for a given ``HTTPRequest``. This is a convenience method fo when the ``NetworkResponse/headers`` and ``NetworkResponse/statusCode`` of a ``NetworkResponse`` are not needed.
+    /// Fetches the response contents for a given ``HTTPRequest``. This is a convenience method fo when the ``HTTPResponse/headers`` and ``HTTPResponse/statusCode`` of a ``HTTPResponse`` are not needed.
     /// - Parameter request: The ``HTTPRequest`` to be submitted.
-    /// - Returns: The ``NetworkResponse/content`` returned by the `request`.
+    /// - Returns: The ``HTTPResponse/content`` returned by the `request`.
     /// - Throws: Any errors that occurred when fetching the response. Usually this is a network or decoding error. See ``HTTPStatusCode``.
     public func fetchContent<Request: HTTPRequest>(_ request: Request) async throws -> Request.ResponseType {
         

@@ -4,10 +4,10 @@ import Foundation
 extension HTTPController {
     
     func transform<Request: HTTPRequest>(
-        dataResponse: NetworkResponse<Data>,
+        dataResponse: HTTPResponse<Data>,
         from request: Request,
         using decoder: DataDecoder
-    ) throws -> NetworkResponse<Request.ResponseType> {
+    ) throws -> HTTPResponse<Request.ResponseType> {
         
         let transformedContents = try request.transform(
             data: dataResponse.content,
@@ -15,7 +15,7 @@ extension HTTPController {
             using: decoder
         )
         
-        let transformedResponse = NetworkResponse(
+        let transformedResponse = HTTPResponse(
             content: transformedContents,
             statusCode: dataResponse.statusCode,
             headers: dataResponse.headers

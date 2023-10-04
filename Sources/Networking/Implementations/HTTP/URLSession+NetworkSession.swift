@@ -8,7 +8,7 @@ extension URLSession: NetworkSession {
     public func submit(
         request:  some HTTPRequest,
         to baseURL: URL
-    ) async throws -> NetworkResponse<Data> {
+    ) async throws -> HTTPResponse<Data> {
 
         let urlRequest = try self.urlRequest(for: request, withBaseURL: baseURL)
         let (data, response) = try await self.data(for: urlRequest)

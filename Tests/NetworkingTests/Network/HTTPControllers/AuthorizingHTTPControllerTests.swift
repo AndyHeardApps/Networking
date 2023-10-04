@@ -95,7 +95,7 @@ extension AuthorizingHTTPControllerTests {
 
         let responseData = UUID().uuidString.data(using: .utf8)!
         let responseHeaders = ["header1" : "headerValue1"]
-        let expectedResponse = NetworkResponse(
+        let expectedResponse = HTTPResponse(
             content: responseData,
             statusCode: .ok,
             headers: responseHeaders
@@ -243,7 +243,7 @@ extension AuthorizingHTTPControllerTests {
         let request = MockHTTPRequest { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
-        let response = NetworkResponse(
+        let response = HTTPResponse(
             content: UUID().uuidString.data(using: .utf8)!,
             statusCode: .badRequest,
             headers: [:]
@@ -268,7 +268,7 @@ extension AuthorizingHTTPControllerTests {
         let request = MockHTTPRequest { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
-        let response = NetworkResponse(
+        let response = HTTPResponse(
             content: UUID().uuidString.data(using: .utf8)!,
             statusCode: .badRequest,
             headers: [:]

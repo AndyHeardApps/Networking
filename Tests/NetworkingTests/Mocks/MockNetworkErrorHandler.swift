@@ -5,7 +5,7 @@ final class MockNetworkErrorHandler {
     
     // MARK: - Properties
     private(set) var recievedError: Error?
-    private(set) var recievedResponse: NetworkResponse<Data>?
+    private(set) var recievedResponse: HTTPResponse<Data>?
     var result: Error!
 }
 
@@ -14,7 +14,7 @@ extension MockNetworkErrorHandler: NetworkErrorHandler {
     
     func map(
         _ error: Error,
-        from response: NetworkResponse<Data>
+        from response: HTTPResponse<Data>
     ) -> Error {
         
         recievedError = error

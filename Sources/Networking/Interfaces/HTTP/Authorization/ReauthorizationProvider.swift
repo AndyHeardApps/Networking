@@ -19,12 +19,12 @@ public protocol ReauthorizationProvider<AuthorizationRequest, ReauthorizationReq
     /// - Returns: A request that can be used to reauthorize the app with an API, or nil if the request cannot be made.
     func makeReauthorizationRequest() -> ReauthorizationRequest?
         
-    /// Extracts authorization credentials from the provided ``ReauthorizationRequest`` and associated ``NetworkResponse`` where possible, and stores them for later use in ``AuthorizationProvider/authorize(_:)`` and ``makeReauthorizationRequest()``.
+    /// Extracts authorization credentials from the provided ``ReauthorizationRequest`` and associated ``HTTPResponse`` where possible, and stores them for later use in ``AuthorizationProvider/authorize(_:)`` and ``makeReauthorizationRequest()``.
     /// - Parameters:
-    ///   - reauthorizationResponse: A ``NetworkResponse``, potentially containing authorization credentials that can be extracted.
+    ///   - reauthorizationResponse: A ``HTTPResponse``, potentially containing authorization credentials that can be extracted.
     ///   - request: The ``HTTPRequest`` that produced the `reauthorizationResponse`.
     func handle(
-        reauthorizationResponse: NetworkResponse<ReauthorizationRequest.ResponseType>,
+        reauthorizationResponse: HTTPResponse<ReauthorizationRequest.ResponseType>,
         from request: ReauthorizationRequest
     )
 }

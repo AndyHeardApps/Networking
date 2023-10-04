@@ -14,7 +14,7 @@ public struct BasicHTTPController {
     /// The base `URL` to submit all requests to. This is the base `URL` used to construct the full `URL` using the ``HTTPRequest/pathComponents`` and ``HTTPRequest/queryItems`` of the request.
     public let baseURL: URL
     
-    /// The ``NetworkSession`` used to fetch the raw `Data` ``NetworkResponse`` for a request.
+    /// The ``NetworkSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
     public let session: NetworkSession
     
     /// The ``DataDecoder`` provided to a submitted ``HTTPRequest`` for decoding. It is best to set up a decoder suitable for the API once and reuse it. The ``HTTPRequest`` may still opt not to use this decoder.
@@ -54,7 +54,7 @@ public struct BasicHTTPController {
 // MARK: - HTTP controller
 extension BasicHTTPController: HTTPController {
     
-    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType> {
+    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.ResponseType> {
 
         if request.requiresAuthorization {
             throw HTTPStatusCode.unauthorized
