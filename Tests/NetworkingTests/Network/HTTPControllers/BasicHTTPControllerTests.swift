@@ -1,7 +1,7 @@
 import XCTest
 @testable import Networking
 
-final class BasicNetworkControllerTests: XCTestCase, NetworkControllerTestCase {
+final class BasicHTTPControllerTests: XCTestCase, HTTPControllerTestCase {
 
     // MARK: - Properties
     private let baseURL = URL(string: "https://example.domain.com")!
@@ -9,11 +9,11 @@ final class BasicNetworkControllerTests: XCTestCase, NetworkControllerTestCase {
     private var decoder: DataDecoder!
     private var errorHandler: MockNetworkErrorHandler!
     private(set) var universalHeaders: [String : String]!
-    private var networkController: BasicNetworkController!
+    private var httpController: BasicHTTPController!
 }
 
 // MARK: - Setup
-extension BasicNetworkControllerTests {
+extension BasicHTTPControllerTests {
 
     override func setUp() {
         super.setUp()
@@ -22,7 +22,7 @@ extension BasicNetworkControllerTests {
         self.errorHandler = MockNetworkErrorHandler()
         self.decoder = JSONDecoder()
         self.universalHeaders = ["headerKey2" : "universalHeaderValue2"]
-        self.networkController = BasicNetworkController(
+        self.httpController = BasicHTTPController(
             baseURL: baseURL,
             session: networkSession,
             decoder: decoder,
@@ -38,12 +38,12 @@ extension BasicNetworkControllerTests {
         self.errorHandler = nil
         self.decoder = nil
         self.universalHeaders = nil
-        self.networkController = nil
+        self.httpController = nil
     }
 }
 
 // MARK: - Tests
-extension BasicNetworkControllerTests {
+extension BasicHTTPControllerTests {
 
     // MARK: Request manipulation
     func testFetchResponse_willSubmitRequest_toNetworkSession_withoutAssertionFailure_whenAuthorizationIsNotRequired() async throws {
@@ -51,7 +51,7 @@ extension BasicNetworkControllerTests {
         let request = MockNetworkRequest(requiresAuthorization: false)
         networkSession.setBlankResponse(for: request)
 
-        _ = try await networkController.fetchResponse(request)
+        _ = try await httpController.fetchResponse(request)
 
         let lastReceivedRequest = networkSession.receivedRequests.last?.request
         let lastReceivedBaseURL = networkSession.receivedRequests.last?.baseURL
@@ -72,7 +72,7 @@ extension BasicNetworkControllerTests {
         networkSession.setBlankResponse(for: request)
 
         do {
-            _ = try await networkController.fetchResponse(request)
+            _ = try await httpController.fetchResponse(request)
         } catch {
             XCTAssertEqual(error as? HTTPStatusCode, .unauthorized)
         }
@@ -105,7 +105,7 @@ extension BasicNetworkControllerTests {
             for: request
         )
 
-        let response = try await networkController.fetchResponse(request)
+        let response = try await httpController.fetchResponse(request)
 
         XCTAssertEqual(transformData, expectedResponse.content)
         XCTAssertEqual(transformStatusCode, expectedResponse.statusCode)
@@ -117,14 +117,14 @@ extension BasicNetworkControllerTests {
     }
 
     // MARK: Universal headers
-    func testFetchResponse_willNotAddUniversalHeaders_toRequestBeforeSubmission_whenNetworkControllerHasNoUniversalHeaders() async throws {
+    func testFetchResponse_willNotAddUniversalHeaders_toRequestBeforeSubmission_whenHTTPControllerHasNoUniversalHeaders() async throws {
 
         let request = MockNetworkRequest(
             headers: ["headerKey2" : "headerValue2"],
             requiresAuthorization: false
         )
         networkSession.setBlankResponse(for: request)
-        networkController = BasicNetworkController(
+        httpController = BasicHTTPController(
             baseURL: baseURL,
             session: networkSession,
             decoder: decoder,
@@ -132,7 +132,7 @@ extension BasicNetworkControllerTests {
             universalHeaders: nil
         )
         
-        _ = try await networkController.fetchResponse(request)
+        _ = try await httpController.fetchResponse(request)
 
         let lastReceivedRequest = networkSession.receivedRequests.last?.request
 
@@ -153,9 +153,9 @@ extension BasicNetworkControllerTests {
         )
         networkSession.setBlankResponse(for: request)
 
-        _ = try await networkController.fetchResponse(request)
+        _ = try await httpController.fetchResponse(request)
 
-        let expectedHeaders = networkController.universalHeaders!.merging(request.headers!) { $1 }
+        let expectedHeaders = httpController.universalHeaders!.merging(request.headers!) { $1 }
 
         let lastReceivedRequest = networkSession.receivedRequests.last?.request
 
@@ -176,14 +176,14 @@ extension BasicNetworkControllerTests {
         )
         networkSession.setBlankResponse(for: request)
 
-        _ = try await networkController.fetchResponse(request)
+        _ = try await httpController.fetchResponse(request)
 
         let lastReceivedRequest = networkSession.receivedRequests.last?.request
 
         XCTAssertEqual(networkSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
-        XCTAssertEqual(lastReceivedRequest?.headers, networkController.universalHeaders)
+        XCTAssertEqual(lastReceivedRequest?.headers, httpController.universalHeaders)
         XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
         XCTAssertEqual(lastReceivedRequest?.body as? UUID, request.body)
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
@@ -197,7 +197,7 @@ extension BasicNetworkControllerTests {
         )
         networkSession.setBlankResponse(for: request)
 
-        _ = try await networkController.fetchResponse(request)
+        _ = try await httpController.fetchResponse(request)
 
         let lastReceivedRequest = networkSession.receivedRequests.last?.request
 
@@ -225,7 +225,7 @@ extension BasicNetworkControllerTests {
         networkSession.set(response: response, for: request)
 
         do {
-            _ = try await networkController.fetchResponse(request)
+            _ = try await httpController.fetchResponse(request)
             XCTFail()
         } catch {
 
@@ -249,7 +249,7 @@ extension BasicNetworkControllerTests {
         errorHandler.result = MockError()
         networkSession.set(response: response, for: request)
 
-        networkController = BasicNetworkController(
+        httpController = BasicHTTPController(
             baseURL: baseURL,
             session: networkSession,
             decoder: decoder,
@@ -258,7 +258,7 @@ extension BasicNetworkControllerTests {
         )
 
         do {
-            _ = try await networkController.fetchResponse(request)
+            _ = try await httpController.fetchResponse(request)
             XCTFail()
         } catch {
 
@@ -276,7 +276,7 @@ extension BasicNetworkControllerTests {
         networkSession.shouldThrowErrorOnSubmit = true
 
         do {
-            _ = try await networkController.fetchResponse(request)
+            _ = try await httpController.fetchResponse(request)
             XCTFail()
         } catch {
 

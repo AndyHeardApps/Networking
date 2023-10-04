@@ -2,7 +2,7 @@ import Foundation
 
 /// Defines a strongly typed abstraction for a network request.
 ///
-/// Any types implementing this protocol define a series of properties that point to an endpoint on a network. It is the job of a request to understand the data at the endpoint it is pointing to, and to be able to decode that data into some concrete Swift type. When a ``NetworkRequest`` is submitted through some ``NetworkController``, the ``transform(data:statusCode:using:)`` function is called in order to be able to strongly type the response from the request. This tightly couples the request to the type of content it will provide.
+/// Any types implementing this protocol define a series of properties that point to an endpoint on a network. It is the job of a request to understand the data at the endpoint it is pointing to, and to be able to decode that data into some concrete Swift type. When a ``NetworkRequest`` is submitted through some ``HTTPController``, the ``transform(data:statusCode:using:)`` function is called in order to be able to strongly type the response from the request. This tightly couples the request to the type of content it will provide.
 ///
 /// Implementations should be lightweight, and are intended to be created and recycled quickly.
 ///
@@ -34,7 +34,7 @@ public protocol NetworkRequest<ResponseType> {
     /// The body of the request.
     var body: Body? { get }
     
-    /// Whether or not the request will require authorization credentials attaching. If so, then ``AuthorizingNetworkController`` and ``ReauthorizingNetworkController`` types will authorize the request before submission.
+    /// Whether or not the request will require authorization credentials attaching. If so, then ``AuthorizingHTTPController`` and ``ReauthorizingHTTPController`` types will authorize the request before submission.
     var requiresAuthorization: Bool { get }
     
     // MARK: - Functions
@@ -45,7 +45,7 @@ public protocol NetworkRequest<ResponseType> {
     /// - Parameters:
     ///   - data: The `Data` returned from the network that needs to be decoded.
     ///   - statusCode: The ``HTTPStatusCode`` returned from the network.
-    ///   - decoder: A ``DataDecoder`` provided by the calling ``NetworkController`` that can be used to decode the `Data`. This usually has API specific settings such as date decoding options. If the request "knows better" than to use this default decoder, then it should use some other instance.
+    ///   - decoder: A ``DataDecoder`` provided by the calling ``HTTPController`` that can be used to decode the `Data`. This usually has API specific settings such as date decoding options. If the request "knows better" than to use this default decoder, then it should use some other instance.
     /// - Returns: The decoded object.
     /// - Throws: Any errors that occured during decoding. This is most likely to be an unexpeced ``HTTPStatusCode`` or a `DecodingError`.
     func transform(

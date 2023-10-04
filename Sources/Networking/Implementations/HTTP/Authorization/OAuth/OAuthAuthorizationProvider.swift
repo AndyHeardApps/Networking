@@ -38,7 +38,7 @@ extension OAuthAuthorizationProvider: ReauthorizationProvider {
         var headers = request.headers ?? [:]
         headers[OAuthAuthorizationProviderStorageKey.authorizationHeader] = "Bearer \(accessToken)"
 
-        let request = AnyRequest(
+        let request = AnyNetworkRequest(
             httpMethod: request.httpMethod,
             pathComponents: request.pathComponents,
             headers: headers,

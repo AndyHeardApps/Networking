@@ -1,12 +1,12 @@
 import Networking
 
-// Shared helpers for NetworkController tests
-protocol NetworkControllerTestCase {
+// Shared helpers for HTTPController tests
+protocol HTTPControllerTestCase {
     
     var universalHeaders: [String : String]! { get }
 }
 
-extension NetworkControllerTestCase {
+extension HTTPControllerTestCase {
     
     func expectedHeaders(for request: some NetworkRequest, additionalHeaders: [String : String]? = nil) -> [String : String] {
         

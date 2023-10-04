@@ -28,59 +28,25 @@ extension URLSession: NetworkSession {
 // MARK: - URL request
 extension URLSession {
     
-    private func urlRequest(
-        httpMethod: HTTPMethod,
-        pathComponents: [String],
-        headers: [String : String]?,
-        queryItems: [String : String]?,
-        body: (some Encodable)?,
-        baseURL: URL
+    private func urlRequest<Request: NetworkRequest>(
+        for request: Request,
+        withBaseURL baseURL: URL
     ) throws -> URLRequest {
         
         var urlComponents = URLComponents()
-        urlComponents.path = pathComponents.joined(separator: "/")
-        urlComponents.queryItems = queryItems?.map(URLQueryItem.init)
+        urlComponents.path = request.pathComponents.joined(separator: "/")
+        urlComponents.queryItems = request.queryItems?.map(URLQueryItem.init)
         
         guard let url = urlComponents.url(relativeTo: baseURL) else {
             throw NetworkSessionError.failedToCreateURLFromComponents
         }
         
         var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = httpMethod.asString
-        urlRequest.allHTTPHeaderFields = headers
-        urlRequest.httpBody = try body.map(Self.bodyEncoder.encode)
+        urlRequest.httpMethod = request.httpMethod.asString
+        urlRequest.allHTTPHeaderFields = request.headers
+        urlRequest.httpBody = try request.body.map(Self.bodyEncoder.encode)
         
         return urlRequest
-    }
-    
-    private func urlRequest<Request: NetworkRequest>(
-        for request: Request,
-        withBaseURL baseURL: URL
-    ) throws -> URLRequest {
-        
-        try urlRequest(
-            httpMethod: request.httpMethod,
-            pathComponents: request.pathComponents,
-            headers: request.headers,
-            queryItems: request.queryItems,
-            body: request.body,
-            baseURL: baseURL
-        )
-    }
-    
-    private func urlRequest<Request: NetworkWebSocketRequest>(
-        for request: Request,
-        withBaseURL baseURL: URL
-    ) throws -> URLRequest {
-        
-        try urlRequest(
-            httpMethod: .get,
-            pathComponents: request.pathComponents,
-            headers: request.headers,
-            queryItems: request.queryItems,
-            body: Never?.none,
-            baseURL: baseURL
-        )
     }
 }
 

@@ -3,7 +3,7 @@ import Foundation
 /// A type erased ``NetworkRequest``.
 ///
 /// **Note:** This is no longer widely used since the introduction of existential types in Swift.
-public struct AnyRequest<ResponseType, Body: Encodable>: NetworkRequest {
+public struct AnyNetworkRequest<ResponseType, Body: Encodable>: NetworkRequest {
     
     // MARK: Properties
     public let httpMethod: HTTPMethod

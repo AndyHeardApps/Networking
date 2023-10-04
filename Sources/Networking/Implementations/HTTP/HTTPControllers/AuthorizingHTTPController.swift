@@ -1,13 +1,13 @@
 import Foundation
 
-/// A ``NetworkController`` that authorizes every request submitted using the provided ``AuthorizationProvider``.
+/// A ``HTTPController`` that authorizes every request submitted using the provided ``AuthorizationProvider``.
 ///
-/// This type extends the basic implementation of the ``BasicNetworkController``, so refer to its documentation for basic usage.
+/// This type extends the basic implementation of the ``BasicHTTPController``, so refer to its documentation for basic usage.
 ///
-/// This difference between ``BasicNetworkController`` and ``AuthorizingNetworkController`` is that every request submitted through this type with ``NetworkRequest/requiresAuthorization`` equal to `true` will try and have authorizing credentials attached using the provided ``AuthorizationProvider`` before it is submitted.
+/// This difference between ``BasicHTTPController`` and ``AuthorizingHTTPController`` is that every request submitted through this type with ``NetworkRequest/requiresAuthorization`` equal to `true` will try and have authorizing credentials attached using the provided ``AuthorizationProvider`` before it is submitted.
 ///
 /// Requests are handed to the ``AuthorizationProvider/authorize(_:)`` function before they are submitted, and instances of ``AuthorizationProvider/AuthorizationRequest`` and assocated ``NetworkResponse`` from successful requests are passed to the ``AuthorizationProvider/handle(authorizationResponse:from:)`` function.
-public struct AuthorizingNetworkController<Authorization: AuthorizationProvider> {
+public struct AuthorizingHTTPController<Authorization: AuthorizationProvider> {
     
     // MARK: - Properties
     
@@ -31,7 +31,7 @@ public struct AuthorizingNetworkController<Authorization: AuthorizationProvider>
     
     // MARK: - Initialisers
 
-    /// Creates a new ``AuthorizingNetworkController`` instance.
+    /// Creates a new ``AuthorizingHTTPController`` instance.
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
     ///   - session: The ``NetworkSession`` the controller will use.
@@ -57,8 +57,8 @@ public struct AuthorizingNetworkController<Authorization: AuthorizationProvider>
     }
 }
 
-// MARK: - Network controller
-extension AuthorizingNetworkController: NetworkController {
+// MARK: - HTTP controller
+extension AuthorizingHTTPController: HTTPController {
     
     public func fetchResponse<Request: NetworkRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType> {
         
@@ -104,7 +104,7 @@ extension AuthorizingNetworkController: NetworkController {
 }
 
 // MARK: - Request modification
-extension AuthorizingNetworkController {
+extension AuthorizingHTTPController {
     
     private func authorize<Request: NetworkRequest>(request: Request) -> any NetworkRequest<Request.ResponseType> {
         
@@ -119,7 +119,7 @@ extension AuthorizingNetworkController {
 }
     
 // MARK: - Authorized content extraction
-extension AuthorizingNetworkController {
+extension AuthorizingHTTPController {
     
     private func extractAuthorizationContent<Response>(
         from response: NetworkResponse<Response>,
@@ -128,10 +128,10 @@ extension AuthorizingNetworkController {
         
         if
             let authorizationRequest = request as? Authorization.AuthorizationRequest,
-            let authorizionResponse = response as? NetworkResponse<Authorization.AuthorizationRequest.ResponseType>
+            let authorizationResponse = response as? NetworkResponse<Authorization.AuthorizationRequest.ResponseType>
         {
             authorization.handle(
-                authorizationResponse: authorizionResponse,
+                authorizationResponse: authorizationResponse,
                 from: authorizationRequest
             )
         }

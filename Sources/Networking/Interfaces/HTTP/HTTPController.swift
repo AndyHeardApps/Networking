@@ -2,8 +2,8 @@ import Foundation
 
 /// Defines an entrypoint for fetching content from a ``NetworkRequest``.
 ///
-/// There are three default types that implement this protocol, ``BasicNetworkController``, ``AuthorizingNetworkController``, and ``ReauthorizingNetworkController``. These can be used depending on how much security an API requires.
-public protocol NetworkController {
+/// There are three default types that implement this protocol, ``BasicHTTPController``, ``AuthorizingHTTPController``, and ``ReauthorizingHTTPController``. These can be used depending on how much security an API requires.
+public protocol HTTPController {
     
     // MARK: - Functions
     
@@ -15,7 +15,7 @@ public protocol NetworkController {
 }
 
 // MARK: - Convenience method
-extension NetworkController {
+extension HTTPController {
     
     /// Fetches the response contents for a given ``NetworkRequest``. This is a convenience method fo when the ``NetworkResponse/headers`` and ``NetworkResponse/statusCode`` of a ``NetworkResponse`` are not needed.
     /// - Parameter request: The ``NetworkRequest`` to be submitted.

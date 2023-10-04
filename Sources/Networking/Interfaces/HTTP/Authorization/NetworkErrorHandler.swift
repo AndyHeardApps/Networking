@@ -1,6 +1,6 @@
 import Foundation
 
-/// Describes a type that handles errors produced by a ``NetworkController``.
+/// Describes a type that handles errors produced by a ``HTTPController``.
 ///
 /// Implementations of this protocol define a function that accepts an `Error` and the ``NetworkResponse`` containing `Data` that caused the error to be thrown, and attempts to extract more information and map it into a more detailed `Error` type. This gives a developer the opportunity to handle custom error types in the networking logic. Usually the data in in the ``NetworkResponse/content`` will contain further information about the error that can be extracted and returned in a more detailed error type.
 public protocol NetworkErrorHandler {

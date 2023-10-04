@@ -1,13 +1,13 @@
 import Foundation
 
-/// A basic implementation of a ``NetworkController``, with no authorization on requests. This type will submit requests using the provided ``NetworkSession`` and transform responses using the ``NetworkRequest/transform(data:statusCode:using:)`` function.
+/// A basic implementation of a ``HTTPController``, with no authorization on requests. This type will submit requests using the provided ``NetworkSession`` and transform responses using the ``NetworkRequest/transform(data:statusCode:using:)`` function.
 ///
 /// Any request errors are handed to the ``errorHandler`` to enable more information to be extracted where possible before throwing the error.
 ///
 /// The ``universalHeaders`` property can be used to add a static set of headers to every request submitted, such as API keys.
 ///
 /// Though the implementation is intentionally lightweight, it is best if an instance is created once for each `baseURL` on app launch, and held for reuse.
-public struct BasicNetworkController {
+public struct BasicHTTPController {
     
     // MARK: - Properties
     
@@ -28,7 +28,7 @@ public struct BasicNetworkController {
 
     // MARK: - Initialisers
     
-    /// Creates a new ``BasicNetworkController`` instance.
+    /// Creates a new ``BasicHTTPController`` instance.
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
     ///   - session: The ``NetworkSession`` the controller will use.
@@ -51,8 +51,8 @@ public struct BasicNetworkController {
     }
 }
 
-// MARK: - Network controller
-extension BasicNetworkController: NetworkController {
+// MARK: - HTTP controller
+extension BasicHTTPController: HTTPController {
     
     public func fetchResponse<Request: NetworkRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType> {
 

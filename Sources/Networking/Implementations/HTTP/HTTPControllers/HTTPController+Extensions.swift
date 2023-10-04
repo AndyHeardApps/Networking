@@ -1,7 +1,7 @@
 import Foundation
 
 // MARK: - Response transform
-extension NetworkController {
+extension HTTPController {
     
     func transform<Request: NetworkRequest>(
         dataResponse: NetworkResponse<Data>,
@@ -26,7 +26,7 @@ extension NetworkController {
 }
 
 // MARK: - Request modification
-extension NetworkController {
+extension HTTPController {
     
     func add<Request: NetworkRequest>(
         universalHeaders: [String : String]?,
@@ -42,7 +42,7 @@ extension NetworkController {
             requestHeader
         }
         
-        let updatedRequest = AnyRequest(
+        let updatedRequest = AnyNetworkRequest(
             httpMethod: request.httpMethod,
             pathComponents: request.pathComponents,
             headers: headers,

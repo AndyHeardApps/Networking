@@ -1,7 +1,7 @@
 import Foundation
 import Networking
 
-final class MockNetworkController {
+final class MockHTTPController {
     
     // MARK: - Properties
     var responseData: Data = .init()
@@ -10,8 +10,8 @@ final class MockNetworkController {
     var responseDecoder: DataDecoder = JSONDecoder()
 }
 
-// MARK: - Network controller
-extension MockNetworkController: NetworkController {
+// MARK: - HTTP controller
+extension MockHTTPController: HTTPController {
     
     func fetchResponse<Request: NetworkRequest>(_ request: Request) async throws -> NetworkResponse<Request.ResponseType> {
         
