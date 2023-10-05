@@ -12,7 +12,7 @@ import Foundation
 public protocol HTTPRequest<ResponseType> {
 
     /// The strongly typed response that this request returns.
-    associatedtype ResponseType
+    associatedtype ResponseType = Void
     
     /// The object to be encoded to the body of the request.
     associatedtype Body: Encodable = Never
@@ -53,6 +53,24 @@ public protocol HTTPRequest<ResponseType> {
         statusCode: HTTPStatusCode,
         using decoder: DataDecoder
     ) throws -> ResponseType
+}
+
+public extension HTTPRequest {
+    
+    var headers: [String : String]? {
+        nil
+    }
+    
+    var queryItems: [String : String]? {
+        nil
+    }
+}
+
+public extension HTTPRequest where Body == Never {
+    
+    var body: Never? {
+        nil
+    }
 }
 
 /*
