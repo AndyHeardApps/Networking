@@ -54,3 +54,9 @@ public protocol HTTPRequest<ResponseType> {
         using decoder: DataDecoder
     ) throws -> ResponseType
 }
+
+/*
+ swift package --allow-writing-to-directory ./docs generate-documentation --target Networking --disable-indexing --transform-for-static-hosting --hosting-base-path Networking --output-path ./docs
+ 
+  I am NOT figuring this out again!
+ */
