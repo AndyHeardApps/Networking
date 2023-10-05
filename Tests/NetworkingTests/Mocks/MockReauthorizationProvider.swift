@@ -8,17 +8,17 @@ final class MockReauthorizationProvider {
     var authorizationFailsUntilReauthorizationRequestIsMade = false
     private var hasCreatedReauthorizationRequest = false
     private(set) var makeReauthorizationRequestWasCalled = false
-    private(set) var handledAuthorizationResponse: NetworkResponse<MockAccessToken>?
-    private(set) var handledAuthorizationResponseRequest: MockNetworkRequest<MockAccessToken>?
-    private(set) var handledReauthorizationResponse: NetworkResponse<MockRefreshToken>?
-    private(set) var handledReauthorizationResponseRequest: MockNetworkRequest<MockRefreshToken>?
-    private(set) var authorizedRequest: (any NetworkRequest)?
+    private(set) var handledAuthorizationResponse: HTTPResponse<MockAccessToken>?
+    private(set) var handledAuthorizationResponseRequest: MockHTTPRequest<MockAccessToken>?
+    private(set) var handledReauthorizationResponse: HTTPResponse<MockRefreshToken>?
+    private(set) var handledReauthorizationResponseRequest: MockHTTPRequest<MockRefreshToken>?
+    private(set) var authorizedRequest: (any HTTPRequest)?
 }
 
-// MARK: - Reauthorization provider
-extension MockReauthorizationProvider: ReauthorizationProvider {
+// MARK: - HTTP Reauthorization provider
+extension MockReauthorizationProvider: HTTPReauthorizationProvider {
     
-    func makeReauthorizationRequest() -> MockNetworkRequest<MockRefreshToken>? {
+    func makeReauthorizationRequest() -> MockHTTPRequest<MockRefreshToken>? {
         
         makeReauthorizationRequestWasCalled = true
         
@@ -27,7 +27,7 @@ extension MockReauthorizationProvider: ReauthorizationProvider {
         }
         
         hasCreatedReauthorizationRequest = true
-        return MockNetworkRequest(
+        return MockHTTPRequest(
             httpMethod: .get,
             pathComponents: ["mockReauthorization"],
             headers: nil,
@@ -39,19 +39,25 @@ extension MockReauthorizationProvider: ReauthorizationProvider {
         }
     }
     
-    func handle(authorizationResponse: NetworkResponse<MockAccessToken>, from request: MockNetworkRequest<MockAccessToken>) {
+    func handle(
+        authorizationResponse: HTTPResponse<MockAccessToken>,
+        from request: MockHTTPRequest<MockAccessToken>
+    ) {
         
         self.handledAuthorizationResponse = authorizationResponse
         self.handledAuthorizationResponseRequest = request
     }
     
-    func handle(reauthorizationResponse: NetworkResponse<MockRefreshToken>, from request: MockNetworkRequest<MockRefreshToken>) {
+    func handle(
+        reauthorizationResponse: HTTPResponse<MockRefreshToken>,
+        from request: MockHTTPRequest<MockRefreshToken>
+    ) {
         
         self.handledReauthorizationResponse = reauthorizationResponse
         self.handledReauthorizationResponseRequest = request
     }
     
-    func authorize<Request: NetworkRequest>(_ request: Request) -> any NetworkRequest<Request.ResponseType> {
+    func authorize<Request: HTTPRequest>(_ request: Request) -> any HTTPRequest<Request.ResponseType> {
         
         self.authorizedRequest = request
         
@@ -63,12 +69,12 @@ extension MockReauthorizationProvider: ReauthorizationProvider {
             headers["Authorization"] = "true"
         }
     
-        let authorizedRequest = MockNetworkRequest(
+        let authorizedRequest = MockHTTPRequest(
             httpMethod: request.httpMethod,
             pathComponents: request.pathComponents,
             headers: headers,
             queryItems: request.queryItems,
-            body: request.body,
+            body: request.body as? UUID,
             requiresAuthorization: request.requiresAuthorization,
             transformClosure: request.transform
         )
