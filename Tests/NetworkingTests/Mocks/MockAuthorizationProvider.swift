@@ -1,36 +1,39 @@
 import Foundation
 @testable import Networking
 
-final class MockAuthorizationProvider {
+final class MockHTTPAuthorizationProvider {
     
     // MARK: - Properties
-    private(set) var handledAuthorizationResponse: NetworkResponse<MockAccessToken>?
-    private(set) var handledAuthorizationResponseRequest: MockNetworkRequest<MockAccessToken>?
-    private(set) var authorizedRequest: (any NetworkRequest)?
+    private(set) var handledAuthorizationResponse: HTTPResponse<MockAccessToken>?
+    private(set) var handledAuthorizationResponseRequest: MockHTTPRequest<MockAccessToken>?
+    private(set) var authorizedRequest: (any HTTPRequest)?
 }
 
-// MARK: - Authorization provider
-extension MockAuthorizationProvider: AuthorizationProvider {
+// MARK: - HTTP Authorization provider
+extension MockHTTPAuthorizationProvider: HTTPAuthorizationProvider {
     
-    func handle(authorizationResponse: NetworkResponse<MockAccessToken>, from request: MockNetworkRequest<MockAccessToken>) {
+    func handle(
+        authorizationResponse: HTTPResponse<MockAccessToken>,
+        from request: MockHTTPRequest<MockAccessToken>
+    ) {
         
         self.handledAuthorizationResponse = authorizationResponse
         self.handledAuthorizationResponseRequest = request
     }
     
-    func authorize<Request: NetworkRequest>(_ request: Request) -> any NetworkRequest<Request.ResponseType> {
+    func authorize<Request: HTTPRequest>(_ request: Request) -> any HTTPRequest<Request.ResponseType> {
         
         self.authorizedRequest = request
         
         var headers = request.headers ?? [:]
         headers["Authorization"] = "true"
     
-        let authorizedRequest = MockNetworkRequest(
+        let authorizedRequest = MockHTTPRequest(
             httpMethod: request.httpMethod,
             pathComponents: request.pathComponents,
             headers: headers,
             queryItems: request.queryItems,
-            body: request.body,
+            body: request.body as? UUID,
             requiresAuthorization: request.requiresAuthorization,
             transformClosure: request.transform
         )
