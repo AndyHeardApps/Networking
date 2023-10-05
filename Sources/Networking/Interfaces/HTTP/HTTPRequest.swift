@@ -13,9 +13,6 @@ public protocol HTTPRequest<ResponseType> {
 
     /// The strongly typed response that this request returns.
     associatedtype ResponseType = Void
-    
-    /// The object to be encoded to the body of the request.
-    associatedtype Body: Encodable = Never
 
     // MARK: - Properties
     
@@ -32,7 +29,7 @@ public protocol HTTPRequest<ResponseType> {
     var queryItems: [String : String]? { get }
     
     /// The body of the request.
-    var body: Body? { get }
+    var body: Data? { get }
     
     /// Whether or not the request will require authorization credentials attaching. If so, then ``AuthorizingHTTPController`` and ``ReauthorizingHTTPController`` types will authorize the request before submission.
     var requiresAuthorization: Bool { get }
@@ -64,11 +61,8 @@ public extension HTTPRequest {
     var queryItems: [String : String]? {
         nil
     }
-}
-
-public extension HTTPRequest where Body == Never {
     
-    var body: Never? {
+    var body: Data? {
         nil
     }
 }

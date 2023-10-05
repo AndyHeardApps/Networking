@@ -189,7 +189,7 @@ extension OAuthHTTPAuthorizationProviderTests {
         XCTAssertEqual(authorizedRequest.headers?["header1"], "headerValue1")
         XCTAssertEqual(authorizedRequest.headers?.count, 2)
         XCTAssertEqual(authorizedRequest.queryItems, request.queryItems)
-        XCTAssertEqual(authorizedRequest.body as? UUID, request.body)
+        XCTAssertEqual(authorizedRequest.body, request.body)
         XCTAssertEqual(authorizedRequest.requiresAuthorization, request.requiresAuthorization)
     }
     
@@ -208,7 +208,7 @@ extension OAuthHTTPAuthorizationProviderTests {
         XCTAssertEqual(authorizedRequest.pathComponents, request.pathComponents)
         XCTAssertEqual(authorizedRequest.headers?.count, 1)
         XCTAssertEqual(authorizedRequest.queryItems, request.queryItems)
-        XCTAssertEqual(authorizedRequest.body as? UUID, request.body)
+        XCTAssertEqual(authorizedRequest.body, request.body)
         XCTAssertEqual(authorizedRequest.requiresAuthorization, request.requiresAuthorization)
     }
     
@@ -223,7 +223,7 @@ extension OAuthHTTPAuthorizationProviderTests {
         XCTAssertEqual(authorizedRequest.pathComponents, request.pathComponents)
         XCTAssertEqual(authorizedRequest.headers, request.headers)
         XCTAssertEqual(authorizedRequest.queryItems, request.queryItems)
-        XCTAssertEqual(authorizedRequest.body as? UUID, request.body)
+        XCTAssertEqual(authorizedRequest.body, request.body)
         XCTAssertEqual(authorizedRequest.requiresAuthorization, request.requiresAuthorization)
     }
     

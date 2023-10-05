@@ -44,7 +44,7 @@ extension URLSession {
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = request.httpMethod.asString
         urlRequest.allHTTPHeaderFields = request.headers
-        urlRequest.httpBody = try request.body.map(Self.bodyEncoder.encode)
+        urlRequest.httpBody = request.body
         
         return urlRequest
     }
