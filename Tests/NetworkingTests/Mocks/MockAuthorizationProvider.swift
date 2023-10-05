@@ -33,7 +33,7 @@ extension MockHTTPAuthorizationProvider: HTTPAuthorizationProvider {
             pathComponents: request.pathComponents,
             headers: headers,
             queryItems: request.queryItems,
-            body: request.body as? UUID,
+            body: request.body,
             requiresAuthorization: request.requiresAuthorization,
             transformClosure: request.transform
         )

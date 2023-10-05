@@ -8,7 +8,7 @@ struct MockHTTPRequest<ResponseType>: HTTPRequest {
     let pathComponents: [String]
     let headers: [String : String]?
     let queryItems: [String : String]?
-    let body: UUID?
+    let body: Data?
     let requiresAuthorization: Bool
     private let transformClosure: (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
     
@@ -18,7 +18,7 @@ struct MockHTTPRequest<ResponseType>: HTTPRequest {
         pathComponents: [String] = ["path1", "path2"],
         headers: [String : String]? = ["header1" : "headerValue1"],
         queryItems: [String : String]? = ["query1" : "queryValue1"],
-        body: UUID? = UUID(),
+        body: Data? = UUID().uuidString.data(using: .utf8),
         requiresAuthorization: Bool = true,
         transformClosure: @escaping (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
     ) {
@@ -41,7 +41,7 @@ extension MockHTTPRequest where ResponseType == Void {
         pathComponents: [String] = ["path1", "path2"],
         headers: [String : String]? = ["header1" : "headerValue1"],
         queryItems: [String : String]? = ["query1" : "queryValue1"],
-        body: UUID? = UUID(),
+        body: Data? = UUID().uuidString.data(using: .utf8),
         requiresAuthorization: Bool = true
     ) {
        

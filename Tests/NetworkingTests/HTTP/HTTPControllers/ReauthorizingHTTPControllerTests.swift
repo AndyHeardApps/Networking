@@ -67,7 +67,7 @@ extension ReauthorizingHTTPControllerTests {
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders(for: request))
         XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body as? UUID, request.body)
+        XCTAssertEqual(lastReceivedRequest?.body, request.body)
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
         XCTAssertEqual(lastReceivedBaseURL, baseURL)
     }
@@ -88,7 +88,7 @@ extension ReauthorizingHTTPControllerTests {
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders)
         XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body as? UUID, request.body)
+        XCTAssertEqual(lastReceivedRequest?.body, request.body)
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
     }
 
@@ -156,7 +156,7 @@ extension ReauthorizingHTTPControllerTests {
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, request.headers)
         XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body as? UUID, request.body)
+        XCTAssertEqual(lastReceivedRequest?.body, request.body)
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
     }
 
@@ -179,7 +179,7 @@ extension ReauthorizingHTTPControllerTests {
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders)
         XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body as? UUID, request.body)
+        XCTAssertEqual(lastReceivedRequest?.body, request.body)
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
     }
 
@@ -200,7 +200,7 @@ extension ReauthorizingHTTPControllerTests {
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, httpController.universalHeaders)
         XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body as? UUID, request.body)
+        XCTAssertEqual(lastReceivedRequest?.body, request.body)
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
     }
 
@@ -221,7 +221,7 @@ extension ReauthorizingHTTPControllerTests {
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders(for: request))
         XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body as? UUID, request.body)
+        XCTAssertEqual(lastReceivedRequest?.body, request.body)
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
     }
 
@@ -392,7 +392,7 @@ extension ReauthorizingHTTPControllerTests {
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders)
         XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body as? UUID, request.body)
+        XCTAssertEqual(lastReceivedRequest?.body, request.body)
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
     }
     
