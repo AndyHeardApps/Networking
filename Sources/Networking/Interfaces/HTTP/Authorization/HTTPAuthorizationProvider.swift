@@ -20,7 +20,7 @@ public protocol HTTPAuthorizationProvider<AuthorizationRequest>  {
     /// Only requests with ``HTTPRequest/requiresAuthorization`` equal to `true` should be handed to this function. Implementations should apply authorizing credentials to the request before returning it.
     /// - Parameter request: The ``HTTPRequest`` that needs to be authorized.
     /// - Returns: Any ``HTTPRequest``, with authorization credentials provided where possible.
-    func authorize<Request: HTTPRequest>(_ request: Request) -> any HTTPRequest<Request.ResponseType>
+    func authorize<Request: HTTPRequest>(_ request: Request) throws -> any HTTPRequest<Request.ResponseType>
     
     /// Extracts authorization credentials from the provided ``AuthorizationRequest`` and associated ``HTTPResponse`` where possible, and stores them for later use in ``authorize(_:)``.
     /// - Parameters:
