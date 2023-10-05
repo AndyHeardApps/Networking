@@ -66,7 +66,7 @@ extension AuthorizingHTTPController: HTTPController {
             universalHeaders: universalHeaders,
             to: request
         )
-        let authorizedRequest = authorize(request: requestWithUniversalHeaders)
+        let authorizedRequest = try authorize(request: requestWithUniversalHeaders)
         
         let dataResponse = try await session.submit(
             request: authorizedRequest,
@@ -106,13 +106,13 @@ extension AuthorizingHTTPController: HTTPController {
 // MARK: - Request modification
 extension AuthorizingHTTPController {
     
-    private func authorize<Request: HTTPRequest>(request: Request) -> any HTTPRequest<Request.ResponseType> {
+    private func authorize<Request: HTTPRequest>(request: Request) throws -> any HTTPRequest<Request.ResponseType> {
         
         guard request.requiresAuthorization else {
             return request
         }
         
-        let authorizedRequest = authorization.authorize(request)
+        let authorizedRequest = try authorization.authorize(request)
         
         return authorizedRequest
     }
