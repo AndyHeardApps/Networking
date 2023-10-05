@@ -8,13 +8,13 @@ extension AnyHTTPRequestTests {
     
     func testInitWithParameters_willAssignProperties_andTransformCorrectly() throws {
         
-        let body = UUID().uuidString.data(using: .utf8)
+        let body = Data(UUID().uuidString.utf8)
         let request = AnyHTTPRequest(
             httpMethod: .connect,
             pathComponents: ["path1", "path2"],
             headers: ["header1" : "headerValue1", "header2" : "headerValue2"],
             queryItems: ["query1" : "queryValue1", "query2" : "queryValue2"],
-            body: body,
+            body: .data(body),
             requiresAuthorization: true
         ) { data, _, _ in
             data + data
@@ -24,7 +24,7 @@ extension AnyHTTPRequestTests {
         XCTAssertEqual(request.pathComponents, ["path1", "path2"])
         XCTAssertEqual(request.headers, ["header1" : "headerValue1", "header2" : "headerValue2"])
         XCTAssertEqual(request.queryItems, ["query1" : "queryValue1", "query2" : "queryValue2"])
-        XCTAssertEqual(request.body, body)
+        XCTAssertEqual(request.body, .data(body))
         XCTAssertTrue(request.requiresAuthorization)
 
         let mockData = UUID().uuidString.data(using: .utf8)!

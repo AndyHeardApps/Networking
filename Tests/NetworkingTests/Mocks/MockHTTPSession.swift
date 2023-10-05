@@ -91,7 +91,7 @@ extension MockHTTPSession {
         let httpMethod: HTTPMethod
         let pathComponents: [String]
         let queryItems: [String : String]?
-        let body: Data?
+        let body: HTTPRequestBody?
         let requiresAuthorization: Bool
         
         // Initialiser
@@ -100,7 +100,7 @@ extension MockHTTPSession {
             self.httpMethod = request.httpMethod
             self.pathComponents = request.pathComponents
             self.queryItems = request.queryItems
-            self.body = try? JSONEncoder().encode(request.body)
+            self.body = request.body
             self.requiresAuthorization = request.requiresAuthorization
         }
     }

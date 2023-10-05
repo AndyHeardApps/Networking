@@ -10,7 +10,7 @@ public struct AnyHTTPRequest<ResponseType>: HTTPRequest {
     public let pathComponents: [String]
     public let headers: [String : String]?
     public let queryItems: [String : String]?
-    public let body: Data?
+    public let body: HTTPRequestBody?
     public let requiresAuthorization: Bool
     private let _transform: (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
     
@@ -20,7 +20,7 @@ public struct AnyHTTPRequest<ResponseType>: HTTPRequest {
         pathComponents: [String],
         headers: [String : String]?,
         queryItems: [String : String]?,
-        body: Data?,
+        body: HTTPRequestBody?,
         requiresAuthorization: Bool,
         transform: @escaping (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
     ) {
