@@ -9,10 +9,12 @@ import Foundation
 /// A ``HTTPRequest`` only defines ``pathComponents`` and ``queryItems`` and not a full `URL`. This is so that a `URL` can be constructed against some base `URL`, enabling the same request to be submitted against multiple environments, and to remove the opportunity to build a `URL` "stringily".
 ///
 /// Aim to keep any logic that is needed to construct the request in the initialisers.
-public protocol HTTPRequest<ResponseType> {
+public protocol HTTPRequest<Body, Response> {
 
+    associatedtype Body = Never
+    
     /// The strongly typed response that this request returns.
-    associatedtype ResponseType = Void
+    associatedtype Response = Void
 
     // MARK: - Properties
     
@@ -29,12 +31,18 @@ public protocol HTTPRequest<ResponseType> {
     var queryItems: [String : String]? { get }
     
     /// The body of the request.
-    var body: HTTPRequestBody? { get }
+    var body: Body? { get }
     
     /// Whether or not the request will require authorization credentials attaching. If so, then ``AuthorizingHTTPController`` and ``ReauthorizingHTTPController`` types will authorize the request before submission.
     var requiresAuthorization: Bool { get }
     
     // MARK: - Functions
+    
+    func encode(
+        body: Body,
+        headers: inout [String : String],
+        using coders: DataCoders
+    ) throws -> Data
     
     /// Transforms the raw `Data` returned over the network into some concrete Swift type.
     ///
@@ -45,11 +53,11 @@ public protocol HTTPRequest<ResponseType> {
     ///   - decoder: A ``DataDecoder`` provided by the calling ``HTTPController`` that can be used to decode the `Data`. This usually has API specific settings such as date decoding options. If the request "knows better" than to use this default decoder, then it should use some other instance.
     /// - Returns: The decoded object.
     /// - Throws: Any errors that occured during decoding. This is most likely to be an unexpeced ``HTTPStatusCode`` or a `DecodingError`.
-    func transform(
+    func decode(
         data: Data,
         statusCode: HTTPStatusCode,
-        using decoder: DataDecoder
-    ) throws -> ResponseType
+        using coders: DataCoders
+    ) throws -> Response
 }
 
 public extension HTTPRequest {
@@ -61,9 +69,25 @@ public extension HTTPRequest {
     var queryItems: [String : String]? {
         nil
     }
+}
+
+public extension HTTPRequest where Body == Never {
     
-    var body: HTTPRequestBody? {
+    var body: Body? {
         nil
+    }
+}
+
+public extension HTTPRequest where Body: Encodable {
+    
+    func encode(
+        body: Body,
+        headers: inout [String : String],
+        using coders: DataCoders
+    ) throws -> Data {
+        
+        headers["Content-Type"] = HTTPContentType.json.name
+        return try coders.requireEncoder(for: .json).encode(body)
     }
 }
 

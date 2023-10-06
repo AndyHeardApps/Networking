@@ -57,7 +57,7 @@ extension MockReauthorizationProvider: HTTPReauthorizationProvider {
         self.handledReauthorizationResponseRequest = request
     }
     
-    func authorize<Request: HTTPRequest>(_ request: Request) -> any HTTPRequest<Request.ResponseType> {
+    func authorize<Request: HTTPRequest>(_ request: Request) -> any HTTPRequest<Request.Response> {
         
         self.authorizedRequest = request
         

@@ -22,18 +22,13 @@ public struct ReauthorizingHTTPController<Authorization: HTTPReauthorizationProv
     /// The ``HTTPSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
     public let session: HTTPSession
     
+    public let dataCoders: DataCoders
+    
+    public let delegate: ReauthorizingHTTPControllerDelegate
+    
     /// The ``HTTPReauthorizationProvider`` used to authorize requests that need it, and reauthorize the app whenever possible.
     public let authorization: Authorization
-    
-    /// The ``DataDecoder`` provided to a submitted ``HTTPRequest`` for decoding. It is best to set up a decoder suitable for the API once and reuse it. The ``HTTPRequest`` may still opt not to use this decoder.
-    public let decoder: DataDecoder
-    
-    /// The type used to handle any errors that are thrown by the ``HTTPRequest/transform(data:statusCode:using:)`` function of a request. This is used to decide whether or not to try and reauthorize the app. If not, then it will try and extract error messages from the response if possible. If this property is `nil` then the reauthorizing flow is triggered for a ``HTTPStatusCode/unauthorized`` status code, and unaltered errors are thrown if it fails.
-    public let errorHandler: ReauthorizationHTTPErrorHandler?
-    
-    /// The headers that will be applied to every request before submission.
-    public let universalHeaders: [String : String]?
-    
+        
     // MARK: - Initialisers
 
     /// Creates a new ``ReauthorizingHTTPController`` instance.
@@ -49,26 +44,24 @@ public struct ReauthorizingHTTPController<Authorization: HTTPReauthorizationProv
         baseURL: URL,
         reauthorizationBaseURL: URL? = nil,
         session: HTTPSession = URLSession.shared,
-        authorization: Authorization,
-        decoder: DataDecoder = JSONDecoder(),
-        errorHandler: ReauthorizationHTTPErrorHandler? = nil,
-        universalHeaders: [String : String]? = nil
+        dataCoders: DataCoders,
+        delegate: ReauthorizingHTTPControllerDelegate? = nil,
+        authorization: Authorization
     ) {
         
         self.baseURL = baseURL
         self.reauthorizationBaseURL = reauthorizationBaseURL ?? baseURL
         self.session = session
+        self.dataCoders = dataCoders
+        self.delegate = delegate ?? DefaultReauthorizingHTTPControllerDelegate()
         self.authorization = authorization
-        self.decoder = decoder
-        self.errorHandler = errorHandler
-        self.universalHeaders = universalHeaders
     }
 }
 
 // MARK: - HTTP controller
 extension ReauthorizingHTTPController: HTTPController {
     
-    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.ResponseType> {
+    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.Response> {
         
         try await fetchResponse(
             request,
@@ -79,25 +72,27 @@ extension ReauthorizingHTTPController: HTTPController {
     private func fetchResponse<Request: HTTPRequest>(
         _ request: Request,
         shouldAttemptReauthorization: Bool
-    ) async throws -> HTTPResponse<Request.ResponseType> {
-        
-        let requestWithUniversalHeaders = add(
-            universalHeaders: universalHeaders,
-            to: request
+    ) async throws -> HTTPResponse<Request.Response> {
+
+        let authorizedRequest = try authorize(request: request)
+        let rawDataRequest = try delegate.controller(
+            self,
+            prepareRequestForSubmission: authorizedRequest,
+            using: dataCoders
         )
-        let authorizedRequest = try authorize(request: requestWithUniversalHeaders)
-        
+
         // Errors thrown here cannot be fixed with reauth
         let dataResponse = try await session.submit(
-            request: authorizedRequest,
+            request: rawDataRequest,
             to: baseURL
         )
         
         do {
-            let response = try transform(
-                dataResponse: dataResponse,
-                from: request,
-                using: decoder
+            let response = try delegate.controller(
+                self,
+                decodeResponse: dataResponse,
+                fromRequest: request,
+                using: dataCoders
             )
             
             extractAuthorizationContent(
@@ -109,18 +104,12 @@ extension ReauthorizingHTTPController: HTTPController {
             
         } catch {
             
-            let errorHandlingResult = handle(
-                error,
-                from: dataResponse,
-                shouldAttemptReauthorization: shouldAttemptReauthorization
-            )
-            switch errorHandlingResult {
-            case .attemptReauthorization:
-                break
-                
-            case .error(let error):
-                throw error
-                
+            guard delegate.controller(
+                self,
+                shouldAttemptReauthorizationAfterCatching: error,
+                from: dataResponse
+            ) else {
+                throw delegate.controller(self, didRecieveError: error, from: dataResponse)
             }
             
             try await reauthorize(
@@ -141,7 +130,7 @@ extension ReauthorizingHTTPController: HTTPController {
 // MARK: - Request modification
 extension ReauthorizingHTTPController {
     
-    private func authorize<Request: HTTPRequest>(request: Request) throws -> any HTTPRequest<Request.ResponseType> {
+    private func authorize<Request: HTTPRequest>(request: Request) throws -> any HTTPRequest<Request.Body, Request.Response> {
         
         guard request.requiresAuthorization else {
             return request
@@ -150,43 +139,6 @@ extension ReauthorizingHTTPController {
         let authorizedRequest = try authorization.authorize(request)
         
         return authorizedRequest
-    }
-}
-
-// MARK: - Error handling
-extension ReauthorizingHTTPController {
-
-    private enum ErrorHandlingResult {
-        
-        case attemptReauthorization
-        case error(Error)
-    }
-    
-    private func handle(
-        _ error: Error,
-        from response: HTTPResponse<Data>,
-        shouldAttemptReauthorization: Bool
-    ) -> ErrorHandlingResult {
-        
-        switch (shouldAttemptReauthorization, errorHandler) {
-        case (true, let errorHandler?):
-            guard errorHandler.shouldAttemptReauthorization(afterCatching: error, from: response) else {
-                let mappedError = errorHandler.map(error, from: response)
-                return .error(mappedError)
-            }
-            return .attemptReauthorization
-
-        case (false, let errorHandler?):
-            let mappedError = errorHandler.map(error, from: response)
-            return .error(mappedError)
-
-        case (true, nil) where error as? HTTPStatusCode == .unauthorized:
-            return .attemptReauthorization
-            
-        case (_, nil):
-            return .error(error)
-
-        }
     }
 }
 
@@ -206,20 +158,22 @@ extension ReauthorizingHTTPController {
                 throw originalError
             }
             
-            let requestWithUniversalHeaders = add(
-                universalHeaders: universalHeaders,
-                to: reauthorizationRequest
+            let rawDataRequest = try delegate.controller(
+                self,
+                prepareRequestForSubmission: reauthorizationRequest,
+                using: dataCoders
             )
             
             let dataResponse = try await session.submit(
-                request: requestWithUniversalHeaders,
+                request: rawDataRequest,
                 to: reauthorizationBaseURL
             )
             
-            let reauthorizationResponse = try transform(
-                dataResponse: dataResponse,
-                from: reauthorizationRequest,
-                using: decoder
+            let reauthorizationResponse = try delegate.controller(
+                self,
+                decodeResponse: dataResponse,
+                fromRequest: reauthorizationRequest,
+                using: dataCoders
             )
             
             extractAuthorizationContent(
@@ -227,11 +181,13 @@ extension ReauthorizingHTTPController {
                 returnedBy: reauthorizationRequest
             )
         } catch {
-            guard let errorHandler else {
-                throw originalError
-            }
             
-            let mappedError = errorHandler.map(originalError, from: originalResponse)
+            let mappedError = delegate.controller(
+                self,
+                didRecieveError: originalError,
+                from: originalResponse
+            )
+
             throw mappedError
         }
     }
@@ -247,7 +203,7 @@ extension ReauthorizingHTTPController {
         
         if
             let authorizationRequest = request as? Authorization.AuthorizationRequest,
-            let authorizationResponse = response as? HTTPResponse<Authorization.AuthorizationRequest.ResponseType>
+            let authorizationResponse = response as? HTTPResponse<Authorization.AuthorizationRequest.Response>
         {
             authorization.handle(
                 authorizationResponse: authorizationResponse,
@@ -257,7 +213,7 @@ extension ReauthorizingHTTPController {
         
         if
             let reauthorizationRequest = request as? Authorization.ReauthorizationRequest,
-            let reauthorizationResponse = response as? HTTPResponse<Authorization.ReauthorizationRequest.ResponseType>
+            let reauthorizationResponse = response as? HTTPResponse<Authorization.ReauthorizationRequest.Response>
         {
             authorization.handle(
                 reauthorizationResponse: reauthorizationResponse,

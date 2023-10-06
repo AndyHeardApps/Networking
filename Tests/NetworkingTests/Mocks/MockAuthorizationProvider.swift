@@ -5,7 +5,7 @@ final class MockHTTPAuthorizationProvider {
     
     // MARK: - Properties
     private(set) var handledAuthorizationResponse: HTTPResponse<MockAccessToken>?
-    private(set) var handledAuthorizationResponseRequest: MockHTTPRequest<MockAccessToken>?
+    private(set) var handledAuthorizationResponseRequest: MockHTTPRequest<MockAccessToken, Never>?
     private(set) var authorizedRequest: (any HTTPRequest)?
 }
 
@@ -14,14 +14,14 @@ extension MockHTTPAuthorizationProvider: HTTPAuthorizationProvider {
     
     func handle(
         authorizationResponse: HTTPResponse<MockAccessToken>,
-        from request: MockHTTPRequest<MockAccessToken>
+        from request: MockHTTPRequest<MockAccessToken, Never>
     ) {
         
         self.handledAuthorizationResponse = authorizationResponse
         self.handledAuthorizationResponseRequest = request
     }
     
-    func authorize<Request: HTTPRequest>(_ request: Request) -> any HTTPRequest<Request.ResponseType> {
+    func authorize<Request: HTTPRequest>(_ request: Request) -> any HTTPRequest<Request.Response> {
         
         self.authorizedRequest = request
         

@@ -1,16 +1,16 @@
 import Foundation
 @testable import Networking
 
-struct MockHTTPRequest<ResponseType>: HTTPRequest {
+struct MockHTTPRequest<Body, Response>: HTTPRequest {
 
     // MARK: - Properties
     let httpMethod: HTTPMethod
     let pathComponents: [String]
     let headers: [String : String]?
     let queryItems: [String : String]?
-    let body: HTTPRequestBody?
+    let body: Body?
     let requiresAuthorization: Bool
-    private let transformClosure: (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
+    private let transformClosure: (Data, HTTPStatusCode, DataDecoder) throws -> Response
     
     // MARK: - Initialiser
     init(
@@ -18,9 +18,9 @@ struct MockHTTPRequest<ResponseType>: HTTPRequest {
         pathComponents: [String] = ["path1", "path2"],
         headers: [String : String]? = ["header1" : "headerValue1"],
         queryItems: [String : String]? = ["query1" : "queryValue1"],
-        body: HTTPRequestBody? = .data(Data(UUID().uuidString.utf8)),
+        body: Body? = Data(UUID().uuidString.utf8),
         requiresAuthorization: Bool = true,
-        transformClosure: @escaping (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
+        transformClosure: @escaping (Data, HTTPStatusCode, DataDecoder) throws -> Response
     ) {
        
         self.httpMethod = httpMethod
@@ -34,14 +34,14 @@ struct MockHTTPRequest<ResponseType>: HTTPRequest {
 }
 
 // MARK: - Void initialiser
-extension MockHTTPRequest where ResponseType == Void {
+extension MockHTTPRequest where Response == Void {
     
     init(
         httpMethod: HTTPMethod = .get,
         pathComponents: [String] = ["path1", "path2"],
         headers: [String : String]? = ["header1" : "headerValue1"],
         queryItems: [String : String]? = ["query1" : "queryValue1"],
-        body: HTTPRequestBody? = .data(Data(UUID().uuidString.utf8)),
+        body: Body? = Data(UUID().uuidString.utf8),
         requiresAuthorization: Bool = true
     ) {
        
@@ -62,7 +62,7 @@ extension MockHTTPRequest {
         data: Data,
         statusCode: HTTPStatusCode,
         using decoder: DataDecoder
-    ) throws -> ResponseType {
+    ) throws -> Response {
         
         try transformClosure(data, statusCode, decoder)
     }

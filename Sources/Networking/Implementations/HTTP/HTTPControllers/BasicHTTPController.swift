@@ -17,14 +17,9 @@ public struct BasicHTTPController {
     /// The ``HTTPSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
     public let session: HTTPSession
     
-    /// The ``DataDecoder`` provided to a submitted ``HTTPRequest`` for decoding. It is best to set up a decoder suitable for the API once and reuse it. The ``HTTPRequest`` may still opt not to use this decoder.
-    public let decoder: DataDecoder
-        
-    /// The type used to handle any errors that are thrown by the ``HTTPRequest/transform(data:statusCode:using:)`` function of a request. This is used to try and extract error messages from the response if possible. If this property is `nil` then the unaltered error is thrown.
-    public let errorHandler: HTTPErrorHandler?
-
-    /// The headers that will be applied to every request before submission.
-    public let universalHeaders: [String : String]?
+    public let dataCoders: DataCoders
+    
+    public let delegate: HTTPControllerDelegate
 
     // MARK: - Initialisers
     
@@ -32,61 +27,56 @@ public struct BasicHTTPController {
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
     ///   - session: The ``HTTPSession`` the controller will use.
-    ///   - decoder: The ``DataDecoder`` the controller will hand to requests for decoding.
     ///   - errorHandler: The ``HTTPErrorHandler`` that can be used to manipulate errors before they are thrown.
-    ///   - universalHeaders: The headers applied to every request submitted.
     public init(
         baseURL: URL,
         session: HTTPSession = URLSession.shared,
-        decoder: DataDecoder = JSONDecoder(),
-        errorHandler: HTTPErrorHandler? = nil,
-        universalHeaders: [String : String]? = nil
+        dataCoders: DataCoders,
+        delegate: HTTPControllerDelegate? = nil
     ) {
         
         self.baseURL = baseURL
         self.session = session
-        self.decoder = decoder
-        self.errorHandler = errorHandler
-        self.universalHeaders = universalHeaders
+        self.dataCoders = dataCoders
+        self.delegate = delegate ?? DefaultHTTPControllerDelegate()
     }
 }
 
 // MARK: - HTTP controller
 extension BasicHTTPController: HTTPController {
     
-    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.ResponseType> {
+    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.Response> {
 
         if request.requiresAuthorization {
             throw HTTPStatusCode.unauthorized
         }
         
-        let requestWithUniversalHeaders = add(
-            universalHeaders: universalHeaders,
-            to: request
+        let rawDataRequest = try delegate.controller(
+            self,
+            prepareRequestForSubmission: request,
+            using: dataCoders
         )
         
         let dataResponse = try await session.submit(
-            request: requestWithUniversalHeaders,
+            request: rawDataRequest,
             to: baseURL
         )
         
         do {
-            let response = try transform(
-                dataResponse: dataResponse,
-                from: request,
-                using: decoder
+            let response = try delegate.controller(
+                self,
+                decodeResponse: dataResponse,
+                fromRequest: request,
+                using: dataCoders
             )
             
             return response
                         
         } catch {
-            
-            guard let errorHandler else {
-                throw error
-            }
-            
-            let mappedError = errorHandler.map(
-                error,
+                        
+            let mappedError = delegate.controller(
+                self,
+                didRecieveError: error,
                 from: dataResponse
             )
             

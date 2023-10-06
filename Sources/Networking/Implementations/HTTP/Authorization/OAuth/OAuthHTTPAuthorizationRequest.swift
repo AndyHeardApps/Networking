@@ -9,12 +9,12 @@ public protocol OAuthHTTPAuthorizationRequest: HTTPRequest {
     /// Extracts the Access Token from a HTTP response.
     /// - Parameter response: The response potentially containing the Access Token.
     /// - Returns: The Access Token, if available.
-    func accessToken(from response: HTTPResponse<ResponseType>) -> String?
+    func accessToken(from response: HTTPResponse<Response>) -> String?
 
     /// Extracts the Refresh Token from a HTTP response.
     /// - Parameter response: The response potentially containing the Refresh Token.
     /// - Returns: The Refresh Token, if available.
-    func refreshToken(from response: HTTPResponse<ResponseType>) -> String?
+    func refreshToken(from response: HTTPResponse<Response>) -> String?
 }
 
 extension OAuthHTTPAuthorizationRequest {
