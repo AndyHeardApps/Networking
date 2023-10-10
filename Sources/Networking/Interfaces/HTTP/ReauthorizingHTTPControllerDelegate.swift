@@ -27,7 +27,7 @@ public protocol ReauthorizingHTTPControllerDelegate: HTTPControllerDelegate {
 
 extension ReauthorizingHTTPControllerDelegate {
     
-    func controller(
+    public func controller(
         _ controller: HTTPController,
         shouldAttemptReauthorizationAfterCatching error: Error,
         from response: HTTPResponse<Data>
