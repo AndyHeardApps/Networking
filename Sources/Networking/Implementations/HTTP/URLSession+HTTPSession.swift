@@ -2,9 +2,6 @@ import Foundation
 
 extension URLSession: HTTPSession {
     
-    /// The `JSONEncoder` used to encode the bodies of all `HTTPRequest`s of type `.json` submitted to the `URLSession`.
-    public static var bodyJSONEncoder = JSONEncoder()
-    
     public func submit<Request>(
         request: Request,
         to baseURL: URL

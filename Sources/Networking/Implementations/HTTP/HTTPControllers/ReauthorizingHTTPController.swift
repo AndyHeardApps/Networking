@@ -4,11 +4,11 @@ import Foundation
 ///
 /// This type extends the authorizing behavior of the ``AuthorizingHTTPController``, so refer to its documentation for authorization details.
 ///
-/// This difference between ``AuthorizingHTTPController`` and ``ReauthorizingHTTPController`` is that the ``errorHandler`` is a ``ReauthorizationHTTPErrorHandler`` that has the additional ``ReauthorizationHTTPErrorHandler/shouldAttemptReauthorization(afterCatching:from:)`` function that decides whether a thrown error can be recovered by reauthorizing and resubmitting the request. In addition, the ``authorization`` is a ``HTTPReauthorizationProvider``, that provides the ``HTTPReauthorizationProvider/makeReauthorizationRequest()`` and ``HTTPReauthorizationProvider/handle(reauthorizationResponse:from:)`` functions for creating reauthorizing requests and handling their responses.
+/// This difference between ``AuthorizingHTTPController`` and ``ReauthorizingHTTPController`` is that the ``delegate`` is a ``ReauthorizingHTTPControllerDelegate`` that has the additional ``ReauthorizingHTTPControllerDelegate/controller(_:shouldAttemptReauthorizationAfterCatching:from:)`` function that decides whether a thrown error can be recovered by reauthorizing and resubmitting the request. In addition, the ``authorization`` is a ``HTTPReauthorizationProvider``, that provides the ``HTTPReauthorizationProvider/makeReauthorizationRequest()`` and ``HTTPReauthorizationProvider/handle(reauthorizationResponse:from:)`` functions for creating reauthorizing requests and handling their responses.
 ///
 /// As with the ``AuthorizingHTTPController``, requests are handed to the ``HTTPAuthorizationProvider/authorize(_:)`` function before they are submitted, and instances of ``HTTPAuthorizationProvider/AuthorizationRequest`` and assocated ``HTTPResponse`` from successful requests are passed to the ``HTTPAuthorizationProvider/handle(authorizationResponse:from:)`` function.
 ///
-/// If the requests ``HTTPRequest/transform(data:statusCode:using:)`` function throws an error and the ``errorHandler`` is not `nil`, it is passed to the ``ReauthorizationHTTPErrorHandler/shouldAttemptReauthorization(afterCatching:from:)`` function. If it returns `true` then the ``HTTPReauthorizationProvider/makeReauthorizationRequest()`` function is used to create and submit a reauthorizing request. The initial failed request then has the updated credentials added to it and is resubmitted. If the ``errorHandler`` is nil, then this same logic is applied for a ``HTTPStatusCode/unauthorized`` status code by default.
+/// If the requests ``HTTPRequest/decode(data:statusCode:using:)`` function throws an error, the error is passed to the ``ReauthorizingHTTPControllerDelegate/controller(_:shouldAttemptReauthorizationAfterCatching:from:)`` function. If it returns `true` then the ``HTTPReauthorizationProvider/makeReauthorizationRequest()`` function is used to create and submit a reauthorizing request. The initial failed request then has the updated credentials added to it and is resubmitted. If the ``delegate`` is `nil`, then this same logic is applied for a ``HTTPStatusCode/unauthorized`` status code by default.
 public struct ReauthorizingHTTPController<Authorization: HTTPReauthorizationProvider> {
     
     // MARK: - Properties
@@ -22,8 +22,10 @@ public struct ReauthorizingHTTPController<Authorization: HTTPReauthorizationProv
     /// The ``HTTPSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
     public let session: HTTPSession
     
+    /// A collection of ``DataEncoder`` and ``DataDecoder`` objects that the controller will use to encode and decode specific HTTP content types.
     public let dataCoders: DataCoders
     
+    /// The delegate used to provide additional controler over preparing a request to be sent, handling responses, and handling errors.
     public let delegate: ReauthorizingHTTPControllerDelegate
     
     /// The ``HTTPReauthorizationProvider`` used to authorize requests that need it, and reauthorize the app whenever possible.
@@ -35,11 +37,10 @@ public struct ReauthorizingHTTPController<Authorization: HTTPReauthorizationProv
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
     ///   - reauthorizationBaseURL: The `URL` used to reauthorize the controller. If `nil`, then the `baseURL` is set instead.
+    ///   - dataCoders: The ``DataCoders`` that can be used to encode and decode request body and responses. By default, only JSON coders will be available.
+    ///   - delegate: The ``HTTPControllerDelegate`` for the controller to use. If none is provided, then a default implementation is used to provide standard functionality.
     ///   - session: The ``HTTPSession`` the controller will use.
     ///   - authorization: The ``HTTPReauthorizationProvider`` to use to authorize requests.
-    ///   - decoder: The ``DataDecoder`` the controller will hand to requests for decoding.
-    ///   - errorHandler: The ``ReauthorizationHTTPErrorHandler`` that can be used to manipulate errors before they are thrown, and decide whether reauthorization should be attempted.
-    ///   - universalHeaders: The headers applied to every request submitted.
     public init(
         baseURL: URL,
         reauthorizationBaseURL: URL? = nil,
@@ -104,12 +105,20 @@ extension ReauthorizingHTTPController: HTTPController {
             
         } catch {
             
-            guard delegate.controller(
-                self,
-                shouldAttemptReauthorizationAfterCatching: error,
-                from: dataResponse
-            ) else {
-                throw delegate.controller(self, didRecieveError: error, from: dataResponse)
+            guard
+                shouldAttemptReauthorization,
+                delegate.controller(
+                    self,
+                    shouldAttemptReauthorizationAfterCatching: error,
+                    from: dataResponse
+                ) 
+            else {
+                throw delegate.controller(
+                    self,
+                    didRecieveError: error,
+                    from: dataResponse,
+                    using: dataCoders
+                )
             }
             
             try await reauthorize(
@@ -180,15 +189,18 @@ extension ReauthorizingHTTPController {
                 from: reauthorizationResponse,
                 returnedBy: reauthorizationRequest
             )
+            
         } catch {
             
             let mappedError = delegate.controller(
                 self,
                 didRecieveError: originalError,
-                from: originalResponse
+                from: originalResponse,
+                using: dataCoders
             )
 
             throw mappedError
+            
         }
     }
 }

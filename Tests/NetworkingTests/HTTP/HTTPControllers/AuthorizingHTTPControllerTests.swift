@@ -1,15 +1,13 @@
 import XCTest
 @testable import Networking
 
-final class AuthorizingHTTPControllerTests: XCTestCase, HTTPControllerTestCase {
+final class AuthorizingHTTPControllerTests: XCTestCase {
 
     // MARK: - Properties
     private let baseURL = URL(string: "https://example.domain.com")!
     private var httpSession: MockHTTPSession!
     private var authorizationProvider: MockHTTPAuthorizationProvider!
-    private var decoder: DataDecoder!
-    private var errorHandler: MockHTTPErrorHandler!
-    private(set) var universalHeaders: [String : String]!
+    private var delegate: MockHTTPControllerDelegate!
     private var httpController: AuthorizingHTTPController<MockHTTPAuthorizationProvider>!
 }
 
@@ -20,17 +18,14 @@ extension AuthorizingHTTPControllerTests {
         super.setUp()
 
         self.httpSession = MockHTTPSession()
-        self.errorHandler = MockHTTPErrorHandler()
         self.authorizationProvider = MockHTTPAuthorizationProvider()
-        self.decoder = JSONDecoder()
-        self.universalHeaders = ["headerKey2" : "universalHeaderValue2"]
+        self.delegate = MockHTTPControllerDelegate()
         self.httpController = AuthorizingHTTPController(
             baseURL: baseURL,
             session: httpSession,
-            authorization: authorizationProvider,
-            decoder: decoder,
-            errorHandler: errorHandler,
-            universalHeaders: universalHeaders
+            dataCoders: .default,
+            delegate: delegate,
+            authorization: authorizationProvider
         )
     }
 
@@ -38,10 +33,8 @@ extension AuthorizingHTTPControllerTests {
         super.tearDown()
 
         self.httpSession = nil
-        self.errorHandler = nil
         self.authorizationProvider = nil
-        self.decoder = nil
-        self.universalHeaders = nil
+        self.delegate = nil
         self.httpController = nil
     }
 }
@@ -63,9 +56,9 @@ extension AuthorizingHTTPControllerTests {
         XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
-        XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders(for: request))
+        XCTAssertEqual(lastReceivedRequest?.headers, request.headers)
         XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body, request.body)
+        XCTAssertEqual(lastReceivedRequest?.body as? Data, request.body)
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
         XCTAssertEqual(lastReceivedBaseURL, baseURL)
     }
@@ -77,7 +70,8 @@ extension AuthorizingHTTPControllerTests {
 
         _ = try await httpController.fetchResponse(request)
 
-        let expectedHeaders = expectedHeaders(for: request, additionalHeaders: ["Authorization" : "true"])
+        var expectedHeaders = request.headers ?? [:]
+        expectedHeaders["Authorization"] = "true"
 
         let lastReceivedRequest = httpSession.receivedRequests.last?.request
 
@@ -86,14 +80,59 @@ extension AuthorizingHTTPControllerTests {
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders)
         XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body, request.body)
+        XCTAssertEqual(lastReceivedRequest?.body as? Data, request.body)
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
+        
+        XCTAssertEqual(authorizationProvider.authorizedRequest?.pathComponents, request.pathComponents)
     }
+    
+    // MARK: - Encoding
+    func testFetchResponse_willEncodeBodyUsingRequest_andReturnEncodedBody() async throws {
+        
+        let expectedResponse = HTTPResponse(
+            content: Data(UUID().uuidString.utf8),
+            statusCode: .ok,
+            headers: [:]
+        )
 
-    // MARK: Transform
-    func testFetchResponse_willTransformResponseUsingRequest_andReturnTransformedResponse() async throws {
+        let bodyData = Data(UUID().uuidString.utf8)
 
-        let responseData = UUID().uuidString.data(using: .utf8)!
+        var encodeData: Data?
+        var encodeHeaders: [String : String]?
+        var encodeEncoder: DataEncoder?
+        let request = MockHTTPRequest(body: bodyData) { body, headers, coders in
+            encodeData = body
+            encodeHeaders = headers
+            encodeEncoder = try coders.requireEncoder(for: .json)
+            
+            return Data(body.reversed())
+        } decode: { data, _, _ in
+            data
+        }
+
+        httpSession.set(
+            response: expectedResponse,
+            for: request
+        )
+
+        _ = try await httpController.fetchResponse(request)
+
+        var expectedHeaders = request.headers ?? [:]
+        expectedHeaders["Authorization"] = "true"
+
+        XCTAssertEqual(encodeData, request.body)
+        XCTAssertEqual(encodeHeaders, expectedHeaders)
+        XCTAssertIdentical(encodeEncoder as? JSONEncoder, try DataCoders.default.requireEncoder(for: .json) as? JSONEncoder)
+
+        XCTAssertTrue(delegate.controllerPreparingRequest is AuthorizingHTTPController<MockHTTPAuthorizationProvider>)
+        XCTAssertTrue(delegate.requestPreparedForSubmission is MockHTTPRequest<Data, Data>)
+        XCTAssertNotNil(delegate.codersUsedForRequestPreparation)
+    }
+    
+    // MARK: Decoding
+    func testFetchResponse_willDecodeResponseUsingRequest_andReturnDecodedResponse() async throws {
+
+        let responseData = Data(UUID().uuidString.utf8)
         let responseHeaders = ["header1" : "headerValue1"]
         let expectedResponse = HTTPResponse(
             content: responseData,
@@ -101,14 +140,16 @@ extension AuthorizingHTTPControllerTests {
             headers: responseHeaders
         )
 
-        var transformData: Data?
-        var transformStatusCode: HTTPStatusCode?
-        var transformDecoder: DataDecoder?
-        let request = MockHTTPRequest { data, statusCode, decoder in
-
-            transformData = data
-            transformStatusCode = statusCode
-            transformDecoder = decoder
+        var decodeData: Data?
+        var decodeStatusCode: HTTPStatusCode?
+        var decodeDecoder: DataDecoder?
+        let request = MockHTTPRequest() { body, _, _ in
+            body
+        } decode: { data, statusCode, coders in
+          
+            decodeData = data
+            decodeStatusCode = statusCode
+            decodeDecoder = try coders.requireDecoder(for: .json)
             return data + data
         }
 
@@ -119,136 +160,119 @@ extension AuthorizingHTTPControllerTests {
 
         let response = try await httpController.fetchResponse(request)
 
-        XCTAssertEqual(transformData, expectedResponse.content)
-        XCTAssertEqual(transformStatusCode, expectedResponse.statusCode)
-        XCTAssertTrue(transformDecoder is JSONDecoder)
+        XCTAssertEqual(decodeData, expectedResponse.content)
+        XCTAssertEqual(decodeStatusCode, expectedResponse.statusCode)
+        XCTAssertIdentical(decodeDecoder as? JSONDecoder, try DataCoders.default.requireDecoder(for: .json) as? JSONDecoder)
 
         XCTAssertEqual(response.content, responseData + responseData)
         XCTAssertEqual(response.statusCode, expectedResponse.statusCode)
         XCTAssertEqual(response.headers, expectedResponse.headers)
+        
+        XCTAssertTrue(delegate.controllerDecodingRequest is AuthorizingHTTPController<MockHTTPAuthorizationProvider>)
+        XCTAssertEqual(delegate.decodedResponse.map { $0.content + $0.content }, response.content)
+        XCTAssertEqual(delegate.decodedResponse?.statusCode, response.statusCode)
+        XCTAssertEqual(delegate.decodedResponse?.headers, response.headers)
+        XCTAssertTrue(delegate.decodedRequest is MockHTTPRequest<Data, Data>)
+        XCTAssertNotNil(delegate.codersUsedForRequestDecoding)
     }
 
-    // MARK: Universal headers
-    func testFetchResponse_willNotAddUniversalHeaders_toRequestBeforeSubmission_whenHTTPControllerHasNoUniversalHeaders() async throws {
+    // MARK: Encoding headers
+    func testFetchResponse_willAddEncodingHeaders_toRequestBeforeSubmission_whenRequestHasExistingHeaders() async throws {
 
         let request = MockHTTPRequest(
             headers: ["headerKey2" : "headerValue2"],
-            requiresAuthorization: false
+            encode: { data, headers, coders in
+                headers["encodingKey"] = "encodingValue"
+                return data
+            },
+            decode: { data, statusCode, coders in
+                data
+            }
         )
         httpSession.setBlankResponse(for: request)
-        httpController = AuthorizingHTTPController(
-            baseURL: baseURL,
-            session: httpSession,
-            authorization: authorizationProvider,
-            decoder: decoder,
-            errorHandler: errorHandler,
-            universalHeaders: nil
-        )
         
         _ = try await httpController.fetchResponse(request)
 
         let lastReceivedRequest = httpSession.receivedRequests.last?.request
 
-        XCTAssertEqual(httpSession.receivedRequests.count, 1)
-        XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
-        XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
-        XCTAssertEqual(lastReceivedRequest?.headers, request.headers)
-        XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body, request.body)
-        XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
-    }
-
-    func testFetchResponse_willAddUniversalHeaders_toRequestBeforeSubmission_whenRequestHasExistingHeaders() async throws {
-
-        let request = MockHTTPRequest(
-            headers: ["headerKey2" : "headerValue2"],
-            requiresAuthorization: false
-        )
-        httpSession.setBlankResponse(for: request)
-
-        _ = try await httpController.fetchResponse(request)
-
-        let expectedHeaders = httpController.universalHeaders!.merging(request.headers!) { $1 }
-
-        let lastReceivedRequest = httpSession.receivedRequests.last?.request
-
+        let expectedHeaders = [
+            "headerKey2" : "headerValue2",
+            "encodingKey" : "encodingValue",
+            "Authorization" : "true"
+        ]
         XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders)
         XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body, request.body)
+        XCTAssertEqual(lastReceivedRequest?.body as? Data, request.body)
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
     }
-
-    func testFetchResponse_willAddUniversalHeaders_toRequestBeforeSubmission_whenRequestHasNoExistingHeaders() async throws {
+    
+    func testFetchResponse_willAddEncodingHeaders_toRequestBeforeSubmission_whenRequestHasNoHeaders() async throws {
 
         let request = MockHTTPRequest(
             headers: nil,
-            requiresAuthorization: false
+            encode: { data, headers, coders in
+                headers["encodingKey"] = "encodingValue"
+                return data
+            },
+            decode: { data, statusCode, coders in
+                data
+            }
         )
         httpSession.setBlankResponse(for: request)
-
+        
         _ = try await httpController.fetchResponse(request)
 
         let lastReceivedRequest = httpSession.receivedRequests.last?.request
 
+        let expectedHeaders = [
+            "encodingKey" : "encodingValue",
+            "Authorization" : "true"
+        ]
         XCTAssertEqual(httpSession.receivedRequests.count, 1)
         XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
         XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
-        XCTAssertEqual(lastReceivedRequest?.headers, httpController.universalHeaders)
+        XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders)
         XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body, request.body)
+        XCTAssertEqual(lastReceivedRequest?.body as? Data, request.body)
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
     }
-
-    func testFetchResponse_willAddUniversalHeaders_toRequestBeforeSubmission_andPrioritiseRequestHeadersOnConflict() async throws {
-
-        let request = MockHTTPRequest(
-            headers: ["headerKey1" : "requestHeaderValue1"],
-            requiresAuthorization: false
-        )
-        httpSession.setBlankResponse(for: request)
-
-        _ = try await httpController.fetchResponse(request)
-
-        let lastReceivedRequest = httpSession.receivedRequests.last?.request
-
-        XCTAssertEqual(httpSession.receivedRequests.count, 1)
-        XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
-        XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
-        XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders(for: request))
-        XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body, request.body)
-        XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
-    }
-
+    
     // MARK: Access token saving
     func testFetchResponse_willSaveAccessToken_whenPossible() async throws {
 
         let accessToken = MockAccessToken(value: "accessToken")
-        let request = MockHTTPRequest { _, _, _ in
+        let request = MockHTTPRequest<Data, MockAccessToken> { body, _, _ in
+            body
+        } decode: { _, _, _ in
             accessToken
         }
+
         httpSession.setBlankResponse(for: request)
 
         _ = try await httpController.fetchResponse(request)
 
+        XCTAssertEqual(authorizationProvider.handledAuthorizationResponseRequest?.pathComponents, request.pathComponents)
         XCTAssertEqual(authorizationProvider.handledAuthorizationResponse?.content, accessToken)
     }
-
+    
     // MARK: Error handling
-    func testFetchResponse_willThrowErrorReturnedByErrorHandler() async throws {
+    func testFetchResponse_willThrowErrorReturnedByDelegate() async throws {
 
-        let request = MockHTTPRequest { _, statusCode, _ in
+        let request = MockHTTPRequest { body, _, _ in
+            body
+        } decode: { _, statusCode, _ in
             guard statusCode == .ok else { throw statusCode }
         }
+
         let response = HTTPResponse(
             content: UUID().uuidString.data(using: .utf8)!,
             statusCode: .badRequest,
             headers: [:]
         )
-        errorHandler.result = MockError()
+        delegate.errorToThrow = MockError()
         httpSession.set(response: response, for: request)
 
         do {
@@ -256,50 +280,19 @@ extension AuthorizingHTTPControllerTests {
             XCTFail()
         } catch {
 
-            XCTAssertEqual(errorHandler.recievedResponse?.content, response.content)
-            XCTAssertEqual(errorHandler.recievedError as? HTTPStatusCode, .badRequest)
+            XCTAssertTrue(delegate.controllerThrowingError is AuthorizingHTTPController<MockHTTPAuthorizationProvider>)
+            XCTAssertEqual(delegate.handledError as? HTTPStatusCode, .badRequest)
+            XCTAssertEqual(delegate.handledErrorResponse?.content, response.content)
+            XCTAssertEqual(delegate.handledErrorResponse?.statusCode, response.statusCode)
+            XCTAssertEqual(delegate.handledErrorResponse?.headers, response.headers)
+
             XCTAssertTrue(error is MockError)
             XCTAssertEqual(httpSession.receivedRequests.count, 1)
         }
     }
-    
-    func testFetchResponse_willThrowUnmodifiedError_whenErrorHandlerIsNil() async throws {
-
-        let request = MockHTTPRequest { _, statusCode, _ in
-            guard statusCode == .ok else { throw statusCode }
-        }
-        let response = HTTPResponse(
-            content: UUID().uuidString.data(using: .utf8)!,
-            statusCode: .badRequest,
-            headers: [:]
-        )
-        errorHandler.result = MockError()
-        httpSession.set(response: response, for: request)
-
-        httpController = AuthorizingHTTPController(
-            baseURL: baseURL,
-            session: httpSession,
-            authorization: authorizationProvider,
-            decoder: decoder,
-            errorHandler: nil,
-            universalHeaders: universalHeaders
-        )
-
-        do {
-            _ = try await httpController.fetchResponse(request)
-            XCTFail()
-        } catch {
-
-            XCTAssertNil(errorHandler.recievedResponse)
-            XCTAssertNil(errorHandler.recievedError)
-            XCTAssertEqual(error as? HTTPStatusCode, .badRequest)
-            XCTAssertEqual(httpSession.receivedRequests.count, 1)
-        }
-    }
-
 
     // MARK: Error reporting
-    func testFetchResponse_willReportErrorThrownByHTTPSession_withoutCallingErrorHandler() async throws {
+    func testFetchResponse_willReportErrorThrownByHTTPSession_withoutCallingDelegate() async throws {
 
         let request = MockHTTPRequest()
         httpSession.shouldThrowErrorOnSubmit = true
@@ -309,9 +302,11 @@ extension AuthorizingHTTPControllerTests {
             XCTFail()
         } catch {
 
-            XCTAssertNil(errorHandler.recievedError)
-            XCTAssertNil(errorHandler.recievedResponse)
-            XCTAssertTrue(error is MockHTTPSession.SampleError)
+            XCTAssertNil(delegate.controllerThrowingError)
+            XCTAssertNil(delegate.handledError)
+            XCTAssertNil(delegate.handledErrorResponse)
+
+            XCTAssertTrue(error is MockError)
             XCTAssertEqual(httpSession.receivedRequests.count, 1)
         }
     }

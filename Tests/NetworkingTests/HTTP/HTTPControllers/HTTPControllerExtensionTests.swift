@@ -31,7 +31,9 @@ extension HTTPControllerExtensionTests {
         httpController.responseStatusCode = .ok
         httpController.responseData = UUID().uuidString.data(using: .utf8)!
         
-        let request = MockHTTPRequest { data, _, _ in
+        let request = MockHTTPRequest { body, _, _ in
+            body
+        } decode: { data, _, _ in
             Data(data.reversed())
         }
         

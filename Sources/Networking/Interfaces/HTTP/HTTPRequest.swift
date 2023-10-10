@@ -2,7 +2,7 @@ import Foundation
 
 /// Defines a strongly typed abstraction for a HTTP request.
 ///
-/// Any types implementing this protocol define a series of properties that point to an endpoint on a network. It is the job of a request to understand the data at the endpoint it is pointing to, and to be able to decode that data into some concrete Swift type. When a ``HTTPRequest`` is submitted through some ``HTTPController``, the ``transform(data:statusCode:using:)`` function is called in order to be able to strongly type the response from the request. This tightly couples the request to the type of content it will provide.
+/// Any types implementing this protocol define a series of properties that point to an endpoint on a network. It is the job of a request to understand the data at the endpoint it is pointing to, and to be able to decode that data into some concrete Swift type. When a ``HTTPRequest`` is submitted through some ``HTTPController``, the ``encode(body:headers:using:)-1y6xr`` is used to convert the ``body-9mp51`` to `Data`, then the ``decode(data:statusCode:using:)`` function is called in order to be able to strongly type the response from the request. This tightly couples the request to the type of content it will provide.
 ///
 /// Implementations should be lightweight, and are intended to be created and recycled quickly.
 ///
@@ -11,6 +11,7 @@ import Foundation
 /// Aim to keep any logic that is needed to construct the request in the initialisers.
 public protocol HTTPRequest<Body, Response> {
 
+    /// The body type of the request.
     associatedtype Body = Never
     
     /// The strongly typed response that this request returns.
@@ -38,19 +39,30 @@ public protocol HTTPRequest<Body, Response> {
     
     // MARK: - Functions
     
+    /// Encodes the request ``HTTPRequest/body-9pm74`` in to data. This is only called by a ``HTTPController`` if the body is not `nil`.
+    ///
+    /// The default implementation encodes the `body` to JSON and adds `application/json` to the `Content-Type` header.
+    ///
+    /// Any custom implementations should be sure to set the `Content-Type` value.
+    /// - Parameters:
+    ///   - body: The body to encode to `Data`.
+    ///   - headers: The headers provided as an `inout` parameter. These should be modified to include the  `Content-Type` of the encoding method.
+    ///   - coders: A collection of ``DataCoders`` to be used to encode the provided `Body` instance.
+    /// - Returns: A data representation of the ``HTTPRequest/body-9mp51``
+    /// - Throws: Any errors that occured during encoding. This is most likely to be an `EncodingError` or due to a `DataEncoder` not being available for a specific ``HTTPContentType``.
     func encode(
         body: Body,
         headers: inout [String : String],
         using coders: DataCoders
     ) throws -> Data
     
-    /// Transforms the raw `Data` returned over the network into some concrete Swift type.
+    /// Decodes the raw `Data` returned over the network into some concrete Swift type.
     ///
     /// It is best practice to check that the `statusCode` is expected before attempting to decode any data. If an unexpected value is encountered, then the `statusCode` can be thrown as an error.
     /// - Parameters:
     ///   - data: The `Data` returned from the network that needs to be decoded.
     ///   - statusCode: The ``HTTPStatusCode`` returned from the network.
-    ///   - decoder: A ``DataDecoder`` provided by the calling ``HTTPController`` that can be used to decode the `Data`. This usually has API specific settings such as date decoding options. If the request "knows better" than to use this default decoder, then it should use some other instance.
+    ///   - coders: A collection of ``DataCoders`` to be used to decode the provided `Data`. If the request "knows better" than to use these coders, then it should use some other instance.
     /// - Returns: The decoded object.
     /// - Throws: Any errors that occured during decoding. This is most likely to be an unexpeced ``HTTPStatusCode`` or a `DecodingError`.
     func decode(

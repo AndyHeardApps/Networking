@@ -17,8 +17,10 @@ public struct AuthorizingHTTPController<Authorization: HTTPAuthorizationProvider
     /// The ``HTTPSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
     public let session: HTTPSession
     
+    /// A collection of ``DataEncoder`` and ``DataDecoder`` objects that the controller will use to encode and decode specific HTTP content types.
     public let dataCoders: DataCoders
     
+    /// The delegate used to provide additional controler over preparing a request to be sent, handling responses, and handling errors.
     public let delegate: HTTPControllerDelegate
         
     /// The ``HTTPAuthorizationProvider`` used to authorize requests that need it.
@@ -30,14 +32,13 @@ public struct AuthorizingHTTPController<Authorization: HTTPAuthorizationProvider
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
     ///   - session: The ``HTTPSession`` the controller will use.
+    ///   - dataCoders: The ``DataCoders`` that can be used to encode and decode request body and responses. By default, only JSON coders will be available.
+    ///   - delegate: The ``HTTPControllerDelegate`` for the controller to use. If none is provided, then a default implementation is used to provide standard functionality.
     ///   - authorization: The ``HTTPAuthorizationProvider`` to use to authorize requests.
-    ///   - decoder: The ``DataDecoder`` the controller will hand to requests for decoding.
-    ///   - errorHandler: The ``HTTPErrorHandler`` that can be used to manipulate errors before they are thrown.
-    ///   - universalHeaders: The headers applied to every request submitted.
     public init(
         baseURL: URL,
         session: HTTPSession = URLSession.shared,
-        dataCoders: DataCoders,
+        dataCoders: DataCoders = .default,
         delegate: HTTPControllerDelegate? = nil,
         authorization: Authorization
     ) {
@@ -87,7 +88,8 @@ extension AuthorizingHTTPController: HTTPController {
             let mappedError = delegate.controller(
                 self,
                 didRecieveError: error,
-                from: dataResponse
+                from: dataResponse,
+                using: dataCoders
             )
 
             throw mappedError

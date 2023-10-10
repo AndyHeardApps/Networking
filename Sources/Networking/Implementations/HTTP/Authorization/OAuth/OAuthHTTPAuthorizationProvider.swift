@@ -31,7 +31,10 @@ extension OAuthHTTPAuthorizationProvider: HTTPReauthorizationProvider {
     
     public func authorize<Request: HTTPRequest>(_ request: Request) -> any HTTPRequest<Request.Body, Request.Response> {
         
-        guard let accessToken = storage[OAuthHTTPAuthorizationProviderStorageKey.accessToken] else {
+        guard
+            request.requiresAuthorization,
+            let accessToken = storage[OAuthHTTPAuthorizationProviderStorageKey.accessToken]
+        else {
             return request
         }
         

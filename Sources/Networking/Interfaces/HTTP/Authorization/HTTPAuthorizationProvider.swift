@@ -1,7 +1,7 @@
 
 /// Provides authorization functionality for a ``HTTPController``. Specifically the ``AuthorizingHTTPController``.
 ///
-/// Types implementing this protocol define an ``authorize(_:)`` function to provide authorization credentials for a request. This can be done in any way, as long as it returns a ``HTTPRequest`` with the same ``HTTPRequest/Response`` as the provided request.
+/// Types implementing this protocol define an ``authorize(_:)`` function to provide authorization credentials for a request. This can be done in any way, as long as it returns a ``HTTPRequest`` with the same ``HTTPRequest/Response`` and ``HTTPRequest/Body`` as the provided request.
 ///
 /// An ``AuthorizationRequest`` type must also be defined. This is a type of ``HTTPRequest`` that implementations make use of to extract authorization credentials that are later used to authorize requests. The ``handle(authorizationResponse:from:)`` function is called by an ``AuthorizingHTTPController``, and is handed a ``HTTPResponse`` returned from an ``AuthorizationRequest`` that can be used to extract and store any required credentials.
 ///
@@ -20,6 +20,7 @@ public protocol HTTPAuthorizationProvider<AuthorizationRequest>  {
     /// Only requests with ``HTTPRequest/requiresAuthorization`` equal to `true` should be handed to this function. Implementations should apply authorizing credentials to the request before returning it.
     /// - Parameter request: The ``HTTPRequest`` that needs to be authorized.
     /// - Returns: Any ``HTTPRequest``, with authorization credentials provided where possible.
+    /// - Throws: Any error preventing request authorization.
     func authorize<Request: HTTPRequest>(_ request: Request) throws -> any HTTPRequest<Request.Body, Request.Response>
     
     /// Extracts authorization credentials from the provided ``AuthorizationRequest`` and associated ``HTTPResponse`` where possible, and stores them for later use in ``authorize(_:)``.

@@ -121,7 +121,7 @@ extension URLSessionHTTPSessionTests {
             
             let request = MockHTTPRequest(
                 httpMethod: httpMethod,
-                body: .json(["key" : "value"])
+                body: Data(UUID().uuidString.utf8)
             )
             _ = try await urlSession.submit(request: request, to: baseURL)
                     
@@ -131,12 +131,12 @@ extension URLSessionHTTPSessionTests {
                 + "?"
                 + request.queryItems!.map { "\($0)=\($1)" }.joined(separator: "/")
             var expectedHeaders = request.headers
-            expectedHeaders?["Content-Length"] = "15"
+            expectedHeaders?["Content-Length"] = "36"
             
             XCTAssertNotNil(receivedURLRequest)
             XCTAssertEqual(receivedURLRequest?.url?.absoluteString, expectedURLString)
             XCTAssertEqual(receivedURLRequest?.httpMethod, httpMethodString)
-            XCTAssertEqual(receivedURLRequest?.httpBody, Data(#"{"key":"value"}"#.utf8))
+            XCTAssertEqual(receivedURLRequest?.httpBody, request.body)
             XCTAssertEqual(receivedURLRequest?.allHTTPHeaderFields, expectedHeaders)
         }
     }
