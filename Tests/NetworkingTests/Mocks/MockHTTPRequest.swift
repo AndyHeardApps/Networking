@@ -1,16 +1,17 @@
 import Foundation
 @testable import Networking
 
-struct MockHTTPRequest<ResponseType>: HTTPRequest {
+struct MockHTTPRequest<Body, Response>: HTTPRequest {
 
     // MARK: - Properties
     let httpMethod: HTTPMethod
     let pathComponents: [String]
     let headers: [String : String]?
     let queryItems: [String : String]?
-    let body: Data?
+    let body: Body?
     let requiresAuthorization: Bool
-    private let transformClosure: (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
+    private let _encode: (Body, inout [String : String], DataCoders) throws -> Data
+    private let _decode: (Data, HTTPStatusCode, DataCoders) throws -> Response
     
     // MARK: - Initialiser
     init(
@@ -18,9 +19,10 @@ struct MockHTTPRequest<ResponseType>: HTTPRequest {
         pathComponents: [String] = ["path1", "path2"],
         headers: [String : String]? = ["header1" : "headerValue1"],
         queryItems: [String : String]? = ["query1" : "queryValue1"],
-        body: Data? = UUID().uuidString.data(using: .utf8),
+        body: Body? = Data(UUID().uuidString.utf8),
         requiresAuthorization: Bool = true,
-        transformClosure: @escaping (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
+        encode: @escaping (Body, inout [String : String], DataCoders) throws -> Data,
+        decode: @escaping (Data, HTTPStatusCode, DataCoders) throws -> Response
     ) {
        
         self.httpMethod = httpMethod
@@ -29,19 +31,23 @@ struct MockHTTPRequest<ResponseType>: HTTPRequest {
         self.queryItems = queryItems
         self.body = body
         self.requiresAuthorization = requiresAuthorization
-        self.transformClosure = transformClosure
+        self._encode = encode
+        self._decode = decode
     }
 }
 
-// MARK: - Void initialiser
-extension MockHTTPRequest where ResponseType == Void {
+// MARK: - Void initialisers
+extension MockHTTPRequest
+where Response == Void,
+      Body == Data
+{
     
     init(
         httpMethod: HTTPMethod = .get,
         pathComponents: [String] = ["path1", "path2"],
         headers: [String : String]? = ["header1" : "headerValue1"],
         queryItems: [String : String]? = ["query1" : "queryValue1"],
-        body: Data? = UUID().uuidString.data(using: .utf8),
+        body: Data? = Data(UUID().uuidString.utf8),
         requiresAuthorization: Bool = true
     ) {
        
@@ -51,19 +57,21 @@ extension MockHTTPRequest where ResponseType == Void {
         self.queryItems = queryItems
         self.body = body
         self.requiresAuthorization = requiresAuthorization
-        self.transformClosure = { _, _, _ in () }
+        self._encode = { body, _, _ in body }
+        self._decode = { _, _, _ in () }
     }
 }
 
-// MARK: - Transform
+// MARK: - Coding
 extension MockHTTPRequest {
     
-    func transform(
-        data: Data,
-        statusCode: HTTPStatusCode,
-        using decoder: DataDecoder
-    ) throws -> ResponseType {
+    func encode(body: Body, headers: inout [String : String], using coders: DataCoders) throws -> Data {
         
-        try transformClosure(data, statusCode, decoder)
+        try _encode(body, &headers, coders)
+    }
+    
+    func decode(data: Data, statusCode: HTTPStatusCode, using coders: DataCoders) throws -> Response {
+        
+        try _decode(data, statusCode, coders)
     }
 }

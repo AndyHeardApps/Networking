@@ -34,13 +34,11 @@ extension OAuthHTTPAuthorizationProviderTests {
         // Properties
         let httpMethod: HTTPMethod = .get
         let pathComponents: [String] = []
-        let headers: [String : String]? = nil
-        let queryItems: [String : String]? = nil
         let body: Data? = nil
         var shouldProvideTokens: Bool
         
-        // Transform
-        func transform(data: Data, statusCode: HTTPStatusCode, using decoder: DataDecoder) throws -> Void {}
+        // Decode
+        func decode(data: Data, statusCode: HTTPStatusCode, using coders: DataCoders) throws -> () {}
         
         // Tokens
         func accessToken(from response: HTTPResponse<Void>) -> String? {
@@ -58,7 +56,6 @@ extension OAuthHTTPAuthorizationProviderTests {
         let httpMethod: HTTPMethod = .get
         let pathComponents: [String] = []
         let headers: [String : String]?
-        let queryItems: [String : String]? = nil
         let body: Data? = nil
         var shouldProvideTokens: Bool
         
@@ -69,8 +66,8 @@ extension OAuthHTTPAuthorizationProviderTests {
             self.shouldProvideTokens = true
         }
         
-        // Transform
-        func transform(data: Data, statusCode: HTTPStatusCode, using decoder: DataDecoder) throws -> Void {}
+        // Decode
+        func decode(data: Data, statusCode: HTTPStatusCode, using coders: DataCoders) throws -> () {}
         
         // Tokens
         func accessToken(from response: HTTPResponse<Void>) -> String? {
@@ -226,6 +223,25 @@ extension OAuthHTTPAuthorizationProviderTests {
         XCTAssertEqual(authorizedRequest.body, request.body)
         XCTAssertEqual(authorizedRequest.requiresAuthorization, request.requiresAuthorization)
     }
+    
+    func testAuthorizeRequest_willReturnUnmodifiedRequest_wehnRequestDoesNotRequireAuthorizationIsNotAvailable() {
+        
+        let existingAccessToken = "existingAccessToken"
+        secureStorage["oauth.accessToken"] = existingAccessToken
+
+        XCTAssertNotNil(secureStorage["oauth.accessToken"])
+        
+        let request = MockHTTPRequest(requiresAuthorization: false)
+        let authorizedRequest = authorizationProvider.authorize(request)
+
+        XCTAssertEqual(authorizedRequest.httpMethod, request.httpMethod)
+        XCTAssertEqual(authorizedRequest.pathComponents, request.pathComponents)
+        XCTAssertEqual(authorizedRequest.headers, request.headers)
+        XCTAssertEqual(authorizedRequest.queryItems, request.queryItems)
+        XCTAssertEqual(authorizedRequest.body, request.body)
+        XCTAssertEqual(authorizedRequest.requiresAuthorization, request.requiresAuthorization)
+    }
+
     
     func testInit_willUseKeychainBackedStorage() {
         

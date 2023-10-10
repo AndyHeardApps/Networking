@@ -119,7 +119,10 @@ extension URLSessionHTTPSessionTests {
                 return (HTTPURLResponse(), nil)
             }
             
-            let request = MockHTTPRequest(httpMethod: httpMethod)
+            let request = MockHTTPRequest(
+                httpMethod: httpMethod,
+                body: Data(UUID().uuidString.utf8)
+            )
             _ = try await urlSession.submit(request: request, to: baseURL)
                     
             let expectedURLString = baseURL.absoluteString

@@ -12,12 +12,18 @@ final class MockHTTPSession {
 // MARK: - HTTP session
 extension MockHTTPSession: HTTPSession {
     
-    func submit(request: some HTTPRequest, to baseURL: URL) async throws -> HTTPResponse<Data> {
+    func submit<Request>(
+        request: Request,
+        to baseURL: URL
+    ) async throws -> HTTPResponse<Data>
+    where Request: HTTPRequest,
+          Request.Body == Data
+    {
         
         receivedRequests.append((request, baseURL))
         
         if shouldThrowErrorOnSubmit {
-            throw SampleError()
+            throw MockError()
         }
                 
         if request.requiresAuthorization {
@@ -75,9 +81,11 @@ extension MockHTTPSession {
             headers: nil,
             queryItems: nil,
             body: nil,
-            requiresAuthorization: false
-        ) { _, _, _ in }
-
+            requiresAuthorization: false,
+            encode: { body, _, _ in body },
+            decode: { _, _, _ in }
+        )
+        
         set(data: .init(), for: reauthorizationRequest)
     }
 }
@@ -100,17 +108,11 @@ extension MockHTTPSession {
             self.httpMethod = request.httpMethod
             self.pathComponents = request.pathComponents
             self.queryItems = request.queryItems
-            self.body = try? JSONEncoder().encode(request.body)
+            self.body = try! request.body.map { body in
+                var headers: [String : String] = [:]
+                return try request.encode(body: body, headers: &headers, using: .default)
+            }
             self.requiresAuthorization = request.requiresAuthorization
         }
-    }
-}
-
-// MARK: - Errors
-extension MockHTTPSession {
-    
-    struct SampleError: Error {
-        
-        fileprivate init() {}
     }
 }

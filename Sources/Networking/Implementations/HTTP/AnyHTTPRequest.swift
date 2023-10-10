@@ -3,16 +3,17 @@ import Foundation
 /// A type erased ``HTTPRequest``.
 ///
 /// **Note:** This is no longer widely used since the introduction of existential types in Swift.
-public struct AnyHTTPRequest<ResponseType>: HTTPRequest {
+public struct AnyHTTPRequest<Body, Response>: HTTPRequest {
     
     // MARK: Properties
     public let httpMethod: HTTPMethod
     public let pathComponents: [String]
     public let headers: [String : String]?
     public let queryItems: [String : String]?
-    public let body: Data?
+    public let body: Body?
     public let requiresAuthorization: Bool
-    private let _transform: (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
+    private let _encode: (Body, inout [String : String], DataCoders) throws -> Data
+    private let _decode: (Data, HTTPStatusCode, DataCoders) throws -> Response
     
     // MARK: Initialisers
     public init(
@@ -20,9 +21,10 @@ public struct AnyHTTPRequest<ResponseType>: HTTPRequest {
         pathComponents: [String],
         headers: [String : String]?,
         queryItems: [String : String]?,
-        body: Data?,
+        body: Body?,
         requiresAuthorization: Bool,
-        transform: @escaping (Data, HTTPStatusCode, DataDecoder) throws -> ResponseType
+        encode: @escaping (Body, inout [String : String], DataCoders) throws -> Data,
+        decode: @escaping (Data, HTTPStatusCode, DataCoders) throws -> Response
     ) {
         self.httpMethod = httpMethod
         self.pathComponents = pathComponents
@@ -30,11 +32,13 @@ public struct AnyHTTPRequest<ResponseType>: HTTPRequest {
         self.queryItems = queryItems
         self.body = body
         self.requiresAuthorization = requiresAuthorization
-        self._transform = transform
+        self._encode = encode
+        self._decode = decode
     }
     
     public init<Request: HTTPRequest>(_ request: Request)
-    where Self.ResponseType == Request.ResponseType
+    where Self.Response == Request.Response,
+          Self.Body == Request.Body
     {
         
         self.httpMethod = request.httpMethod
@@ -43,16 +47,50 @@ public struct AnyHTTPRequest<ResponseType>: HTTPRequest {
         self.queryItems = request.queryItems
         self.body = request.body
         self.requiresAuthorization = request.requiresAuthorization
-        self._transform = request.transform
+        self._encode = request.encode
+        self._decode = request.decode
     }
     
-    // MARK: - Transform
-    public func transform(
+    // MARK: - Coding
+    public func encode(
+        body: Body,
+        headers: inout [String : String],
+        using coders: DataCoders
+    ) throws -> Data {
+        
+        try _encode(body, &headers, coders)
+    }
+    
+    public func decode(
         data: Data,
         statusCode: HTTPStatusCode,
-        using decoder: DataDecoder
-    ) throws -> ResponseType {
+        using coders: DataCoders
+    ) throws -> Response {
         
-        try _transform(data, statusCode, decoder)
+        try _decode(data, statusCode, coders)
+    }
+}
+
+extension AnyHTTPRequest where Body == Data {
+    
+    init(
+        httpMethod: HTTPMethod,
+        pathComponents: [String],
+        headers: [String : String]?,
+        queryItems: [String : String]?,
+        body: Data?,
+        requiresAuthorization: Bool,
+        decode: @escaping (Data, HTTPStatusCode, DataCoders) throws -> Response
+    ) {
+        self.httpMethod = httpMethod
+        self.pathComponents = pathComponents
+        self.headers = headers
+        self.queryItems = queryItems
+        self.body = body
+        self.requiresAuthorization = requiresAuthorization
+        self._encode = { body, _, _ in
+            body
+        }
+        self._decode = decode
     }
 }

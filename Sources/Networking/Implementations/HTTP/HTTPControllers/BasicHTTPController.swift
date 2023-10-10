@@ -1,10 +1,8 @@
 import Foundation
 
-/// A basic implementation of a ``HTTPController``, with no authorization on requests. This type will submit requests using the provided ``HTTPSession`` and transform responses using the ``HTTPRequest/transform(data:statusCode:using:)`` function.
+/// A basic implementation of a ``HTTPController``, with no authorization on requests. This type will submit requests using the provided ``HTTPSession``, encoding the ``HTTPRequest/body-9mp51`` of the reqest using ``HTTPRequest/encode(body:headers:using:)-7qe3v`` and decoding the response using ``HTTPRequest/decode(data:statusCode:using:)``.
 ///
-/// Any request errors are handed to the ``errorHandler`` to enable more information to be extracted where possible before throwing the error.
-///
-/// The ``universalHeaders`` property can be used to add a static set of headers to every request submitted, such as API keys.
+/// For further control over preparing the requests for submission or handling responses and errors, create a custom ``HTTPControllerDelegate`` and provide it on the initialiser. This allows you to decode API errors, add headers to every request or encrypt and decrypt content.
 ///
 /// Though the implementation is intentionally lightweight, it is best if an instance is created once for each `baseURL` on app launch, and held for reuse.
 public struct BasicHTTPController {
@@ -17,77 +15,71 @@ public struct BasicHTTPController {
     /// The ``HTTPSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
     public let session: HTTPSession
     
-    /// The ``DataDecoder`` provided to a submitted ``HTTPRequest`` for decoding. It is best to set up a decoder suitable for the API once and reuse it. The ``HTTPRequest`` may still opt not to use this decoder.
-    public let decoder: DataDecoder
-        
-    /// The type used to handle any errors that are thrown by the ``HTTPRequest/transform(data:statusCode:using:)`` function of a request. This is used to try and extract error messages from the response if possible. If this property is `nil` then the unaltered error is thrown.
-    public let errorHandler: HTTPErrorHandler?
+    /// A collection of ``DataEncoder`` and ``DataDecoder`` objects that the controller will use to encode and decode specific HTTP content types.
+    public let dataCoders: DataCoders
+    
+    /// The delegate used to provide additional controler over preparing a request to be sent, handling responses, and handling errors.
+    public let delegate: HTTPControllerDelegate
 
-    /// The headers that will be applied to every request before submission.
-    public let universalHeaders: [String : String]?
-
-    // MARK: - Initialisers
+    // MARK: - Initialiser
     
     /// Creates a new ``BasicHTTPController`` instance.
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
-    ///   - session: The ``HTTPSession`` the controller will use.
-    ///   - decoder: The ``DataDecoder`` the controller will hand to requests for decoding.
-    ///   - errorHandler: The ``HTTPErrorHandler`` that can be used to manipulate errors before they are thrown.
-    ///   - universalHeaders: The headers applied to every request submitted.
+    ///   - session: The ``HTTPSession`` the controller will use to submit requests.
+    ///   - dataCoders: The ``DataCoders`` that can be used to encode and decode request body and responses. By default, only JSON coders will be available.
+    ///   - delegate: The ``HTTPControllerDelegate`` for the controller to use. If none is provided, then a default implementation is used to provide standard functionality.
     public init(
         baseURL: URL,
         session: HTTPSession = URLSession.shared,
-        decoder: DataDecoder = JSONDecoder(),
-        errorHandler: HTTPErrorHandler? = nil,
-        universalHeaders: [String : String]? = nil
+        dataCoders: DataCoders = .default,
+        delegate: HTTPControllerDelegate? = nil
     ) {
         
         self.baseURL = baseURL
         self.session = session
-        self.decoder = decoder
-        self.errorHandler = errorHandler
-        self.universalHeaders = universalHeaders
+        self.dataCoders = dataCoders
+        self.delegate = delegate ?? DefaultHTTPControllerDelegate()
     }
 }
 
 // MARK: - HTTP controller
 extension BasicHTTPController: HTTPController {
     
-    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.ResponseType> {
+    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.Response> {
 
         if request.requiresAuthorization {
             throw HTTPStatusCode.unauthorized
         }
         
-        let requestWithUniversalHeaders = add(
-            universalHeaders: universalHeaders,
-            to: request
+        let rawDataRequest = try delegate.controller(
+            self,
+            prepareRequestForSubmission: request,
+            using: dataCoders
         )
         
         let dataResponse = try await session.submit(
-            request: requestWithUniversalHeaders,
+            request: rawDataRequest,
             to: baseURL
         )
         
         do {
-            let response = try transform(
-                dataResponse: dataResponse,
-                from: request,
-                using: decoder
+            let response = try delegate.controller(
+                self,
+                decodeResponse: dataResponse,
+                fromRequest: request,
+                using: dataCoders
             )
             
             return response
                         
         } catch {
-            
-            guard let errorHandler else {
-                throw error
-            }
-            
-            let mappedError = errorHandler.map(
-                error,
-                from: dataResponse
+                        
+            let mappedError = delegate.controller(
+                self,
+                didRecieveError: error,
+                from: dataResponse,
+                using: dataCoders
             )
             
             throw mappedError

@@ -2,13 +2,13 @@ import Foundation
 
 extension URLSession: HTTPSession {
     
-    /// The `DataEncoder` used to encode the bodies of all `HTTPRequest`s submitted to the `URLSession`.
-    public static var bodyEncoder: any DataEncoder = JSONEncoder()
-    
-    public func submit(
-        request:  some HTTPRequest,
+    public func submit<Request>(
+        request: Request,
         to baseURL: URL
-    ) async throws -> HTTPResponse<Data> {
+    ) async throws -> HTTPResponse<Data> 
+    where Request: HTTPRequest,
+          Request.Body == Data
+    {
 
         let urlRequest = try self.urlRequest(for: request, withBaseURL: baseURL)
         let (data, response) = try await self.data(for: urlRequest)
@@ -28,10 +28,13 @@ extension URLSession: HTTPSession {
 // MARK: - URL request
 extension URLSession {
     
-    private func urlRequest<Request: HTTPRequest>(
+    private func urlRequest<Request>(
         for request: Request,
         withBaseURL baseURL: URL
-    ) throws -> URLRequest {
+    ) throws -> URLRequest
+    where Request: HTTPRequest,
+          Request.Body == Data
+    {
         
         var urlComponents = URLComponents()
         urlComponents.path = request.pathComponents.joined(separator: "/")
@@ -45,7 +48,7 @@ extension URLSession {
         urlRequest.httpMethod = request.httpMethod.asString
         urlRequest.allHTTPHeaderFields = request.headers
         urlRequest.httpBody = request.body
-        
+                
         return urlRequest
     }
 }

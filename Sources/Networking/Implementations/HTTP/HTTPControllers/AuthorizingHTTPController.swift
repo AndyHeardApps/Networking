@@ -16,18 +16,15 @@ public struct AuthorizingHTTPController<Authorization: HTTPAuthorizationProvider
     
     /// The ``HTTPSession`` used to fetch the raw `Data` ``HTTPResponse`` for a request.
     public let session: HTTPSession
+    
+    /// A collection of ``DataEncoder`` and ``DataDecoder`` objects that the controller will use to encode and decode specific HTTP content types.
+    public let dataCoders: DataCoders
+    
+    /// The delegate used to provide additional controler over preparing a request to be sent, handling responses, and handling errors.
+    public let delegate: HTTPControllerDelegate
         
     /// The ``HTTPAuthorizationProvider`` used to authorize requests that need it.
     public let authorization: Authorization
-    
-    /// The ``DataDecoder`` provided to a submitted ``HTTPRequest`` for decoding. It is best to set up a decoder suitable for the API once and reuse it. The ``HTTPRequest`` may still opt not to use this decoder.
-    public let decoder: DataDecoder
-    
-    /// The type used to handle any errors that are thrown by the ``HTTPRequest/transform(data:statusCode:using:)`` function of a request. This is used to try and extract error messages from the response if possible. If this property is `nil` then the unaltered error is thrown.
-    public let errorHandler: HTTPErrorHandler?
-
-    /// The headers that will be applied to every request before submission.
-    public let universalHeaders: [String : String]?
     
     // MARK: - Initialisers
 
@@ -35,51 +32,50 @@ public struct AuthorizingHTTPController<Authorization: HTTPAuthorizationProvider
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
     ///   - session: The ``HTTPSession`` the controller will use.
+    ///   - dataCoders: The ``DataCoders`` that can be used to encode and decode request body and responses. By default, only JSON coders will be available.
+    ///   - delegate: The ``HTTPControllerDelegate`` for the controller to use. If none is provided, then a default implementation is used to provide standard functionality.
     ///   - authorization: The ``HTTPAuthorizationProvider`` to use to authorize requests.
-    ///   - decoder: The ``DataDecoder`` the controller will hand to requests for decoding.
-    ///   - errorHandler: The ``HTTPErrorHandler`` that can be used to manipulate errors before they are thrown.
-    ///   - universalHeaders: The headers applied to every request submitted.
     public init(
         baseURL: URL,
         session: HTTPSession = URLSession.shared,
-        authorization: Authorization,
-        decoder: DataDecoder = JSONDecoder(),
-        errorHandler: HTTPErrorHandler? = nil,
-        universalHeaders: [String : String]? = nil
+        dataCoders: DataCoders = .default,
+        delegate: HTTPControllerDelegate? = nil,
+        authorization: Authorization
     ) {
         
         self.baseURL = baseURL
         self.session = session
+        self.dataCoders = dataCoders
+        self.delegate = delegate ?? DefaultHTTPControllerDelegate()
         self.authorization = authorization
-        self.decoder = decoder
-        self.errorHandler = errorHandler
-        self.universalHeaders = universalHeaders
     }
 }
 
 // MARK: - HTTP controller
 extension AuthorizingHTTPController: HTTPController {
     
-    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.ResponseType> {
+    public func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.Response> {
         
-        let requestWithUniversalHeaders = add(
-            universalHeaders: universalHeaders,
-            to: request
+        let authorizedRequest = try authorize(request: request)
+        let rawDataRequest = try delegate.controller(
+            self,
+            prepareRequestForSubmission: authorizedRequest,
+            using: dataCoders
         )
-        let authorizedRequest = try authorize(request: requestWithUniversalHeaders)
-        
+
         let dataResponse = try await session.submit(
-            request: authorizedRequest,
+            request: rawDataRequest,
             to: baseURL
         )
         
         do {
-            let response = try transform(
-                dataResponse: dataResponse,
-                from: request,
-                using: decoder
+            let response = try delegate.controller(
+                self,
+                decodeResponse: dataResponse,
+                fromRequest: request,
+                using: dataCoders
             )
-            
+
             extractAuthorizationContent(
                 from: response,
                 returnedBy: request
@@ -89,15 +85,13 @@ extension AuthorizingHTTPController: HTTPController {
             
         } catch {
             
-            guard let errorHandler else {
-                throw error
-            }
-            
-            let mappedError = errorHandler.map(
-                error,
-                from: dataResponse
+            let mappedError = delegate.controller(
+                self,
+                didRecieveError: error,
+                from: dataResponse,
+                using: dataCoders
             )
-            
+
             throw mappedError
         }
     }
@@ -106,7 +100,7 @@ extension AuthorizingHTTPController: HTTPController {
 // MARK: - Request modification
 extension AuthorizingHTTPController {
     
-    private func authorize<Request: HTTPRequest>(request: Request) throws -> any HTTPRequest<Request.ResponseType> {
+    private func authorize<Request: HTTPRequest>(request: Request) throws -> any HTTPRequest<Request.Body, Request.Response> {
         
         guard request.requiresAuthorization else {
             return request
@@ -128,7 +122,7 @@ extension AuthorizingHTTPController {
         
         if
             let authorizationRequest = request as? Authorization.AuthorizationRequest,
-            let authorizationResponse = response as? HTTPResponse<Authorization.AuthorizationRequest.ResponseType>
+            let authorizationResponse = response as? HTTPResponse<Authorization.AuthorizationRequest.Response>
         {
             authorization.handle(
                 authorizationResponse: authorizationResponse,

@@ -11,7 +11,7 @@ public protocol HTTPController {
     /// - Parameter request: The ``HTTPRequest`` to be submitted.
     /// - Returns: The ``HTTPResponse`` returned by the `request`.
     /// - Throws: Any errors that occurred when fetching the response. Usually this is a network or decoding error. See ``HTTPStatusCode``.
-    func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.ResponseType>
+    func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.Response>
 }
 
 // MARK: - Convenience method
@@ -21,7 +21,7 @@ extension HTTPController {
     /// - Parameter request: The ``HTTPRequest`` to be submitted.
     /// - Returns: The ``HTTPResponse/content`` returned by the `request`.
     /// - Throws: Any errors that occurred when fetching the response. Usually this is a network or decoding error. See ``HTTPStatusCode``.
-    public func fetchContent<Request: HTTPRequest>(_ request: Request) async throws -> Request.ResponseType {
+    public func fetchContent<Request: HTTPRequest>(_ request: Request) async throws -> Request.Response {
         
         try await fetchResponse(request).content
     }
