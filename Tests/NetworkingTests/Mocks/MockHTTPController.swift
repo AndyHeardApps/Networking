@@ -7,22 +7,21 @@ final class MockHTTPController {
     var responseData: Data = .init()
     var responseStatusCode: HTTPStatusCode = .ok
     var responseHeaders: [AnyHashable : String] = [:]
-    var responseDecoder: DataDecoder = JSONDecoder()
 }
 
 // MARK: - HTTP controller
 extension MockHTTPController: HTTPController {
     
-    func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.ResponseType> {
+    func fetchResponse<Request: HTTPRequest>(_ request: Request) async throws -> HTTPResponse<Request.Response> {
         
-        let transformedData = try request.transform(
+        let decodedData = try request.decode(
             data: responseData,
             statusCode: responseStatusCode,
-            using: responseDecoder
+            using: .default
         )
         
         let response = HTTPResponse(
-            content: transformedData,
+            content: decodedData,
             statusCode: responseStatusCode,
             headers: responseHeaders
         )

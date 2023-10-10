@@ -29,9 +29,12 @@ where AuthorizationRequest: OAuthHTTPAuthorizationRequest,
 // MARK: - HTTP Reauthorization provider
 extension OAuthHTTPAuthorizationProvider: HTTPReauthorizationProvider {
     
-    public func authorize<Request: HTTPRequest>(_ request: Request) -> any HTTPRequest<Request.ResponseType> {
+    public func authorize<Request: HTTPRequest>(_ request: Request) -> any HTTPRequest<Request.Body, Request.Response> {
         
-        guard let accessToken = storage[OAuthHTTPAuthorizationProviderStorageKey.accessToken] else {
+        guard
+            request.requiresAuthorization,
+            let accessToken = storage[OAuthHTTPAuthorizationProviderStorageKey.accessToken]
+        else {
             return request
         }
         
@@ -45,7 +48,8 @@ extension OAuthHTTPAuthorizationProvider: HTTPReauthorizationProvider {
             queryItems: request.queryItems,
             body: request.body,
             requiresAuthorization: request.requiresAuthorization,
-            transform: request.transform
+            encode: request.encode,
+            decode: request.decode
         )
         
         return request
@@ -61,7 +65,7 @@ extension OAuthHTTPAuthorizationProvider: HTTPReauthorizationProvider {
     }
     
     public func handle(
-        authorizationResponse: HTTPResponse<AuthorizationRequest.ResponseType>,
+        authorizationResponse: HTTPResponse<AuthorizationRequest.Response>,
         from request: AuthorizationRequest
     ) {
         
@@ -75,7 +79,7 @@ extension OAuthHTTPAuthorizationProvider: HTTPReauthorizationProvider {
     }
     
     public func handle(
-        reauthorizationResponse: HTTPResponse<ReauthorizationRequest.ResponseType>,
+        reauthorizationResponse: HTTPResponse<ReauthorizationRequest.Response>,
         from request: ReauthorizationRequest
     ) {
         
