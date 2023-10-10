@@ -58,7 +58,7 @@ public protocol HTTPControllerDelegate {
 
 extension HTTPControllerDelegate {
     
-    func controller<Request: HTTPRequest>(
+    public func controller<Request: HTTPRequest>(
         _ controller: HTTPController,
         prepareRequestForSubmission request: Request,
         using coders: DataCoders
@@ -84,7 +84,7 @@ extension HTTPControllerDelegate {
         )
     }
     
-    func controller<Request: HTTPRequest>(
+    public func controller<Request: HTTPRequest>(
         _ controller: HTTPController,
         decodeResponse response: HTTPResponse<Data>,
         fromRequest request: Request,
@@ -106,7 +106,7 @@ extension HTTPControllerDelegate {
         return decodedResponse
     }
     
-    func controller(
+    public func controller(
         _ controller: HTTPController,
         didRecieveError error: Error,
         from response: HTTPResponse<Data>,

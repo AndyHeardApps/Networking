@@ -72,27 +72,27 @@ public protocol HTTPRequest<Body, Response> {
     ) throws -> Response
 }
 
-public extension HTTPRequest {
+extension HTTPRequest {
     
-    var headers: [String : String]? {
+    public var headers: [String : String]? {
         nil
     }
     
-    var queryItems: [String : String]? {
-        nil
-    }
-}
-
-public extension HTTPRequest where Body == Never {
-    
-    var body: Body? {
+    public var queryItems: [String : String]? {
         nil
     }
 }
 
-public extension HTTPRequest where Body: Encodable {
+extension HTTPRequest where Body == Never {
     
-    func encode(
+    public var body: Body? {
+        nil
+    }
+}
+
+extension HTTPRequest where Body: Encodable {
+    
+    public func encode(
         body: Body,
         headers: inout [String : String],
         using coders: DataCoders
