@@ -34,7 +34,6 @@ extension OAuthHTTPAuthorizationProviderTests {
         // Properties
         let httpMethod: HTTPMethod = .get
         let pathComponents: [String] = []
-        let body: Data? = nil
         var shouldProvideTokens: Bool
         
         // Decode
@@ -56,7 +55,6 @@ extension OAuthHTTPAuthorizationProviderTests {
         let httpMethod: HTTPMethod = .get
         let pathComponents: [String] = []
         let headers: [String : String]?
-        let body: Data? = nil
         var shouldProvideTokens: Bool
         
         // Initialiser

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Defines a strongly typed abstraction for a HTTP request.
+/// Defines a type-safe abstraction for a HTTP request.
 ///
 /// Any types implementing this protocol define a series of properties that point to an endpoint on a network. It is the job of a request to understand the data at the endpoint it is pointing to, and to be able to decode that data into some concrete Swift type. When a ``HTTPRequest`` is submitted through some ``HTTPController``, the ``encode(body:headers:using:)-1y6xr`` is used to convert the ``body-9mp51`` to `Data`, then the ``decode(data:statusCode:using:)`` function is called in order to be able to strongly type the response from the request. This tightly couples the request to the type of content it will provide.
 ///
@@ -14,7 +14,7 @@ public protocol HTTPRequest<Body, Response> {
     /// The body type of the request.
     associatedtype Body = Never
     
-    /// The strongly typed response that this request returns.
+    /// The response type that this request returns.
     associatedtype Response = Void
 
     // MARK: - Properties
