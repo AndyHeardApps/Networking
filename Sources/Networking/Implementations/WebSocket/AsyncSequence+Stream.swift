@@ -49,6 +49,5 @@ extension AsyncSequence {
                 }
             }
         }
-
     }
 }

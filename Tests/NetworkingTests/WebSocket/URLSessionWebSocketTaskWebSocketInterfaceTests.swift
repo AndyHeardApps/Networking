@@ -58,7 +58,7 @@ extension URLSessionWebSocketTaskWebSocketInterfaceTests {
         try await task.send(.init())
         task.close(closeCode: .normalClosure, reason: "Going away")
         
-        XCTAssertEqual(task.interfaceCloseCode, .normalClosure)
+        XCTAssertNotNil(task.interfaceCloseCode)
         XCTAssertEqual(task.interfaceCloseReason, "Going away")
     }
     

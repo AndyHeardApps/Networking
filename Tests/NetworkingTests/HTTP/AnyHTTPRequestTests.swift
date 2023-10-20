@@ -121,4 +121,39 @@ extension AnyHTTPRequestTests {
 
         XCTAssertEqual(decodedRequestContent, decodedAnyHTTPRequestContent)
     }
+    
+    func testInitWithDefaultParameters_willAssignProperties_andCodingCorrectly() throws {
+        
+        struct BasicRequest: HTTPRequest {
+            
+            let httpMethod: HTTPMethod
+            let pathComponents: [String]
+            let requiresAuthorization: Bool
+            let body: [String : Int]?
+            
+            func decode(
+                data: Data,
+                statusCode: Networking.HTTPStatusCode,
+                using coders: Networking.DataCoders
+            ) throws {}
+        }
+        
+        let request = BasicRequest(
+            httpMethod: .get,
+            pathComponents: [],
+            requiresAuthorization: false,
+            body: ["key" : 1]
+        )
+        
+        XCTAssertNil(request.headers)
+        XCTAssertNil(request.queryItems)
+        var headers = request.headers ?? [:]
+        let encodedBody = try request.encode(
+            body: request.body!,
+            headers: &headers,
+            using: .default
+        )
+        XCTAssertEqual(encodedBody, Data("{\"key\":1}".utf8))
+        XCTAssertEqual(headers, ["Content-Type" : "application/json"])
+    }
 }
