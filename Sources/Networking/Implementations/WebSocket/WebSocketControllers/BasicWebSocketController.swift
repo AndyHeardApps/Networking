@@ -144,7 +144,7 @@ extension BasicWebSocketController.Connection: WebSocketConnection {
         
         pingTask?.cancel()
         
-        interface.cancel(
+        interface.close(
             closeCode: .normalClosure,
             reason: nil
         )

@@ -118,6 +118,11 @@ extension URLSessionWebSocketTask: WebSocketInterface {
         }
     }
     
+    public func start() {
+        
+        resume()
+    }
+    
     public func send(_ data: Data) async throws {
         
         try await send(.data(data))
@@ -142,7 +147,7 @@ extension URLSessionWebSocketTask: WebSocketInterface {
         }
     }
     
-    public func cancel(
+    public func close(
         closeCode: WebSocketInterfaceCloseCode,
         reason: String?
     ) {

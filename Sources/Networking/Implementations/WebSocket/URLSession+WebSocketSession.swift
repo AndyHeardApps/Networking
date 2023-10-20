@@ -13,7 +13,6 @@ extension URLSession: WebSocketSession {
         )
         
         let task = webSocketTask(with: urlRequest)
-        task.resume()
         
         return task
     }
