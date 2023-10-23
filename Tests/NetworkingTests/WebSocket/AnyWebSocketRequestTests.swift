@@ -6,7 +6,7 @@ final class AnyWebSocketRequestTests: XCTestCase {}
 // MARK: - Tests
 extension AnyWebSocketRequestTests {
     
-    func testInitWithParameters_willAssignProperties_andCodingCorrectly() throws {
+    func test_initWithParameters_willAssignProperties_andCodingCorrectly() throws {
         
         let request = AnyWebSocketRequest<Data, Data>(
             pathComponents: ["path1", "path2"],
@@ -37,7 +37,7 @@ extension AnyWebSocketRequestTests {
         XCTAssertEqual(decodedContent, output + output)
     }
         
-    func testInitWithRequest_willAssignProperties_andCodingCorrectly() throws {
+    func test_initWithRequest_willAssignProperties_andCodingCorrectly() throws {
         
         let mockRequest = MockWebSocketRequest(
             encode: { data, _ in Data(data.reversed()) },
@@ -67,13 +67,14 @@ extension AnyWebSocketRequestTests {
         XCTAssertEqual(decodedContent, output + output)
     }
     
-    func testInitWithDefaultParameters_willAssignProperties_andCodingCorrectly() throws {
+    func test_initWithDefaultParameters_willAssignProperties_andCodingCorrectly() throws {
         
         struct BasicRequest: WebSocketRequest {
             typealias Input = [String : Int]
             typealias Output = [String : Int]
             
-            var pathComponents: [String]
+            let pathComponents: [String]
+            let requiresAuthorization = false
         }
         
         let request = BasicRequest(pathComponents: [])

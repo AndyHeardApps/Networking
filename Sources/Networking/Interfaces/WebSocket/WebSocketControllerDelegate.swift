@@ -3,18 +3,30 @@ import Foundation
 public protocol WebSocketControllerDelegate {
     
     // MARK: - Functions
+    func controller<Request: WebSocketRequest>(
+        _ controller: WebSocketController,
+        prepareToOpenConnectionWithRequest request: Request
+    ) throws -> any WebSocketRequest<Request.Input, Request.Output>
+
     func controller(
         _ controller: WebSocketController,
         pingIntervalForRequest request: some WebSocketRequest
-    ) -> UInt?
+    ) -> ContinuousClock.Instant.Duration?
 }
 
 extension WebSocketControllerDelegate {
     
-    func controller(
+    public func controller<Request: WebSocketRequest>(
+        _ controller: WebSocketController,
+        prepareToOpenConnectionWithRequest request: Request
+    ) throws -> any WebSocketRequest<Request.Input, Request.Output> {
+        request
+    }
+
+    public func controller(
         _ controller: WebSocketController,
         pingIntervalForRequest request: some WebSocketRequest
-    ) -> UInt? {
+    ) -> ContinuousClock.Instant.Duration? {
         
         nil
     }

@@ -20,7 +20,7 @@ extension URLSessionWebSocketTaskWebSocketInterfaceTests {
         let task: WebSocketInterface = URLSession.shared.webSocketTask(with: url)
 
         XCTAssertEqual(task.interfaceState, .idle)
-        task.start()
+        task.open()
         XCTAssertEqual(task.interfaceState, .running)
         task.close(closeCode: .goingAway, reason: nil)
         try await Task.sleep(for: .milliseconds(10))
@@ -37,7 +37,7 @@ extension URLSessionWebSocketTaskWebSocketInterfaceTests {
             Data(UUID().uuidString.utf8)
         ]
         
-        task.start()
+        task.open()
 
         for data in dataArray {
             try await task.send(data)
@@ -53,11 +53,12 @@ extension URLSessionWebSocketTaskWebSocketInterfaceTests {
     func test_taskCancellation_willReportErrorGracefully() async throws {
         
         let task: WebSocketInterface = URLSession.shared.webSocketTask(with: url)
-        task.start()
+        task.open()
         
         try await task.send(.init())
         task.close(closeCode: .normalClosure, reason: "Going away")
         
+        try await Task.sleep(for: .milliseconds(10))
         XCTAssertNotNil(task.interfaceCloseCode)
         XCTAssertEqual(task.interfaceCloseReason, "Going away")
     }
@@ -65,7 +66,7 @@ extension URLSessionWebSocketTaskWebSocketInterfaceTests {
     func test_sendPing() async throws {
         
         let task: WebSocketInterface = URLSession.shared.webSocketTask(with: url)
-        task.start()
+        task.open()
 
         try await task.sendPing()
     }

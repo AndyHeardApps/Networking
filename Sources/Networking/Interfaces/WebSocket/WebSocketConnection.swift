@@ -8,6 +8,8 @@ public protocol WebSocketConnection<Input, Output> {
     
     var isConnected: Bool { get }
     
+    func open()
+    
     var output: AsyncThrowingStream<Output, Error> { get }
     
     func send(_ input: Input) async throws

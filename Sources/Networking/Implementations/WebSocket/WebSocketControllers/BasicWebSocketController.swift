@@ -33,7 +33,16 @@ extension BasicWebSocketController: WebSocketController {
     
     public func openConnection<Request: WebSocketRequest>(with request: Request) throws -> any WebSocketConnection<Request.Input, Request.Output> {
         
-        let webSocketInterface = try session.openConnection(to: request, with: baseURL)
+        let preparedRequest = try delegate.controller(
+            self,
+            prepareToOpenConnectionWithRequest: request
+        )
+        
+        let webSocketInterface = try session.openConnection(
+            to: preparedRequest,
+            with: baseURL
+        )
+        
         let webSocketConnection = Connection(
             interface: webSocketInterface,
             dataCoders: dataCoders,
@@ -64,7 +73,7 @@ extension BasicWebSocketController {
             interface: WebSocketInterface,
             dataCoders: DataCoders,
             request: some WebSocketRequest<Input, Output>,
-            pingInterval: UInt?
+            pingInterval: ContinuousClock.Instant.Duration?
         ) {
 
             self.interface = interface
@@ -79,8 +88,9 @@ extension BasicWebSocketController {
             
             self.pingTask = .init {
                 while !Task.isCancelled {
+                    
+                    try? await Task.sleep(for: pingInterval)
                     guard interface.interfaceState == .running else { continue }
-                    try? await Task.sleep(for: .seconds(pingInterval))
                     try? await interface.sendPing()
                 }
             }
@@ -109,20 +119,67 @@ extension BasicWebSocketController.Connection: WebSocketConnection {
     
     var output: AsyncThrowingStream<Output, Swift.Error> {
         
-        interface.output
-            .map { [decode, dataCoders, interface] data in
+        AsyncThrowingStream(
+            Output.self,
+            bufferingPolicy: .unbounded
+        ) { [decode, dataCoders, interface] continuation in
+            
+            let task = Task.detached {
                 do {
-                    return try decode(data, dataCoders)
+                    for try await element in interface.output {
+                        
+                        if Task.isCancelled { break }
+                        
+                        let decodedElement = try decode(element, dataCoders)
+                        let yieldResult = continuation.yield(decodedElement)
+                        
+                        let shouldBreak: Bool
+                        switch yieldResult {
+                        case .enqueued, .dropped:
+                            shouldBreak = false
+                        case .terminated:
+                            shouldBreak = true
+                        @unknown default:
+                            shouldBreak = true
+                        }
+                        
+                        if shouldBreak {
+                            break
+                        }
+                    }
+                    continuation.finish()
+                    
+                } catch let error as DecodingError {
+                    continuation.finish(throwing: error)
+                    
                 } catch {
-                    throw Error(
+                    let connectionError = Error(
                         failure: "Recieve failed",
                         wrappedError: error,
                         closeCode: interface.interfaceCloseCode,
                         reason: interface.interfaceCloseReason
                     )
+                    continuation.finish(throwing: connectionError)
+                    
                 }
             }
-            .stream
+            
+            continuation.onTermination = { termination in
+                switch termination {
+                case .finished:
+                    break
+                case .cancelled:
+                    task.cancel()
+                @unknown default:
+                    task.cancel()
+                }
+            }
+        }
+    }
+    
+    func open() {
+        
+        interface.open()
     }
     
     func send(_ input: Input) async throws {
@@ -130,6 +187,8 @@ extension BasicWebSocketController.Connection: WebSocketConnection {
         do {
             let data = try encode(input, dataCoders)
             try await interface.send(data)
+        } catch let error as EncodingError {
+            throw error
         } catch {
             throw Error(
                 failure: "Send failed",

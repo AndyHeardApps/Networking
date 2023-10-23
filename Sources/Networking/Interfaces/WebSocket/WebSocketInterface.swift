@@ -10,7 +10,7 @@ public protocol WebSocketInterface {
     
     var interfaceCloseReason: String? { get }
 
-    func start()
+    func open()
 
     func send(_ data: Data) async throws
     

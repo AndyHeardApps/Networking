@@ -39,7 +39,7 @@ extension BasicHTTPControllerTests {
 extension BasicHTTPControllerTests {
 
     // MARK: Request manipulation
-    func testFetchResponse_willSubmitRequest_toHTTPSession_withoutAssertionFailure_whenAuthorizationIsNotRequired() async throws {
+    func test_fetchResponse_willSubmitRequest_toHTTPSession_withoutAssertionFailure_whenAuthorizationIsNotRequired() async throws {
 
         let request = MockHTTPRequest(requiresAuthorization: false)
         httpSession.setBlankResponse(for: request)
@@ -59,7 +59,7 @@ extension BasicHTTPControllerTests {
         XCTAssertEqual(lastReceivedBaseURL, baseURL)
     }
 
-    func testFetchResponse_willCauseAssertionFailure_whenAuthorizationIsRequired() async throws {
+    func test_fetchResponse_willCauseAssertionFailure_whenAuthorizationIsRequired() async throws {
 
         let request = MockHTTPRequest(requiresAuthorization: true)
         httpSession.setBlankResponse(for: request)
@@ -72,7 +72,7 @@ extension BasicHTTPControllerTests {
     }
     
     // MARK: - Encoding
-    func testFetchResponse_willEncodeBodyUsingRequest_andReturnEncodedBody() async throws {
+    func test_fetchResponse_willEncodeBodyUsingRequest_andReturnEncodedBody() async throws {
         
         let expectedResponse = HTTPResponse(
             content: Data(UUID().uuidString.utf8),
@@ -115,7 +115,7 @@ extension BasicHTTPControllerTests {
     }
 
     // MARK: Decoding
-    func testFetchResponse_willDecodeResponseUsingRequest_andReturnDecodedResponse() async throws {
+    func test_fetchResponse_willDecodeResponseUsingRequest_andReturnDecodedResponse() async throws {
 
         let responseData = Data(UUID().uuidString.utf8)
         let responseHeaders = ["header1" : "headerValue1"]
@@ -163,7 +163,7 @@ extension BasicHTTPControllerTests {
         XCTAssertNotNil(delegate.codersUsedForRequestDecoding)    }
 
     // MARK: Encoding headers
-    func testFetchResponse_willAddEncodingHeaders_toRequestBeforeSubmission_whenRequestHasExistingHeaders() async throws {
+    func test_fetchResponse_willAddEncodingHeaders_toRequestBeforeSubmission_whenRequestHasExistingHeaders() async throws {
 
         let request = MockHTTPRequest(
             headers: ["headerKey2" : "headerValue2"],
@@ -195,7 +195,7 @@ extension BasicHTTPControllerTests {
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
     }
     
-    func testFetchResponse_willAddEncodingHeaders_toRequestBeforeSubmission_whenRequestHasNoHeaders() async throws {
+    func test_fetchResponse_willAddEncodingHeaders_toRequestBeforeSubmission_whenRequestHasNoHeaders() async throws {
 
         let request = MockHTTPRequest(
             headers: nil,
@@ -227,7 +227,7 @@ extension BasicHTTPControllerTests {
     }
 
     // MARK: Error handling
-    func testFetchResponse_willThrowErrorReturnedByDelegate() async throws {
+    func test_fetchResponse_willThrowErrorReturnedByDelegate() async throws {
 
         let request = MockHTTPRequest(
             requiresAuthorization: false
@@ -262,7 +262,7 @@ extension BasicHTTPControllerTests {
     }
 
     // MARK: Error reporting
-    func testFetchResponse_willReportErrorThrownByHTTPSession_withoutCallingDelegate() async throws {
+    func test_fetchResponse_willReportErrorThrownByHTTPSession_withoutCallingDelegate() async throws {
 
         let request = MockHTTPRequest(requiresAuthorization: false)
         httpSession.shouldThrowErrorOnSubmit = true

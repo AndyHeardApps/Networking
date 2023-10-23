@@ -81,7 +81,7 @@ extension OAuthHTTPAuthorizationProviderTests {
 // MARK: - Tests
 extension OAuthHTTPAuthorizationProviderTests {
  
-    func testMakeReauthorizationRequest_willReturnNil_whenNoRefreshTokenIsAvailable() {
+    func test_makeReauthorizationRequest_willReturnNil_whenNoRefreshTokenIsAvailable() {
         
         secureStorage["oauth.refreshToken"] = nil
         
@@ -90,7 +90,7 @@ extension OAuthHTTPAuthorizationProviderTests {
         XCTAssertNil(reauthorizationRequest)
     }
     
-    func testMakeReauthorizationRequest_willReturnCorrectRequest_whenRefreshTokenIsAvailable() {
+    func test_makeReauthorizationRequest_willReturnCorrectRequest_whenRefreshTokenIsAvailable() {
         
         secureStorage["oauth.refreshToken"] = "refreshToken"
         
@@ -100,7 +100,7 @@ extension OAuthHTTPAuthorizationProviderTests {
         XCTAssertEqual(reauthorizationRequest?.headers, ["TestRefreshToken" : "refreshToken"])
     }
     
-    func testHandleAuthorizationResponse_willExtractTokensFromResponse_andStoreInSecureStorage() {
+    func test_handleAuthorizationResponse_willExtractTokensFromResponse_andStoreInSecureStorage() {
         
         XCTAssertNil(secureStorage["oauth.accessToken"])
         XCTAssertNil(secureStorage["oauth.refreshToken"])
@@ -114,7 +114,7 @@ extension OAuthHTTPAuthorizationProviderTests {
         XCTAssertEqual(secureStorage["oauth.refreshToken"], authorizationRequest.refreshToken(from: response))
     }
     
-    func testHandleAuthorizationResponse_willNotOverrideAndRemoveExistingTokensInSecureStorage_whenTokensAreNil() {
+    func test_handleAuthorizationResponse_willNotOverrideAndRemoveExistingTokensInSecureStorage_whenTokensAreNil() {
         
         let existingAccessToken = "existingAccessToken"
         let existingRefreshToken = "existingRefreshToken"
@@ -133,7 +133,7 @@ extension OAuthHTTPAuthorizationProviderTests {
         XCTAssertEqual(secureStorage["oauth.refreshToken"], existingRefreshToken)
     }
     
-    func testHandleReauthorizationResponse_willExtractTokensFromResponse_andStoreInSecureStorage() {
+    func test_handleReauthorizationResponse_willExtractTokensFromResponse_andStoreInSecureStorage() {
         
         XCTAssertNil(secureStorage["oauth.accessToken"])
         XCTAssertNil(secureStorage["oauth.refreshToken"])
@@ -148,7 +148,7 @@ extension OAuthHTTPAuthorizationProviderTests {
         XCTAssertEqual(secureStorage["oauth.refreshToken"], reauthorizationRequest.refreshToken(from: response))
     }
     
-    func testHandleReauthorizationResponse_willNotOverrideAndRemoveExistingTokensInSecureStorage_whenTokensAreNil() {
+    func test_handleReauthorizationResponse_willNotOverrideAndRemoveExistingTokensInSecureStorage_whenTokensAreNil() {
         
         let existingAccessToken = "existingAccessToken"
         let existingRefreshToken = "existingRefreshToken"
@@ -168,7 +168,7 @@ extension OAuthHTTPAuthorizationProviderTests {
         XCTAssertEqual(secureStorage["oauth.refreshToken"], existingRefreshToken)
     }
     
-    func testAuthorizeRequest_willAddAccessTokenToRequestHeaders_whenAccessTokenIsAvailable_andRequestAlreadyHasHeaders() {
+    func test_authorizeRequest_willAddAccessTokenToRequestHeaders_whenAccessTokenIsAvailable_andRequestAlreadyHasHeaders() {
         
         let existingAccessToken = "existingAccessToken"
         secureStorage["oauth.accessToken"] = existingAccessToken
@@ -188,7 +188,7 @@ extension OAuthHTTPAuthorizationProviderTests {
         XCTAssertEqual(authorizedRequest.requiresAuthorization, request.requiresAuthorization)
     }
     
-    func testAuthorizeRequest_willAddAccessTokenToRequestHeaders_whenAccessTokenIsAvailable_andRequestHasNilHeaders() {
+    func test_authorizeRequest_willAddAccessTokenToRequestHeaders_whenAccessTokenIsAvailable_andRequestHasNilHeaders() {
         
         let existingAccessToken = "existingAccessToken"
         secureStorage["oauth.accessToken"] = existingAccessToken
@@ -207,7 +207,7 @@ extension OAuthHTTPAuthorizationProviderTests {
         XCTAssertEqual(authorizedRequest.requiresAuthorization, request.requiresAuthorization)
     }
     
-    func testAuthorizeRequest_willReturnUnmodifiedRequest_wehnAccessTokenIsNotAvailable() {
+    func test_authorizeRequest_willReturnUnmodifiedRequest_wehnAccessTokenIsNotAvailable() {
         
         XCTAssertNil(secureStorage["oauth.accessToken"])
         
@@ -222,7 +222,7 @@ extension OAuthHTTPAuthorizationProviderTests {
         XCTAssertEqual(authorizedRequest.requiresAuthorization, request.requiresAuthorization)
     }
     
-    func testAuthorizeRequest_willReturnUnmodifiedRequest_wehnRequestDoesNotRequireAuthorizationIsNotAvailable() {
+    func test_authorizeRequest_willReturnUnmodifiedRequest_wehnRequestDoesNotRequireAuthorizationIsNotAvailable() {
         
         let existingAccessToken = "existingAccessToken"
         secureStorage["oauth.accessToken"] = existingAccessToken
@@ -241,7 +241,7 @@ extension OAuthHTTPAuthorizationProviderTests {
     }
 
     
-    func testInit_willUseKeychainBackedStorage() {
+    func test_init_willUseKeychainBackedStorage() {
         
         authorizationProvider = OAuthHTTPAuthorizationProvider()
         

@@ -29,7 +29,7 @@ extension URLSessionWebSocketSessionTests {
 // MARK: - Tests
 extension URLSessionWebSocketSessionTests {
     
-    func testOpenConnection_willCorrectlyCreateWebSocketTask() async throws {
+    func test_openConnection_willCorrectlyCreateWebSocketTask() async throws {
         
         let request = AnyWebSocketRequest<Data, Data>(
             pathComponents: ["path1", "path2"],

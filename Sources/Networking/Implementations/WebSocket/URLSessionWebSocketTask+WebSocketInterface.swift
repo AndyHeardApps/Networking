@@ -118,7 +118,7 @@ extension URLSessionWebSocketTask: WebSocketInterface {
         }
     }
     
-    public func start() {
+    public func open() {
         
         resume()
     }

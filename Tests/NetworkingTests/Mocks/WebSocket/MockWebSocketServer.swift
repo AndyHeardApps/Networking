@@ -74,7 +74,7 @@ extension MockWebSocketServer {
             return
         }
         
-        print("will start")
+        print("will open")
 
         let parameters = NWParameters.tcp
         let ws = NWProtocolWebSocket.Options(.version13)

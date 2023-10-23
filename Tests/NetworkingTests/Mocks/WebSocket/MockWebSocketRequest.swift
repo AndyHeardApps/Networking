@@ -7,6 +7,7 @@ struct MockWebSocketRequest: WebSocketRequest {
     let pathComponents: [String]
     let headers: [String : String]?
     let queryItems: [String : String]?
+    let requiresAuthorization: Bool
     private let _encode: (Input, DataCoders) throws -> Data
     private let _decode: (Data, DataCoders) throws -> Output
 
@@ -14,12 +15,14 @@ struct MockWebSocketRequest: WebSocketRequest {
         pathComponents: [String] = ["path1", "path2"],
         headers: [String : String]? = ["header1" : "headerValue1"],
         queryItems: [String : String]? = ["query1" : "queryValue1"],
+        requiresAuthorization: Bool = false,
         encode: @escaping (Input, DataCoders) throws -> Data,
         decode: @escaping (Data, DataCoders) throws -> Output
     ) {
         self.pathComponents = pathComponents
         self.headers = headers
         self.queryItems = queryItems
+        self.requiresAuthorization = requiresAuthorization
         self._encode = encode
         self._decode = decode
     }

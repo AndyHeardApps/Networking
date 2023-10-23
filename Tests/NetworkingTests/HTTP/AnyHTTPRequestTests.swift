@@ -6,7 +6,7 @@ final class AnyHTTPRequestTests: XCTestCase {}
 // MARK: - Tests
 extension AnyHTTPRequestTests {
     
-    func testInitWithParameters_willAssignProperties_andCodingCorrectly() throws {
+    func test_initWithParameters_willAssignProperties_andCodingCorrectly() throws {
         
         let body = Data(UUID().uuidString.utf8)
         let request = AnyHTTPRequest(
@@ -50,7 +50,7 @@ extension AnyHTTPRequestTests {
         XCTAssertEqual(decodedContent, mockData + mockData)
     }
     
-    func testInitWithDataBodyParameters_willAssignProperties_andCodingCorrectly() throws {
+    func test_initWithDataBodyParameters_willAssignProperties_andCodingCorrectly() throws {
         
         let body = Data(UUID().uuidString.utf8)
         let request = AnyHTTPRequest(
@@ -91,7 +91,7 @@ extension AnyHTTPRequestTests {
         XCTAssertEqual(decodedContent, mockData + mockData)
     }
     
-    func testInitWithRequest_willAssignProperties_andCodingCorrectly() throws {
+    func test_initWithRequest_willAssignProperties_andCodingCorrectly() throws {
         
         let mockRequest = MockHTTPRequest { body, _, _ in
             Data(body.reversed())
@@ -122,7 +122,7 @@ extension AnyHTTPRequestTests {
         XCTAssertEqual(decodedRequestContent, decodedAnyHTTPRequestContent)
     }
     
-    func testInitWithDefaultParameters_willAssignProperties_andCodingCorrectly() throws {
+    func test_initWithDefaultParameters_willAssignProperties_andCodingCorrectly() throws {
         
         struct BasicRequest: HTTPRequest {
             

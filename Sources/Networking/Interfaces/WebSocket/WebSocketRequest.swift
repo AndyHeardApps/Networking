@@ -10,7 +10,8 @@ public protocol WebSocketRequest<Input, Output> {
     var pathComponents: [String] { get }
     var headers: [String : String]? { get }
     var queryItems: [String : String]? { get }
-    
+    var requiresAuthorization: Bool { get }
+
     // MARK: - Functions
     func encode(
         input: Input,

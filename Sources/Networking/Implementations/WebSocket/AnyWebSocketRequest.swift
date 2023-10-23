@@ -9,6 +9,7 @@ public struct AnyWebSocketRequest<Input, Output>: WebSocketRequest {
     public let pathComponents: [String]
     public let headers: [String : String]?
     public let queryItems: [String : String]?
+    public let requiresAuthorization: Bool
     private let _encode: (Input, DataCoders) throws -> Data
     private let _decode: (Data, DataCoders) throws -> Output
     
@@ -17,6 +18,7 @@ public struct AnyWebSocketRequest<Input, Output>: WebSocketRequest {
         pathComponents: [String],
         headers: [String : String]?,
         queryItems: [String : String]?,
+        requiresAuthorization: Bool = false,
         encode: @escaping (Input, DataCoders) throws -> Data,
         decode: @escaping (Data, DataCoders) throws -> Output
     ) {
@@ -24,6 +26,7 @@ public struct AnyWebSocketRequest<Input, Output>: WebSocketRequest {
         self.pathComponents = pathComponents
         self.headers = headers
         self.queryItems = queryItems
+        self.requiresAuthorization = requiresAuthorization
         self._encode = encode
         self._decode = decode
     }
@@ -36,6 +39,7 @@ public struct AnyWebSocketRequest<Input, Output>: WebSocketRequest {
         self.pathComponents = request.pathComponents
         self.headers = request.headers
         self.queryItems = request.queryItems
+        self.requiresAuthorization = request.requiresAuthorization
         self._encode = request.encode
         self._decode = request.decode
     }
