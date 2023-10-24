@@ -1,6 +1,6 @@
 import Foundation
 
-/// A type erased ``HTTPRequest``.
+/// A type erased ``WebSocketRequest``.
 ///
 /// **Note:** This is no longer widely used since the introduction of existential types in Swift.
 public struct AnyWebSocketRequest<Input, Output>: WebSocketRequest {

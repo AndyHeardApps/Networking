@@ -30,7 +30,7 @@ public protocol WebSocketRequest<Input, Output> {
 
     // MARK: - Functions
     
-    /// Encodes ``Input``instances in to `Data`. This is called by a ``WebSocketController``.
+    /// Encodes ``Input`` instances in to `Data`. This is called by a ``WebSocketController``.
     ///
     /// The default implementation (if the ``Input`` conforms to `Encodable`) encodes the `input` to JSON.
     ///
@@ -44,7 +44,7 @@ public protocol WebSocketRequest<Input, Output> {
         using coders: DataCoders
     ) throws -> Data
     
-    /// Decodes ``Output``instances from data. This is called by a ``WebSocketController``.
+    /// Decodes ``Output`` instances from data. This is called by a ``WebSocketController``.
     ///
     /// The default implementation (if the ``Output`` conforms to `Decodable`) treats the `data` as JSON and attempts to decode it into an ``Output`` instance.
     ///
