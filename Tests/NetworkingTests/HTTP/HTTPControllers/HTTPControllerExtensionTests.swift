@@ -26,7 +26,7 @@ extension HTTPControllerExtensionTests {
 // MARK: - Tests
 extension HTTPControllerExtensionTests {
  
-    func testFetchContent_willReturnContentFromFetchResponse() async throws {
+    func test_fetchContent_willReturnContentFromFetchResponse() async throws {
         
         httpController.responseStatusCode = .ok
         httpController.responseData = UUID().uuidString.data(using: .utf8)!

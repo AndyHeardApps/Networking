@@ -27,7 +27,7 @@ extension KeychainSecureStorageTests {
 // MARK: - Tests
 extension KeychainSecureStorageTests {
 
-    func testStorage_willStoreValueAndReadValue_andDeleteValueCorrectly() {
+    func test_storage_willStoreValueAndReadValue_andDeleteValueCorrectly() {
 
         let key = "testKey"
         let value = "testValue"

@@ -97,7 +97,7 @@ extension URLSessionHTTPSessionTests {
 // MARK: - Tests
 extension URLSessionHTTPSessionTests {
     
-    func testSubmitRequest_willCorrectlyCreateURLRequest_andSubmitIt() async throws {
+    func test_submitRequest_willCorrectlyCreateURLRequest_andSubmitIt() async throws {
         
         let httpMethods: [HTTPMethod : String] = [
             .get : "GET",
