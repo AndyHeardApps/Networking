@@ -42,7 +42,7 @@ extension BasicWebSocketControllerTests {
     
     func test_openConnection_willUseSessionToCreateInterface() throws {
                 
-        _ = try controller.openConnection(with: request)
+        _ = try controller.createConnection(with: request)
         
         XCTAssertEqual(session.openedConnections.count, 1)
         XCTAssertEqual(session.openedConnections.first?.0.pathComponents, request.pathComponents)
@@ -53,7 +53,7 @@ extension BasicWebSocketControllerTests {
     
     func test_openConnection_willCallOpenOnInterface() throws {
         
-        let connection = try controller.openConnection(with: request)
+        let connection = try controller.createConnection(with: request)
                 
         guard let interface = session.lastOpenedInterface else {
             XCTFail()
@@ -69,7 +69,7 @@ extension BasicWebSocketControllerTests {
     
     func test_closeConnection_willCallCloseOnInterface() throws {
         
-        let connection = try controller.openConnection(with: request)
+        let connection = try controller.createConnection(with: request)
                 
         guard let interface = session.lastOpenedInterface else {
             XCTFail()
@@ -86,7 +86,7 @@ extension BasicWebSocketControllerTests {
     
     func test_send_willEncode_andSubmitDataToInterface() async throws {
         
-        let connection = try controller.openConnection(with: request)
+        let connection = try controller.createConnection(with: request)
 
         guard let interface = session.lastOpenedInterface else {
             XCTFail()
@@ -101,7 +101,7 @@ extension BasicWebSocketControllerTests {
         
     func test_send_willReportConnectionErrors() async throws {
         
-        let connection = try controller.openConnection(with: request)
+        let connection = try controller.createConnection(with: request)
 
         guard let interface = session.lastOpenedInterface else {
             XCTFail()
@@ -134,7 +134,7 @@ extension BasicWebSocketControllerTests {
             decode: { data, _ in data + data }
         )
 
-        let connection = try controller.openConnection(with: request)
+        let connection = try controller.createConnection(with: request)
 
         guard let interface = session.lastOpenedInterface else {
             XCTFail()
@@ -154,7 +154,7 @@ extension BasicWebSocketControllerTests {
 
     func test_output_willDecode_andPublishDataFromInterface() async throws {
         
-        let connection = try controller.openConnection(with: request)
+        let connection = try controller.createConnection(with: request)
 
         guard let interface = session.lastOpenedInterface else {
             XCTFail()
@@ -176,7 +176,7 @@ extension BasicWebSocketControllerTests {
     
     func test_output_willWrapAndReportConnectionErrorsFromInterface() async throws {
      
-        let connection = try controller.openConnection(with: request)
+        let connection = try controller.createConnection(with: request)
 
         guard let interface = session.lastOpenedInterface else {
             XCTFail()
@@ -213,7 +213,7 @@ extension BasicWebSocketControllerTests {
             }
         )
 
-        let connection = try controller.openConnection(with: request)
+        let connection = try controller.createConnection(with: request)
 
         guard let interface = session.lastOpenedInterface else {
             XCTFail()
@@ -240,7 +240,7 @@ extension BasicWebSocketControllerTests {
         
         delegate.pingInterval = .milliseconds(10)
         
-        let connection = try controller.openConnection(with: request)
+        let connection = try controller.createConnection(with: request)
         
         guard let interface = session.lastOpenedInterface else {
             XCTFail()
@@ -262,7 +262,7 @@ extension BasicWebSocketControllerTests {
             session: session
         )
         
-        let connection = try controller.openConnection(with: request)
+        let connection = try controller.createConnection(with: request)
         
         guard let interface = session.lastOpenedInterface else {
             XCTFail()

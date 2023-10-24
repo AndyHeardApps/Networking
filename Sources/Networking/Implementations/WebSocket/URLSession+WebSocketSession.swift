@@ -2,7 +2,7 @@ import Foundation
 
 extension URLSession: WebSocketSession {
     
-    public func openConnection(
+    public func createInterface(
         to request: some WebSocketRequest,
         with baseURL: URL
     ) throws -> WebSocketInterface {

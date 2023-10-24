@@ -11,7 +11,7 @@ final class MockWebSocketSession {
 
 extension MockWebSocketSession: WebSocketSession {
     
-    func openConnection(
+    func createInterface(
         to request: some WebSocketRequest,
         with baseURL: URL
     ) throws -> WebSocketInterface {

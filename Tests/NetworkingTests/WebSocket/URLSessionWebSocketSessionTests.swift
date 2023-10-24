@@ -38,7 +38,7 @@ extension URLSessionWebSocketSessionTests {
             encode: { data, _ in data },
             decode: { data, _ in data }
         )
-        let interface = try urlSession.openConnection(to: request, with: baseURL)
+        let interface = try urlSession.createInterface(to: request, with: baseURL)
         
         guard let webSocketTask = interface as? URLSessionWebSocketTask else {
             XCTFail()

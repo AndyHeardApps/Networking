@@ -128,7 +128,6 @@ extension AnyHTTPRequestTests {
             
             let httpMethod: HTTPMethod
             let pathComponents: [String]
-            let requiresAuthorization: Bool
             let body: [String : Int]?
             
             func decode(
@@ -141,12 +140,12 @@ extension AnyHTTPRequestTests {
         let request = BasicRequest(
             httpMethod: .get,
             pathComponents: [],
-            requiresAuthorization: false,
             body: ["key" : 1]
         )
         
         XCTAssertNil(request.headers)
         XCTAssertNil(request.queryItems)
+        XCTAssertFalse(request.requiresAuthorization)
         var headers = request.headers ?? [:]
         let encodedBody = try request.encode(
             body: request.body!,

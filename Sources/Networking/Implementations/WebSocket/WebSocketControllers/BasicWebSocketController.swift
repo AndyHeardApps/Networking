@@ -1,19 +1,36 @@
 import Foundation
 
+/// A basic implementation of the ``WebSocketController``, simply opening and returning a ``WebSocketConnection`` and handling `ping` and `pong` messages.
+///
+/// This type will open web socket connections using ``WebSocketRequest`` and the provided ``WebSocketSession``, encoding the ``WebSocketRequest/Input`` of the reqest using ``WebSocketRequest/encode(input:using:)-2u1ga`` and decoding the ``WebSocketRequest/Output`` using ``WebSocketRequest/decode(data:using:)-6zk91``.
+///
+/// For further control over preparing the requests for connection or handling `ping` messages, create a custom ``WebSocketControllerDelegate`` and provide it in the initialiser.
+///
+/// Though the implementation is intentionally lightweight, it is best if an instance is created once for each `baseURL` on app launch, and held for reuse.
 public struct BasicWebSocketController {
     
     // MARK: - Properties
     
+    /// The base `URL` to open web socket connections with. This is the base `URL` used to construct the full `URL` using the ``WebSocketRequest/pathComponents`` and ``WebSocketRequest/queryItems`` of the request.
     public let baseURL: URL
     
+    /// The ``WebSocketSession`` used to open a ``WebSocketInterface`` to send and recieve the raw `Data` throug the web socket.
     public let session: WebSocketSession
     
+    /// A collection of ``DataEncoder`` and ``DataDecoder`` objects that the controller will use to encode and decode specific message types.
     public let dataCoders: DataCoders
     
+    /// The delegate used to provide additional control over preparing a request to be sent and handling `ping` messages.
     public let delegate: WebSocketControllerDelegate
 
     // MARK: - Initialiser
     
+    /// Creates a new ``BasicWebSocketController`` instance.
+    /// - Parameters:
+    ///   - baseURL: The base `URL` of the controller.
+    ///   - session: The ``WebSocketSession`` the controller will use to open ``WebSocketInterface`` for a request.
+    ///   - dataCoders: The ``DataCoders`` that can be used to encode and decode request input and output. By default, only JSON coders will be available.
+    ///   - delegate: The ``WebSocketControllerDelegate`` for the controller to use. If none is provided, then a default implementation is used to provide standard functionality.
     public init(
         baseURL: URL,
         session: WebSocketSession = URLSession.shared,
@@ -31,14 +48,14 @@ public struct BasicWebSocketController {
 // MARK: - Web socket controller
 extension BasicWebSocketController: WebSocketController {
     
-    public func openConnection<Request: WebSocketRequest>(with request: Request) throws -> any WebSocketConnection<Request.Input, Request.Output> {
+    public func createConnection<Request: WebSocketRequest>(with request: Request) throws -> any WebSocketConnection<Request.Input, Request.Output> {
         
         let preparedRequest = try delegate.controller(
             self,
             prepareToOpenConnectionWithRequest: request
         )
         
-        let webSocketInterface = try session.openConnection(
+        let webSocketInterface = try session.createInterface(
             to: preparedRequest,
             with: baseURL
         )
