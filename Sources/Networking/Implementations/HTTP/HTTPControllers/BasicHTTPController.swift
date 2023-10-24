@@ -2,7 +2,7 @@ import Foundation
 
 /// A basic implementation of a ``HTTPController``, with no authorization on requests. This type will submit requests using the provided ``HTTPSession``, encoding the ``HTTPRequest/body-9mp51`` of the reqest using ``HTTPRequest/encode(body:headers:using:)-7qe3v`` and decoding the response using ``HTTPRequest/decode(data:statusCode:using:)``.
 ///
-/// For further control over preparing the requests for submission or handling responses and errors, create a custom ``HTTPControllerDelegate`` and provide it on the initialiser. This allows you to decode API errors, add headers to every request or encrypt and decrypt content.
+/// For further control over preparing the requests for submission or handling responses and errors, create a custom ``HTTPControllerDelegate`` and provide it in the initialiser. This allows you to decode API errors, add headers to every request or encrypt and decrypt content.
 ///
 /// Though the implementation is intentionally lightweight, it is best if an instance is created once for each `baseURL` on app launch, and held for reuse.
 public struct BasicHTTPController {
@@ -18,7 +18,7 @@ public struct BasicHTTPController {
     /// A collection of ``DataEncoder`` and ``DataDecoder`` objects that the controller will use to encode and decode specific HTTP content types.
     public let dataCoders: DataCoders
     
-    /// The delegate used to provide additional controler over preparing a request to be sent, handling responses, and handling errors.
+    /// The delegate used to provide additional control over preparing a request to be sent, handling responses, and handling errors.
     public let delegate: HTTPControllerDelegate
 
     // MARK: - Initialiser

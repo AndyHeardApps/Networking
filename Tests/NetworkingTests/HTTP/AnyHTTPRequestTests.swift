@@ -6,7 +6,7 @@ final class AnyHTTPRequestTests: XCTestCase {}
 // MARK: - Tests
 extension AnyHTTPRequestTests {
     
-    func testInitWithParameters_willAssignProperties_andCodingCorrectly() throws {
+    func test_initWithParameters_willAssignProperties_andCodingCorrectly() throws {
         
         let body = Data(UUID().uuidString.utf8)
         let request = AnyHTTPRequest(
@@ -50,7 +50,7 @@ extension AnyHTTPRequestTests {
         XCTAssertEqual(decodedContent, mockData + mockData)
     }
     
-    func testInitWithDataBodyParameters_willAssignProperties_andCodingCorrectly() throws {
+    func test_initWithDataBodyParameters_willAssignProperties_andCodingCorrectly() throws {
         
         let body = Data(UUID().uuidString.utf8)
         let request = AnyHTTPRequest(
@@ -91,7 +91,7 @@ extension AnyHTTPRequestTests {
         XCTAssertEqual(decodedContent, mockData + mockData)
     }
     
-    func testInitWithRequest_willAssignProperties_andCodingCorrectly() throws {
+    func test_initWithRequest_willAssignProperties_andCodingCorrectly() throws {
         
         let mockRequest = MockHTTPRequest { body, _, _ in
             Data(body.reversed())
@@ -120,5 +120,39 @@ extension AnyHTTPRequestTests {
         let decodedAnyHTTPRequestContent = try anyHTTPRequest.decode(data: mockData, statusCode: .ok, using: .default)
 
         XCTAssertEqual(decodedRequestContent, decodedAnyHTTPRequestContent)
+    }
+    
+    func test_initWithDefaultParameters_willAssignProperties_andCodingCorrectly() throws {
+        
+        struct BasicRequest: HTTPRequest {
+            
+            let httpMethod: HTTPMethod
+            let pathComponents: [String]
+            let body: [String : Int]?
+            
+            func decode(
+                data: Data,
+                statusCode: Networking.HTTPStatusCode,
+                using coders: Networking.DataCoders
+            ) throws {}
+        }
+        
+        let request = BasicRequest(
+            httpMethod: .get,
+            pathComponents: [],
+            body: ["key" : 1]
+        )
+        
+        XCTAssertNil(request.headers)
+        XCTAssertNil(request.queryItems)
+        XCTAssertFalse(request.requiresAuthorization)
+        var headers = request.headers ?? [:]
+        let encodedBody = try request.encode(
+            body: request.body!,
+            headers: &headers,
+            using: .default
+        )
+        XCTAssertEqual(encodedBody, Data("{\"key\":1}".utf8))
+        XCTAssertEqual(headers, ["Content-Type" : "application/json"])
     }
 }

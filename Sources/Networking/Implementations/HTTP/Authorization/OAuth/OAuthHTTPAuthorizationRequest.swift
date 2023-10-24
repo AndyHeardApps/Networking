@@ -16,10 +16,3 @@ public protocol OAuthHTTPAuthorizationRequest: HTTPRequest {
     /// - Returns: The Refresh Token, if available.
     func refreshToken(from response: HTTPResponse<Response>) -> String?
 }
-
-extension OAuthHTTPAuthorizationRequest {
-    
-    public var requiresAuthorization: Bool {
-        false
-    }
-}

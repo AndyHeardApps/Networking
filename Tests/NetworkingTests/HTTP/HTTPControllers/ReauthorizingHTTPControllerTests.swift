@@ -45,7 +45,7 @@ extension ReauthorizingHTTPControllerTests {
 extension ReauthorizingHTTPControllerTests {
 
     // MARK: Request authorization
-    func testFetchResponse_willSubmitRequest_toHTTPSession_withoutAuthorization_whenAuthorizationIsNotRequired() async throws {
+    func test_fetchResponse_willSubmitRequest_toHTTPSession_withoutAuthorization_whenAuthorizationIsNotRequired() async throws {
 
         let request = MockHTTPRequest(requiresAuthorization: false)
         httpSession.setBlankResponse(for: request)
@@ -65,7 +65,7 @@ extension ReauthorizingHTTPControllerTests {
         XCTAssertEqual(lastReceivedBaseURL, baseURL)
     }
 
-    func testFetchResponse_willUseAuthorizationProvider_toAuthorizeRequestBeforeSubmission_whenAuthorizationIsRequired() async throws {
+    func test_fetchResponse_willUseAuthorizationProvider_toAuthorizeRequestBeforeSubmission_whenAuthorizationIsRequired() async throws {
 
         let request = MockHTTPRequest(requiresAuthorization: true)
         httpSession.setBlankResponse(for: request)
@@ -89,7 +89,7 @@ extension ReauthorizingHTTPControllerTests {
     }
 
     // MARK: - Encoding
-    func testFetchResponse_willEncodeBodyUsingRequest_andReturnEncodedBody() async throws {
+    func test_fetchResponse_willEncodeBodyUsingRequest_andReturnEncodedBody() async throws {
         
         let expectedResponse = HTTPResponse(
             content: Data(UUID().uuidString.utf8),
@@ -132,7 +132,7 @@ extension ReauthorizingHTTPControllerTests {
     }
 
     // MARK: Decoding
-    func testFetchResponse_willDecodeResponseUsingRequest_andReturnDecodedResponse() async throws {
+    func test_fetchResponse_willDecodeResponseUsingRequest_andReturnDecodedResponse() async throws {
 
         let responseData = Data(UUID().uuidString.utf8)
         let responseHeaders = ["header1" : "headerValue1"]
@@ -179,7 +179,7 @@ extension ReauthorizingHTTPControllerTests {
     }
     
     // MARK: Encoding headers
-    func testFetchResponse_willAddEncodingHeaders_toRequestBeforeSubmission_whenRequestHasExistingHeaders() async throws {
+    func test_fetchResponse_willAddEncodingHeaders_toRequestBeforeSubmission_whenRequestHasExistingHeaders() async throws {
 
         let request = MockHTTPRequest(
             headers: ["headerKey2" : "headerValue2"],
@@ -211,7 +211,7 @@ extension ReauthorizingHTTPControllerTests {
         XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
     }
     
-    func testFetchResponse_willAddEncodingHeaders_toRequestBeforeSubmission_whenRequestHasNoHeaders() async throws {
+    func test_fetchResponse_willAddEncodingHeaders_toRequestBeforeSubmission_whenRequestHasNoHeaders() async throws {
 
         let request = MockHTTPRequest(
             headers: nil,
@@ -243,7 +243,7 @@ extension ReauthorizingHTTPControllerTests {
     }
 
     // MARK: Access token saving
-    func testFetchResponse_willSaveAccessToken_whenPossible() async throws {
+    func test_fetchResponse_willSaveAccessToken_whenPossible() async throws {
 
         let accessToken = MockAccessToken(value: "accessToken")
         let request = MockHTTPRequest<Data, MockAccessToken> { body, _, _ in
@@ -260,7 +260,7 @@ extension ReauthorizingHTTPControllerTests {
         XCTAssertEqual(authorizationProvider.handledAuthorizationResponse?.content, accessToken)
     }
 
-    func testFetchResponse_willSaveRefreshToken_whenPossible() async throws {
+    func test_fetchResponse_willSaveRefreshToken_whenPossible() async throws {
 
         let refreshToken = MockRefreshToken(value: "refreshToken")
         let request = MockHTTPRequest<Data, MockRefreshToken> { body, _, _ in
@@ -276,7 +276,7 @@ extension ReauthorizingHTTPControllerTests {
     }
 
     // MARK: Reauthorization
-    func testFetchResponse_willReauthorizeFailedRequest_whenDelegateSaysTo() async throws {
+    func test_fetchResponse_willReauthorizeFailedRequest_whenDelegateSaysTo() async throws {
 
         let request = MockHTTPRequest { body, _, _ in
             body
@@ -306,7 +306,7 @@ extension ReauthorizingHTTPControllerTests {
         XCTAssertEqual(httpSession.receivedRequests.last?.baseURL, baseURL)
     }
 
-    func testFetchResponse_willThrowErrorReturnedByDelegate_whenInitialRequestFails_andDelegateDoesNotAllowReauthorization() async throws {
+    func test_fetchResponse_willThrowErrorReturnedByDelegate_whenInitialRequestFails_andDelegateDoesNotAllowReauthorization() async throws {
 
         let request = MockHTTPRequest { body, _, _ in
             body
@@ -343,7 +343,7 @@ extension ReauthorizingHTTPControllerTests {
         }
     }
 
-    func testFetchResponse_willThrowErrorReturnedByDelegate_whenRetriedRequestFails() async throws {
+    func test_fetchResponse_willThrowErrorReturnedByDelegate_whenRetriedRequestFails() async throws {
 
         let request = MockHTTPRequest { body, _, _ in
             body
@@ -379,7 +379,7 @@ extension ReauthorizingHTTPControllerTests {
         }
     }
 
-    func testFetchResponse_willThrowErrorReturnedByDelegate_usingOriginalError_whenReauthorizationRequestCannotBeCreated() async throws {
+    func test_fetchResponse_willThrowErrorReturnedByDelegate_usingOriginalError_whenReauthorizationRequestCannotBeCreated() async throws {
 
         let request = MockHTTPRequest { body, _, _ in
             body
@@ -413,7 +413,7 @@ extension ReauthorizingHTTPControllerTests {
     }
 
     // MARK: Error reporting
-    func testFetchResponse_willReportErrorThrownByHTTPSession_withoutCallingDelegate() async throws {
+    func test_fetchResponse_willReportErrorThrownByHTTPSession_withoutCallingDelegate() async throws {
 
         let request = MockHTTPRequest()
         httpSession.shouldThrowErrorOnSubmit = true

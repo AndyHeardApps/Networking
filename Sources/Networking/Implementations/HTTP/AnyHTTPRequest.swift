@@ -5,7 +5,7 @@ import Foundation
 /// **Note:** This is no longer widely used since the introduction of existential types in Swift.
 public struct AnyHTTPRequest<Body, Response>: HTTPRequest {
     
-    // MARK: Properties
+    // MARK: - Properties
     public let httpMethod: HTTPMethod
     public let pathComponents: [String]
     public let headers: [String : String]?
@@ -15,7 +15,7 @@ public struct AnyHTTPRequest<Body, Response>: HTTPRequest {
     private let _encode: (Body, inout [String : String], DataCoders) throws -> Data
     private let _decode: (Data, HTTPStatusCode, DataCoders) throws -> Response
     
-    // MARK: Initialisers
+    // MARK: - Initialisers
     public init(
         httpMethod: HTTPMethod,
         pathComponents: [String],
@@ -26,6 +26,7 @@ public struct AnyHTTPRequest<Body, Response>: HTTPRequest {
         encode: @escaping (Body, inout [String : String], DataCoders) throws -> Data,
         decode: @escaping (Data, HTTPStatusCode, DataCoders) throws -> Response
     ) {
+        
         self.httpMethod = httpMethod
         self.pathComponents = pathComponents
         self.headers = headers
@@ -82,6 +83,7 @@ extension AnyHTTPRequest where Body == Data {
         requiresAuthorization: Bool,
         decode: @escaping (Data, HTTPStatusCode, DataCoders) throws -> Response
     ) {
+        
         self.httpMethod = httpMethod
         self.pathComponents = pathComponents
         self.headers = headers

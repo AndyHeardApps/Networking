@@ -45,7 +45,7 @@ public struct ReauthorizingHTTPController<Authorization: HTTPReauthorizationProv
         baseURL: URL,
         reauthorizationBaseURL: URL? = nil,
         session: HTTPSession = URLSession.shared,
-        dataCoders: DataCoders,
+        dataCoders: DataCoders = .default,
         delegate: ReauthorizingHTTPControllerDelegate? = nil,
         authorization: Authorization
     ) {

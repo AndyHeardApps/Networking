@@ -10,7 +10,10 @@ extension URLSession: HTTPSession {
           Request.Body == Data
     {
 
-        let urlRequest = try self.urlRequest(for: request, withBaseURL: baseURL)
+        let urlRequest = try urlRequest(
+            for: request,
+            withBaseURL: baseURL
+        )
         let (data, response) = try await self.data(for: urlRequest)
         
         let httpResponse = response as! HTTPURLResponse
@@ -61,31 +64,22 @@ extension HTTPMethod {
         switch self {
         case .get:
             "GET"
-            
         case .head:
             "HEAD"
-            
         case .post:
             "POST"
-            
         case .put:
             "PUT"
-            
         case .delete:
             "DELETE"
-            
         case .connect:
             "CONNECT"
-            
         case .options:
             "OPTIONS"
-            
         case .trace:
             "TRACE"
-            
         case .patch:
             "PATCH"
-            
         }
     }
 }
