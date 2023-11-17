@@ -1,3 +1,4 @@
+#if canImport(Security)
 import XCTest
 @testable import Networking
 
@@ -13,7 +14,7 @@ extension KeychainSecureStorageTests {
     override func setUp() {
         super.setUp()
 
-        storage = KeychainSecureStorage(key: "tests")
+        storage = KeychainSecureStorage()
     }
 
     override func tearDown() {
@@ -41,3 +42,4 @@ extension KeychainSecureStorageTests {
         XCTAssertNil(storage[key])
     }
 }
+#endif

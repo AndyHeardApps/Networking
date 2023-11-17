@@ -19,11 +19,13 @@ where AuthorizationRequest: OAuthHTTPAuthorizationRequest,
         self.storage = storage
     }
     
+    #if canImport(Security)
     /// Creates a new ``OAuthHTTPAuthorizationProvider`` instance, using the keychain to store tokens.
     public init() {
         
-        self.storage = KeychainSecureStorage(key: OAuthHTTPAuthorizationProviderStorageKey.storage)
+        self.storage = KeychainSecureStorage()
     }
+    #endif
 }
 
 // MARK: - HTTP Reauthorization provider
@@ -97,7 +99,6 @@ extension OAuthHTTPAuthorizationProvider: HTTPReauthorizationProvider {
 enum OAuthHTTPAuthorizationProviderStorageKey {
     
     static let authorizationHeader = "Authorization"
-    static let storage = "oauthStorage"
     static let accessToken = "oauth.accessToken"
     static let refreshToken = "oauth.refreshToken"
 }
