@@ -1,3 +1,4 @@
+#if os(iOS) || os(macOS)
 import Foundation
 
 extension URLSession: HTTPSession {
@@ -92,3 +93,4 @@ extension URLSession {
         case failedToCreateURLFromComponents
     }
 }
+#endif
