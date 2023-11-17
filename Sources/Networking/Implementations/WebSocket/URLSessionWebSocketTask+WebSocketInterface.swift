@@ -1,3 +1,4 @@
+#if os(iOS) || os(macOS)
 import Foundation
 
 extension URLSessionWebSocketTask: WebSocketInterface {
@@ -187,3 +188,4 @@ extension URLSessionWebSocketTask: WebSocketInterface {
         )
     }
 }
+#endif

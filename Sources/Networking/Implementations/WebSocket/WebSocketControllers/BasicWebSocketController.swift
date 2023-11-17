@@ -25,6 +25,7 @@ public struct BasicWebSocketController {
 
     // MARK: - Initialiser
     
+    #if os(iOS) || os(macOS)
     /// Creates a new ``BasicWebSocketController`` instance.
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
@@ -43,6 +44,7 @@ public struct BasicWebSocketController {
         self.dataCoders = dataCoders
         self.delegate = delegate ?? DefaultWebSocketControllerDelegate()
     }
+    #endif
 }
 
 // MARK: - Web socket controller

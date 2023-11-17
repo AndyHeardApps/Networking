@@ -33,6 +33,7 @@ public struct ReauthorizingHTTPController<Authorization: HTTPReauthorizationProv
         
     // MARK: - Initialisers
 
+    #if os(iOS) || os(macOS)
     /// Creates a new ``ReauthorizingHTTPController`` instance.
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
@@ -57,6 +58,7 @@ public struct ReauthorizingHTTPController<Authorization: HTTPReauthorizationProv
         self.delegate = delegate ?? DefaultReauthorizingHTTPControllerDelegate()
         self.authorization = authorization
     }
+    #endif
 }
 
 // MARK: - HTTP controller

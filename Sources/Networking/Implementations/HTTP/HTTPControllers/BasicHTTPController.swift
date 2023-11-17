@@ -23,6 +23,7 @@ public struct BasicHTTPController {
 
     // MARK: - Initialiser
     
+    #if os(iOS) || os(macOS)
     /// Creates a new ``BasicHTTPController`` instance.
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
@@ -41,6 +42,7 @@ public struct BasicHTTPController {
         self.dataCoders = dataCoders
         self.delegate = delegate ?? DefaultHTTPControllerDelegate()
     }
+    #endif
 }
 
 // MARK: - HTTP controller
