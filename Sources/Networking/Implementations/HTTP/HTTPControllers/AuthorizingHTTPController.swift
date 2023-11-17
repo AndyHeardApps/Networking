@@ -27,7 +27,8 @@ public struct AuthorizingHTTPController<Authorization: HTTPAuthorizationProvider
     public let authorization: Authorization
     
     // MARK: - Initialisers
-
+    
+    #if os(iOS) || os(macOS)
     /// Creates a new ``AuthorizingHTTPController`` instance.
     /// - Parameters:
     ///   - baseURL: The base `URL` of the controller.
@@ -49,6 +50,7 @@ public struct AuthorizingHTTPController<Authorization: HTTPAuthorizationProvider
         self.delegate = delegate ?? DefaultHTTPControllerDelegate()
         self.authorization = authorization
     }
+    #endif
 }
 
 // MARK: - HTTP controller
