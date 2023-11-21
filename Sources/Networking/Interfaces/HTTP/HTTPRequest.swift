@@ -32,14 +32,14 @@ public protocol HTTPRequest<Body, Response> {
     var queryItems: [String : String]? { get }
     
     /// The body of the request.
-    var body: Body? { get }
+    var body: Body { get }
     
     /// Whether or not the request will require authorization credentials attaching. If so, then ``AuthorizingHTTPController`` and ``ReauthorizingHTTPController`` types will authorize the request before submission.
     var requiresAuthorization: Bool { get }
     
     // MARK: - Functions
     
-    /// Encodes the request ``HTTPRequest/body-9pm74`` in to `Data`. This is only called by a ``HTTPController`` if the body is not `nil`.
+    /// Encodes the request ``HTTPRequest/body-9pm74`` in to `Data`. This is only called by a ``HTTPController`` if the body is not `Never`.
     ///
     /// The default implementation (if the ``Body`` conforms to `Encodable`) encodes the ``body-9mp51`` to JSON and adds `application/json` to the `Content-Type` header.
     ///
@@ -90,8 +90,8 @@ extension HTTPRequest {
 
 extension HTTPRequest where Body == Never {
     
-    public var body: Body? {
-        nil
+    public var body: Body {
+        fatalError()
     }
 }
 

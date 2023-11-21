@@ -10,7 +10,7 @@ public struct AnyHTTPRequest<Body, Response>: HTTPRequest {
     public let pathComponents: [String]
     public let headers: [String : String]?
     public let queryItems: [String : String]?
-    public let body: Body?
+    public let body: Body
     public let requiresAuthorization: Bool
     private let _encode: (Body, inout [String : String], DataCoders) throws -> Data
     private let _decode: (Data, HTTPStatusCode, DataCoders) throws -> Response
@@ -21,7 +21,7 @@ public struct AnyHTTPRequest<Body, Response>: HTTPRequest {
         pathComponents: [String],
         headers: [String : String]?,
         queryItems: [String : String]?,
-        body: Body?,
+        body: Body,
         requiresAuthorization: Bool,
         encode: @escaping (Body, inout [String : String], DataCoders) throws -> Data,
         decode: @escaping (Data, HTTPStatusCode, DataCoders) throws -> Response
@@ -79,7 +79,7 @@ extension AnyHTTPRequest where Body == Data {
         pathComponents: [String],
         headers: [String : String]?,
         queryItems: [String : String]?,
-        body: Data?,
+        body: Data,
         requiresAuthorization: Bool,
         decode: @escaping (Data, HTTPStatusCode, DataCoders) throws -> Response
     ) {

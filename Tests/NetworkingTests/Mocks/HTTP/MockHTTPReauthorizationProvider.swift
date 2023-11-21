@@ -32,7 +32,7 @@ extension MockHTTPReauthorizationProvider: HTTPReauthorizationProvider {
             pathComponents: ["mockReauthorization"],
             headers: nil,
             queryItems: nil,
-            body: nil,
+            body: Data(),
             requiresAuthorization: false,
             encode: { body, _, _ in
                 body

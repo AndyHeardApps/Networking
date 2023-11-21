@@ -80,7 +80,7 @@ extension MockHTTPSession {
             pathComponents: ["mockReauthorization"],
             headers: nil,
             queryItems: nil,
-            body: nil,
+            body: Data(),
             requiresAuthorization: false,
             encode: { body, _, _ in body },
             decode: { _, _, _ in }
@@ -103,14 +103,16 @@ extension MockHTTPSession {
         let requiresAuthorization: Bool
         
         // Initialiser
-        init(request: some HTTPRequest) {
+        init<Request: HTTPRequest>(request: Request) {
             
             self.httpMethod = request.httpMethod
             self.pathComponents = request.pathComponents
             self.queryItems = request.queryItems
-            self.body = try! request.body.map { body in
+            if Request.Body.self == Never.self {
+                self.body = nil
+            } else {
                 var headers: [String : String] = [:]
-                return try request.encode(body: body, headers: &headers, using: .default)
+                self.body = try! request.encode(body: request.body, headers: &headers, using: .default)
             }
             self.requiresAuthorization = request.requiresAuthorization
         }

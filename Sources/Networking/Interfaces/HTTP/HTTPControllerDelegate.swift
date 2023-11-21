@@ -65,9 +65,12 @@ extension HTTPControllerDelegate {
     ) throws -> any HTTPRequest<Data, Request.Response> {
         
         var headers = request.headers ?? [:]
-        let bodyData = try request.body.map { body in
-            try request.encode(
-                body: body,
+        let bodyData: Data
+        if Request.Body.self == Never.self {
+            bodyData = .init()
+        } else {
+            bodyData = try request.encode(
+                body: request.body,
                 headers: &headers,
                 using: coders
             )
