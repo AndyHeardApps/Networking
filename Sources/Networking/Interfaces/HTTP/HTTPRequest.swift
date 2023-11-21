@@ -32,7 +32,7 @@ public protocol HTTPRequest<Body, Response> {
     var queryItems: [String : String]? { get }
     
     /// The body of the request.
-    var body: Body? { get }
+    var body: Body { get }
     
     /// Whether or not the request will require authorization credentials attaching. If so, then ``AuthorizingHTTPController`` and ``ReauthorizingHTTPController`` types will authorize the request before submission.
     var requiresAuthorization: Bool { get }
@@ -90,8 +90,8 @@ extension HTTPRequest {
 
 extension HTTPRequest where Body == Never {
     
-    public var body: Body? {
-        nil
+    public var body: Body {
+        fatalError()
     }
 }
 

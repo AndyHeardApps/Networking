@@ -16,7 +16,7 @@ extension KeychainSecureStorage: SecureStorage {
     
     subscript(key: String) -> String? {
         get {
-            let prefixedKey = Data((keyPrefix + key).utf8)
+            let prefixedKey = keyPrefix + key
             let getQuery: [String : Any] = [
                 kSecClass as String: kSecClassGenericPassword,
                 kSecAttrAccount as String: prefixedKey,
@@ -37,7 +37,7 @@ extension KeychainSecureStorage: SecureStorage {
             return nil
         }
         set {
-            let prefixedKey = Data((keyPrefix + key).utf8)
+            let prefixedKey = keyPrefix + key
             let deleteQuery: [String : Any] = [
                 kSecClass as String: kSecClassGenericPassword,
                 kSecAttrAccount as String: prefixedKey,

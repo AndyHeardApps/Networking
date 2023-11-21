@@ -8,7 +8,7 @@ struct MockHTTPRequest<Body, Response>: HTTPRequest {
     let pathComponents: [String]
     let headers: [String : String]?
     let queryItems: [String : String]?
-    let body: Body?
+    let body: Body
     let requiresAuthorization: Bool
     private let _encode: (Body, inout [String : String], DataCoders) throws -> Data
     private let _decode: (Data, HTTPStatusCode, DataCoders) throws -> Response
@@ -19,7 +19,7 @@ struct MockHTTPRequest<Body, Response>: HTTPRequest {
         pathComponents: [String] = ["path1", "path2"],
         headers: [String : String]? = ["header1" : "headerValue1"],
         queryItems: [String : String]? = ["query1" : "queryValue1"],
-        body: Body? = Data(UUID().uuidString.utf8),
+        body: Body = Data(UUID().uuidString.utf8),
         requiresAuthorization: Bool = true,
         encode: @escaping (Body, inout [String : String], DataCoders) throws -> Data,
         decode: @escaping (Data, HTTPStatusCode, DataCoders) throws -> Response
@@ -47,7 +47,7 @@ where Response == Void,
         pathComponents: [String] = ["path1", "path2"],
         headers: [String : String]? = ["header1" : "headerValue1"],
         queryItems: [String : String]? = ["query1" : "queryValue1"],
-        body: Data? = Data(UUID().uuidString.utf8),
+        body: Data = Data(UUID().uuidString.utf8),
         requiresAuthorization: Bool = true
     ) {
        

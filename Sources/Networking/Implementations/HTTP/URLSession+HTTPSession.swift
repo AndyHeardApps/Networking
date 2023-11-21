@@ -51,8 +51,10 @@ extension URLSession {
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = request.httpMethod.asString
         urlRequest.allHTTPHeaderFields = request.headers
-        urlRequest.httpBody = request.body
-                
+        if !request.body.isEmpty {
+            urlRequest.httpBody = request.body
+        }
+        
         return urlRequest
     }
 }
