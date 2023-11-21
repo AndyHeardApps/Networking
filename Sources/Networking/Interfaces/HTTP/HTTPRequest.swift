@@ -39,7 +39,7 @@ public protocol HTTPRequest<Body, Response> {
     
     // MARK: - Functions
     
-    /// Encodes the request ``HTTPRequest/body-9pm74`` in to `Data`. This is only called by a ``HTTPController`` if the body is not `nil`.
+    /// Encodes the request ``HTTPRequest/body-9pm74`` in to `Data`. This is only called by a ``HTTPController`` if the body is not `Never`.
     ///
     /// The default implementation (if the ``Body`` conforms to `Encodable`) encodes the ``body-9mp51`` to JSON and adds `application/json` to the `Content-Type` header.
     ///
