@@ -1,8 +1,9 @@
 import Foundation
 
 /// Provides callbacks to customise ``WebSocketRequest`` objects before they are opened, and allows customisation of ping and pong message timings.
+@available(iOS 17.0, *)
 public protocol WebSocketControllerDelegate {
-    
+
     // MARK: - Functions
     
     /// Prepares a ``WebSocketRequest`` for submission.
@@ -33,6 +34,7 @@ public protocol WebSocketControllerDelegate {
     ) -> ContinuousClock.Instant.Duration?
 }
 
+@available(iOS 17.0, *)
 extension WebSocketControllerDelegate {
     
     public func controller<Request: WebSocketRequest>(
