@@ -2,6 +2,7 @@ import Foundation
 import Combine
 @testable import Networking
 
+@available(iOS 17.0, *)
 final class MockWebSocketSession {
     
     // MARK: - Properties
@@ -9,6 +10,7 @@ final class MockWebSocketSession {
     private(set) var lastOpenedInterface: Interface?
 }
 
+@available(iOS 17.0, *)
 extension MockWebSocketSession: WebSocketSession {
     
     func createInterface(
@@ -24,6 +26,7 @@ extension MockWebSocketSession: WebSocketSession {
     }
 }
 
+@available(iOS 17.0, *)
 extension MockWebSocketSession {
     final class Interface: WebSocketInterface {
         
@@ -38,6 +41,7 @@ extension MockWebSocketSession {
     }
 }
 
+@available(iOS 17.0, *)
 extension MockWebSocketSession.Interface {
     
     func open() {
@@ -73,6 +77,7 @@ extension MockWebSocketSession.Interface {
     }
 }
 
+@available(iOS 17.0, *)
 extension MockWebSocketSession.Interface {
     
     func recieve(message: Data) {

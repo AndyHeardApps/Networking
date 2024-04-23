@@ -1,6 +1,7 @@
 import XCTest
 @testable import Networking
 
+@available(iOS 17.0, *)
 final class BasicWebSocketControllerTests: XCTestCase {
     
     // MARK: - Properties
@@ -14,8 +15,9 @@ final class BasicWebSocketControllerTests: XCTestCase {
 }
 
 // MARK: - Setup
+@available(iOS 17.0, *)
 extension BasicWebSocketControllerTests {
-    
+
     override func setUp() {
         super.setUp()
         
@@ -38,6 +40,7 @@ extension BasicWebSocketControllerTests {
 }
 
 // MARK: - Tests
+@available(iOS 17.0, *)
 extension BasicWebSocketControllerTests {
     
     func test_openConnection_willUseSessionToCreateInterface() throws {

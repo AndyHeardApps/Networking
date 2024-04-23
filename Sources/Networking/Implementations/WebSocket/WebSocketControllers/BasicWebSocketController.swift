@@ -7,6 +7,7 @@ import Foundation
 /// For further control over preparing the requests for connection or handling `ping` messages, create a custom ``WebSocketControllerDelegate`` and provide it in the initialiser.
 ///
 /// Though the implementation is intentionally lightweight, it is best if an instance is created once for each `baseURL` on app launch, and held for reuse.
+@available(iOS 17.0, *)
 public struct BasicWebSocketController {
     
     // MARK: - Properties
@@ -48,6 +49,7 @@ public struct BasicWebSocketController {
 }
 
 // MARK: - Web socket controller
+@available(iOS 17.0, *)
 extension BasicWebSocketController: WebSocketController {
     
     public func createConnection<Request: WebSocketRequest>(with request: Request) throws -> any WebSocketConnection<Request.Input, Request.Output> {
@@ -77,6 +79,7 @@ extension BasicWebSocketController: WebSocketController {
 }
 
 // MARK: - Web socket connection
+@available(iOS 17.0, *)
 extension BasicWebSocketController {
     final class Connection<Input, Output> {
         
@@ -122,6 +125,7 @@ extension BasicWebSocketController {
     }
 }
 
+@available(iOS 17.0, *)
 extension BasicWebSocketController.Connection: WebSocketConnection {
 
     var isConnected: Bool {
@@ -229,6 +233,7 @@ extension BasicWebSocketController.Connection: WebSocketConnection {
     }
 }
 
+@available(iOS 17.0, *)
 extension BasicWebSocketController.Connection {
     struct Error {
         
@@ -239,6 +244,7 @@ extension BasicWebSocketController.Connection {
     }
 }
 
+@available(iOS 17.0, *)
 extension BasicWebSocketController.Connection.Error: LocalizedError {
     
     var errorDescription: String? {

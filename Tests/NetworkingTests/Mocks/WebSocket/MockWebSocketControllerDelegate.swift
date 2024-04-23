@@ -1,5 +1,6 @@
 import Networking
 
+@available(iOS 17.0, *)
 final class MockWebSocketControllerDelegate {
     
     // MARK: - Properties
@@ -7,6 +8,7 @@ final class MockWebSocketControllerDelegate {
 }
 
 // MARK: - Web socket controller delegate
+@available(iOS 17.0, *)
 extension MockWebSocketControllerDelegate: WebSocketControllerDelegate {
     
     func controller(
