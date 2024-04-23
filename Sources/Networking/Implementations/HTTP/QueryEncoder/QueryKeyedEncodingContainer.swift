@@ -128,8 +128,11 @@ extension QueryEncoder.Encoder.KeyedEncodingContainer: KeyedEncodingContainerPro
         _ value: T,
         forKey key: Key
     ) throws {
-        if let rawRepresentable = value as? any RawRepresentable<String> {
-            encoder.contents[key.stringValue] = rawRepresentable.rawValue
+        if
+            let rawRepresentable = value as? any RawRepresentable,
+            let rawValue = rawRepresentable.rawValue as? String
+        {
+            encoder.contents[key.stringValue] = rawValue
         } else if let stringConvertible = value as? CustomStringConvertible {
             encoder.contents[key.stringValue] = stringConvertible.description
         } else {

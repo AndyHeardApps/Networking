@@ -1,6 +1,7 @@
 import XCTest
 @testable import Networking
 
+@available(iOS 17.0, *)
 final class URLSessionWebSocketTaskWebSocketInterfaceTests: XCTestCase {
     
     // MARK: - Properties
@@ -13,6 +14,7 @@ final class URLSessionWebSocketTaskWebSocketInterfaceTests: XCTestCase {
 }
 
 // MARK: - Tests
+@available(iOS 17.0, *)
 extension URLSessionWebSocketTaskWebSocketInterfaceTests {
     
     func test_interfaceState_willReturnCorrectValues() async throws {
