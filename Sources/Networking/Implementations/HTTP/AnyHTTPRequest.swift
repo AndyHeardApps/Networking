@@ -10,12 +10,9 @@ public struct AnyHTTPRequest<Body, Response>: HTTPRequest {
     public let pathComponents: [String]
     public let headers: [String : String]?
     public let queryItems: [String : String]?
-    private let _body: Body?
+    private let _body: () -> Body
     public var body: Body {
-        guard let _body else {
-            fatalError("Accessing body of type Never")
-        }
-        return _body
+        _body()
     }
     public let requiresAuthorization: Bool
     private let _encode: ((Body, inout [String : String], DataCoders) throws -> Data)?
@@ -27,7 +24,7 @@ public struct AnyHTTPRequest<Body, Response>: HTTPRequest {
         pathComponents: [String],
         headers: [String : String]?,
         queryItems: [String : String]?,
-        body: Body,
+        body: @autoclosure @escaping () -> Body,
         requiresAuthorization: Bool,
         encode: @escaping (Body, inout [String : String], DataCoders) throws -> Data,
         decode: @escaping (Data, HTTPStatusCode, DataCoders) throws -> Response
@@ -52,23 +49,7 @@ public struct AnyHTTPRequest<Body, Response>: HTTPRequest {
         self.pathComponents = request.pathComponents
         self.headers = request.headers
         self.queryItems = request.queryItems
-        self._body = request.body
-        self.requiresAuthorization = request.requiresAuthorization
-        self._encode = request.encode
-        self._decode = request.decode
-    }
-
-    public init<Request: HTTPRequest>(_ request: Request)
-    where Self.Response == Request.Response,
-          Self.Body == Request.Body,
-          Request.Body == Never
-    {
-
-        self.httpMethod = request.httpMethod
-        self.pathComponents = request.pathComponents
-        self.headers = request.headers
-        self.queryItems = request.queryItems
-        self._body = nil
+        self._body = { request.body }
         self.requiresAuthorization = request.requiresAuthorization
         self._encode = request.encode
         self._decode = request.decode
@@ -113,33 +94,11 @@ extension AnyHTTPRequest where Body == Data {
         self.pathComponents = pathComponents
         self.headers = headers
         self.queryItems = queryItems
-        self._body = body
+        self._body = { body }
         self.requiresAuthorization = requiresAuthorization
         self._encode = { body, _, _ in
             body
         }
-        self._decode = decode
-    }
-}
-
-extension AnyHTTPRequest where Body == Never {
-
-    public init(
-        httpMethod: HTTPMethod,
-        pathComponents: [String],
-        headers: [String : String]?,
-        queryItems: [String : String]?,
-        requiresAuthorization: Bool,
-        decode: @escaping (Data, HTTPStatusCode, DataCoders) throws -> Response
-    ) {
-
-        self.httpMethod = httpMethod
-        self.pathComponents = pathComponents
-        self.headers = headers
-        self.queryItems = queryItems
-        self._body = nil
-        self.requiresAuthorization = requiresAuthorization
-        self._encode = nil
         self._decode = decode
     }
 }
