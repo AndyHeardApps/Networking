@@ -155,4 +155,29 @@ extension AnyHTTPRequestTests {
         XCTAssertEqual(encodedBody, Data("{\"key\":1}".utf8))
         XCTAssertEqual(headers, ["Content-Type" : "application/json"])
     }
+
+    func test_initWithNeverRequest_willAssignProperties_andCodingCorrectly() throws {
+
+        struct NeverRequest: HTTPRequest {
+
+            let httpMethod: HTTPMethod
+            let pathComponents: [String]
+
+            func decode(
+                data: Data,
+                statusCode: Networking.HTTPStatusCode,
+                using coders: Networking.DataCoders
+            ) throws {}
+        }
+
+        let neverRequest = NeverRequest(
+            httpMethod: .get,
+            pathComponents: []
+        )
+        let request = AnyHTTPRequest(neverRequest)
+
+        XCTAssertNil(request.headers)
+        XCTAssertNil(request.queryItems)
+        XCTAssertFalse(request.requiresAuthorization)
+    }
 }
