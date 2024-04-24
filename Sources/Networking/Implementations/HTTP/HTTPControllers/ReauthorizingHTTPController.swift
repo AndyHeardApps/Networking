@@ -77,7 +77,7 @@ extension ReauthorizingHTTPController: HTTPController {
         shouldAttemptReauthorization: Bool
     ) async throws -> HTTPResponse<Request.Response> {
 
-        let authorizedRequest = try authorize(request: request)
+        let authorizedRequest = try await authorize(request: request)
         let rawDataRequest = try delegate.controller(
             self,
             prepareRequestForSubmission: authorizedRequest,
@@ -98,7 +98,7 @@ extension ReauthorizingHTTPController: HTTPController {
                 using: dataCoders
             )
             
-            extractAuthorizationContent(
+            await extractAuthorizationContent(
                 from: response,
                 returnedBy: request
             )
@@ -141,14 +141,14 @@ extension ReauthorizingHTTPController: HTTPController {
 // MARK: - Request modification
 extension ReauthorizingHTTPController {
     
-    private func authorize<Request: HTTPRequest>(request: Request) throws -> any HTTPRequest<Request.Body, Request.Response> {
+    private func authorize<Request: HTTPRequest>(request: Request) async throws -> any HTTPRequest<Request.Body, Request.Response> {
         
         guard request.requiresAuthorization else {
             return request
         }
         
-        let authorizedRequest = try authorization.authorize(request)
-        
+        let authorizedRequest = try await authorization.authorize(request)
+
         return authorizedRequest
     }
 }
@@ -163,7 +163,7 @@ extension ReauthorizingHTTPController {
         
         do {
             guard
-                let reauthorizationRequest = authorization.makeReauthorizationRequest(),
+                let reauthorizationRequest = await authorization.makeReauthorizationRequest(),
                 !reauthorizationRequest.requiresAuthorization
             else {
                 throw originalError
@@ -187,7 +187,7 @@ extension ReauthorizingHTTPController {
                 using: dataCoders
             )
             
-            extractAuthorizationContent(
+            await extractAuthorizationContent(
                 from: reauthorizationResponse,
                 returnedBy: reauthorizationRequest
             )
@@ -213,13 +213,13 @@ extension ReauthorizingHTTPController {
     private func extractAuthorizationContent<Response>(
         from response: HTTPResponse<Response>,
         returnedBy request: some HTTPRequest
-    ) {
-        
+    ) async {
+
         if
             let authorizationRequest = request as? Authorization.AuthorizationRequest,
             let authorizationResponse = response as? HTTPResponse<Authorization.AuthorizationRequest.Response>
         {
-            authorization.handle(
+            await authorization.handle(
                 authorizationResponse: authorizationResponse,
                 from: authorizationRequest
             )
@@ -229,7 +229,7 @@ extension ReauthorizingHTTPController {
             let reauthorizationRequest = request as? Authorization.ReauthorizationRequest,
             let reauthorizationResponse = response as? HTTPResponse<Authorization.ReauthorizationRequest.Response>
         {
-            authorization.handle(
+            await authorization.handle(
                 reauthorizationResponse: reauthorizationResponse,
                 from: reauthorizationRequest
             )
