@@ -21,8 +21,8 @@ public protocol HTTPAuthorizationProvider<AuthorizationRequest>  {
     /// - Parameter request: The ``HTTPRequest`` that needs to be authorized.
     /// - Returns: Any ``HTTPRequest``, with authorization credentials provided where possible.
     /// - Throws: Any error preventing request authorization.
-    func authorize<Request: HTTPRequest>(_ request: Request) throws -> any HTTPRequest<Request.Body, Request.Response>
-    
+    func authorize<Request: HTTPRequest>(_ request: Request) async throws -> any HTTPRequest<Request.Body, Request.Response>
+
     /// Extracts authorization credentials from the provided ``AuthorizationRequest`` and associated ``HTTPResponse`` where possible, and stores them for later use in ``authorize(_:)``.
     /// - Parameters:
     ///   - authorizationResponse: A ``HTTPResponse``, potentially containing authorization credentials that can be extracted.
@@ -30,5 +30,5 @@ public protocol HTTPAuthorizationProvider<AuthorizationRequest>  {
     func handle(
         authorizationResponse: HTTPResponse<AuthorizationRequest.Response>,
         from request: AuthorizationRequest
-    )    
+    ) async
 }

@@ -17,8 +17,8 @@ public protocol HTTPReauthorizationProvider<AuthorizationRequest, Reauthorizatio
     ///
     /// This function is called by an ``AuthorizingHTTPController`` when its ``ReauthorizingHTTPController/delegate`` prompts it to reauthorize, or if no delegat is provided, when an ``HTTPStatusCode/unauthorized`` status code is returned by a request. If the credentials to create a request are not available, then return `nil` in order to abandon the reauthorization process.
     /// - Returns: A request that can be used to reauthorize the app with an API, or `nil` if the request cannot be constructed.
-    func makeReauthorizationRequest() -> ReauthorizationRequest?
-        
+    func makeReauthorizationRequest() async -> ReauthorizationRequest?
+
     /// Extracts authorization credentials from the provided ``ReauthorizationRequest`` and associated ``HTTPResponse`` where possible, and stores them for later use in ``HTTPAuthorizationProvider/authorize(_:)`` and ``makeReauthorizationRequest()``.
     /// - Parameters:
     ///   - reauthorizationResponse: A ``HTTPResponse``, potentially containing authorization credentials that can be extracted.
@@ -26,5 +26,5 @@ public protocol HTTPReauthorizationProvider<AuthorizationRequest, Reauthorizatio
     func handle(
         reauthorizationResponse: HTTPResponse<ReauthorizationRequest.Response>,
         from request: ReauthorizationRequest
-    )
+    ) async
 }
