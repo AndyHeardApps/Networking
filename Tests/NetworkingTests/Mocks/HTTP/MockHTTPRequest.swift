@@ -1,7 +1,7 @@
 import Foundation
 @testable import Networking
 
-struct MockHTTPRequest<Body, Response>: HTTPRequest {
+struct MockHTTPRequest<Body: Sendable, Response: Sendable>: HTTPRequest, @unchecked Sendable {
 
     // MARK: - Properties
     let httpMethod: HTTPMethod
@@ -12,7 +12,7 @@ struct MockHTTPRequest<Body, Response>: HTTPRequest {
     let requiresAuthorization: Bool
     private let _encode: (Body, inout [String : String], DataCoders) throws -> Data
     private let _decode: (Data, HTTPStatusCode, DataCoders) throws -> Response
-    
+
     // MARK: - Initialiser
     init(
         httpMethod: HTTPMethod = .get,
@@ -64,7 +64,7 @@ where Response == Void,
 
 // MARK: - Coding
 extension MockHTTPRequest {
-    
+
     func encode(body: Body, headers: inout [String : String], using coders: DataCoders) throws -> Data {
         
         try _encode(body, &headers, coders)

@@ -28,10 +28,10 @@ extension MockWebSocketSession: WebSocketSession {
 
 @available(iOS 17.0, *)
 extension MockWebSocketSession {
-    final class Interface: WebSocketInterface {
+    final class Interface: WebSocketInterface, @unchecked Sendable {
         
         // Properties
-        private var outputPublisher: PassthroughSubject<Data, Error> = .init()
+        private let outputPublisher: PassthroughSubject<Data, Error> = .init()
         private(set) var sentMessages: [Message] = []
         private(set) var interfaceState: WebSocketInterfaceState = .idle
         var interfaceCloseCode: WebSocketInterfaceCloseCode?

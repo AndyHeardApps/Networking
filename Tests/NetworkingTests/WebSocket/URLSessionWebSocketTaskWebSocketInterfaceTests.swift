@@ -5,12 +5,25 @@ import XCTest
 final class URLSessionWebSocketTaskWebSocketInterfaceTests: XCTestCase {
     
     // MARK: - Properties
-    private let server: MockWebSocketServer = {
-        let server = MockWebSocketServer()
-        try! server.start()
-        return server
-    }()
+    private var server: MockWebSocketServer!
     private let url = URL(string: "ws://localhost:12345")!
+}
+
+// MARK: - Setup
+extension URLSessionWebSocketTaskWebSocketInterfaceTests {
+
+    override func setUp() async throws {
+        try await super.setUp()
+
+        self.server = MockWebSocketServer()
+        try await  server.start()
+    }
+
+    override func tearDown() {
+        super.tearDown()
+
+        self.server = nil
+    }
 }
 
 // MARK: - Tests

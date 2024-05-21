@@ -9,7 +9,7 @@ import Foundation
 /// A ``WebSocketRequest`` only defines ``pathComponents`` and ``queryItems`` and not a full `URL`. This is so that a `URL` can be constructed against some base `URL`, enabling the same request to be submitted against multiple environments, and to remove the opportunity to build a `URL` "stringily".
 ///
 /// Aim to keep any logic that is needed to construct the request in the initialisers.
-public protocol WebSocketRequest<Input, Output> {
+public protocol WebSocketRequest<Input, Output>: Sendable {
 
     /// The type that this request can send to the opened web socket.
     associatedtype Input

@@ -1,5 +1,5 @@
 /// Defines a list of close codes that a web socket interface can use.
-public enum WebSocketInterfaceCloseCode {
+public enum WebSocketInterfaceCloseCode: Sendable {
 
     // MARK: - Cases
     case invalid

@@ -7,15 +7,15 @@ struct MockWebSocketRequest: WebSocketRequest {
     let pathComponents: [String]
     let headers: [String : String]?
     let queryItems: [String : String]?
-    private let _encode: (Input, DataCoders) throws -> Data
-    private let _decode: (Data, DataCoders) throws -> Output
+    private let _encode: @Sendable (Input, DataCoders) throws -> Data
+    private let _decode: @Sendable (Data, DataCoders) throws -> Output
 
     init(
         pathComponents: [String] = ["path1", "path2"],
         headers: [String : String]? = ["header1" : "headerValue1"],
         queryItems: [String : String]? = ["query1" : "queryValue1"],
-        encode: @escaping (Input, DataCoders) throws -> Data,
-        decode: @escaping (Data, DataCoders) throws -> Output
+        encode: @Sendable @escaping (Input, DataCoders) throws -> Data,
+        decode: @Sendable @escaping (Data, DataCoders) throws -> Output
     ) {
         self.pathComponents = pathComponents
         self.headers = headers

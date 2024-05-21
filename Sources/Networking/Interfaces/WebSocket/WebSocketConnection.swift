@@ -3,7 +3,7 @@ import Foundation
 /// Defines an interface for a connection to a web socket.
 /// 
 /// The socket can be connected using the ``open()`` function and closed with the ``close()`` function only once, but while open (``isConnected`` is `true`) , values can be sent with the ``send(_:)`` function and received by listening to the ``output-swift.property``.
-public protocol WebSocketConnection<Input, Output> {
+public protocol WebSocketConnection<Input, Output>: Sendable {
     
     /// The type that this web socket connection sends.
     associatedtype Input

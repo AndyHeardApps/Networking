@@ -1,7 +1,7 @@
 import Foundation
 
 /// An interface that can be used to open a connection to the web socket, send and recieve raw `Data`, send `ping` messages, and close the connection.
-public protocol WebSocketInterface {
+public protocol WebSocketInterface: Sendable {
     
     /// A sequence emitting the messages recieved from the web socket.
     var output: AsyncThrowingStream<Data, Error> { get }

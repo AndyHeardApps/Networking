@@ -34,6 +34,7 @@ extension URLSessionHTTPSessionTests {
     final class MockURLProtocol: URLProtocol {
         
         // Properties
+        @MainActor
         static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data?))?
         
         // URL protocol
@@ -67,6 +68,7 @@ extension URLSessionHTTPSessionTests {
             return request
         }
         
+        @MainActor
         override func startLoading() {
             
             guard let handler = MockURLProtocol.requestHandler else {
@@ -97,6 +99,7 @@ extension URLSessionHTTPSessionTests {
 // MARK: - Tests
 extension URLSessionHTTPSessionTests {
     
+    @MainActor
     func test_submitRequest_willCorrectlyCreateURLRequest_andSubmitIt() async throws {
         
         let httpMethods: [HTTPMethod : String] = [
