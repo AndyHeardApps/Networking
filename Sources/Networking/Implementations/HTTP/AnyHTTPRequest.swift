@@ -3,8 +3,8 @@ import Foundation
 /// A type erased ``HTTPRequest``.
 ///
 /// **Note:** This is no longer widely used since the introduction of existential types in Swift.
-public struct AnyHTTPRequest<Body, Response>: HTTPRequest {
-    
+public struct AnyHTTPRequest<Body: Sendable, Response: Sendable>: HTTPRequest {
+
     // MARK: - Properties
     public let httpMethod: HTTPMethod
     public let pathComponents: [String]

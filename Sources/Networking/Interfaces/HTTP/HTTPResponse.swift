@@ -29,3 +29,5 @@ public struct HTTPResponse<Content> {
         self.headers = headers
     }
 }
+
+extension HTTPResponse: @unchecked Sendable where Content: Sendable {}

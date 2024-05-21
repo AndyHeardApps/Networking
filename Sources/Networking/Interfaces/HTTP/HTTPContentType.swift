@@ -1,6 +1,6 @@
 
 /// Defines types expressible in the `Content-Type` HTTP header.
-public struct HTTPContentType: Hashable, ExpressibleByStringLiteral {
+public struct HTTPContentType: Hashable, ExpressibleByStringLiteral, Sendable {
     
     // MARK: - Properties
     let name: String

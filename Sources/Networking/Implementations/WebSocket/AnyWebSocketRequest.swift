@@ -9,16 +9,16 @@ public struct AnyWebSocketRequest<Input, Output>: WebSocketRequest {
     public let pathComponents: [String]
     public let headers: [String : String]?
     public let queryItems: [String : String]?
-    private let _encode: (Input, DataCoders) throws -> Data
-    private let _decode: (Data, DataCoders) throws -> Output
-    
+    private let _encode: @Sendable (Input, DataCoders) throws -> Data
+    private let _decode: @Sendable (Data, DataCoders) throws -> Output
+
     // MARK: - Initialisers
     public init(
         pathComponents: [String],
         headers: [String : String]?,
         queryItems: [String : String]?,
-        encode: @escaping (Input, DataCoders) throws -> Data,
-        decode: @escaping (Data, DataCoders) throws -> Output
+        encode: @Sendable @escaping (Input, DataCoders) throws -> Data,
+        decode: @Sendable @escaping (Data, DataCoders) throws -> Output
     ) {
         
         self.pathComponents = pathComponents
@@ -36,8 +36,8 @@ public struct AnyWebSocketRequest<Input, Output>: WebSocketRequest {
         self.pathComponents = request.pathComponents
         self.headers = request.headers
         self.queryItems = request.queryItems
-        self._encode = request.encode
-        self._decode = request.decode
+        self._encode = { try request.encode(input: $0, using: $1) }
+        self._decode = { try request.decode(data: $0, using: $1) }
     }
     
     // MARK: - Coding

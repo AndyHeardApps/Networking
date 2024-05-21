@@ -86,8 +86,8 @@ extension BasicWebSocketController {
         // Properties
         private let interface: WebSocketInterface
         private let dataCoders: DataCoders
-        private let encode: (Input, DataCoders) throws -> Data
-        private let decode: (Data, DataCoders) throws -> Output
+        private let encode: @Sendable (Input, DataCoders) throws -> Data
+        private let decode: @Sendable (Data, DataCoders) throws -> Output
         private let pingTask: Task<Void, Never>?
         
         // Initialiser
@@ -100,9 +100,9 @@ extension BasicWebSocketController {
 
             self.interface = interface
             self.dataCoders = dataCoders
-            self.encode = request.encode
-            self.decode = request.decode
-            
+            self.encode = { try request.encode(input: $0, using: $1) }
+            self.decode = { try request.decode(data: $0, using: $1) }
+
             guard let pingInterval else {
                 self.pingTask = nil
                 return

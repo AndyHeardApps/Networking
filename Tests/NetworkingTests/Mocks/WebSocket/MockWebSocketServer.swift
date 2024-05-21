@@ -1,8 +1,8 @@
 import Foundation
 import Network
 
-final class MockWebSocketServer {
-    
+actor MockWebSocketServer {
+
     // MARK: - Properties
     private var connections: [NWConnection] = []
     private var listener: NWListener?
@@ -11,12 +11,14 @@ final class MockWebSocketServer {
     // MARK: - Deinit
     deinit {
         
-        cancel()
+        connections.forEach { $0.cancel() }
+        connections.removeAll()
+        listener?.cancel()
     }
 }
 
 extension MockWebSocketServer {
-    
+
     private func startReceive(connection: NWConnection) {
         
         connection.receiveMessage { [weak self] content, context, _, error in
@@ -28,14 +30,18 @@ extension MockWebSocketServer {
             
             if let content, let context {
                 print("Connection did receive content, count: \(content.count)")
-                self?.send(
-                    data: content,
-                    to: connection,
-                    with: context
-                )
+                Task { [weak self] in
+                    await self?.send(
+                        data: content,
+                        to: connection,
+                        with: context
+                    )
+                }
             }
             
-            self?.startReceive(connection: connection)
+            Task { [weak self] in
+                await self?.startReceive(connection: connection)
+            }
         }
     }
     
@@ -88,21 +94,29 @@ extension MockWebSocketServer {
         listener.newConnectionHandler = { [weak self, dispatchQueue] connection in
             
             print("listener did accept connection")
-            self?.connections.append(connection)
-            
+            Task { [weak self] in
+                await self?.append(connection)
+            }
+
             connection.stateUpdateHandler = { newState in
                 print("connection state did change, new: \(newState)")
             }
             
             connection.start(queue: dispatchQueue)
             
-            self?.startReceive(connection: connection)
+            Task { [weak self] in
+                await self?.startReceive(connection: connection)
+            }
         }
         listener.start(queue: dispatchQueue)
 
         self.listener = listener
     }
-    
+
+    private func append(_ connection: NWConnection) {
+        self.connections.append(connection)
+    }
+
     func cancel() {
         
         connections.forEach { $0.cancel() }

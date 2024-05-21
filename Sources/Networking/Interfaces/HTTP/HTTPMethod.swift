@@ -1,6 +1,6 @@
 
 /// An `enum` with cases corresponding to each of the standard HTTPMethods.
-public enum HTTPMethod {
+public enum HTTPMethod: Sendable {
     
     // MARK: - Cases
     

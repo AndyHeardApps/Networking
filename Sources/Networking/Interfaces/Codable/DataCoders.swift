@@ -4,8 +4,8 @@ import Foundation
 ///
 /// Each ``HTTPContentType`` can have one encoder and one decoder registered. The coders can be fetched during ``HTTPRequest/encode(body:headers:using:)-7qe3v``, and ``HTTPRequest/decode(data:statusCode:using:)`` to allow shared coders to be used across all requests.
 /// The coders being used can be updated for a specific ``HTTPContentType`` using the ``DataCoders/set(_:for:)-63yj2`` and ``DataCoders/set(_:for:)-3sjye`` functions, and then fetched using the ``DataCoders/requireEncoder(for:)`` and ``DataCoders/requireDecoder(for:)`` functions.
-public struct DataCoders {
-    
+public struct DataCoders: Sendable {
+
     // MARK: - Static properties
     
     /// The default ``DataCoders``, containing only `JSONEncoder` and `JSONDecoder` for ``HTTPContentType/json``.

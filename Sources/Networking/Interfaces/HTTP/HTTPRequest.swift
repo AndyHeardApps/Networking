@@ -12,10 +12,10 @@ import Foundation
 public protocol HTTPRequest<Body, Response> {
 
     /// The body type of the request.
-    associatedtype Body = Never
-    
+    associatedtype Body: Sendable = Never
+
     /// The response type that this request returns.
-    associatedtype Response = Void
+    associatedtype Response: Sendable = Void
 
     // MARK: - Properties
     
