@@ -30,13 +30,13 @@ public protocol WebSocketRequest<Input, Output>: Sendable {
 
     // MARK: - Functions
     
-    /// Encodes ``Input`` instances in to `Data`. This is called by a ``WebSocketController``.
+    /// Encodes <doc:/documentation/Networking/WebSocketRequest/Input> instances in to `Data`. This is called by a ``WebSocketController``.
     ///
-    /// The default implementation (if the ``Input`` conforms to `Encodable`) encodes the `input` to JSON.
+    /// The default implementation (if the <doc:/documentation/Networking/WebSocketRequest/Input> conforms to `Encodable`) encodes the `input` to JSON.
     ///
     /// - Parameters:
-    ///   - input: The ``Input`` to encode to `Data`.
-    ///   - coders: A collection of ``DataCoders`` to be used to encode the provided ``Input`` instance.
+    ///   - input: The <doc:/documentation/Networking/WebSocketRequest/Input> to encode to `Data`.
+    ///   - coders: A collection of ``DataCoders`` to be used to encode the provided <doc:/documentation/Networking/WebSocketRequest/Input> instance.
     /// - Returns: A data representation of the `input`.
     /// - Throws: Any errors that occured during encoding. This is most likely to be an `EncodingError` or due to a ``DataEncoder`` not being available for a specific ``HTTPContentType``.
     func encode(
@@ -44,14 +44,14 @@ public protocol WebSocketRequest<Input, Output>: Sendable {
         using coders: DataCoders
     ) throws -> Data
     
-    /// Decodes ``Output`` instances from data. This is called by a ``WebSocketController``.
+    /// Decodes <doc:/documentation/Networking/WebSocketRequest/Output> instances from data. This is called by a ``WebSocketController``.
     ///
-    /// The default implementation (if the ``Output`` conforms to `Decodable`) treats the `data` as JSON and attempts to decode it into an ``Output`` instance.
+    /// The default implementation (if the <doc:/documentation/Networking/WebSocketRequest/Output> conforms to `Decodable`) treats the `data` as JSON and attempts to decode it into an <doc:/documentation/Networking/WebSocketRequest/Output> instance.
     ///
     /// - Parameters:
-    ///   - data: The `Data` to attempt to convert into some ``Output``.
-    ///   - coders: A collection of ``DataCoders`` to be used to decode the provided `Data` into some ``Output`` instance.
-    /// - Returns: An ``Output`` decoded from the `data`.
+    ///   - data: The `Data` to attempt to convert into some <doc:/documentation/Networking/WebSocketRequest/Output>.
+    ///   - coders: A collection of ``DataCoders`` to be used to decode the provided `Data` into some <doc:/documentation/Networking/WebSocketRequest/Output> instance.
+    /// - Returns: An <doc:/documentation/Networking/WebSocketRequest/Output> decoded from the `data`.
     /// - Throws: Any errors that occured during decoding. This is most likely to be a `DecodingError` or due to a ``DataDecoder`` not being available for a specific ``HTTPContentType``.
     func decode(
         data: Data,
