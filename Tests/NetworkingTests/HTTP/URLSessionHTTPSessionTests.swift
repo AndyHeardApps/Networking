@@ -1,30 +1,23 @@
-import XCTest
+import Foundation
+import Testing
 @testable import Networking
 
-final class URLSessionHTTPSessionTests: XCTestCase {
-    
-    // MARK: - Properties
-    private var baseURL: URL!
-    private var urlSession: URLSession!
-}
+@Suite(
+    "URLSession HTTPSession",
+    .tags(.http)
+)
+struct URLSessionHTTPSessionTests {
 
-// MARK: - Setup
-extension URLSessionHTTPSessionTests {
-    
-    override func setUp() {
-        super.setUp()
-        
-        self.baseURL = URL(string: "https://test.domain.com")
+    // MARK: - Properties
+    private let baseURL = URL(string: "https://test.domain.com")!
+    private let urlSession: URLSession
+
+    // MARK: - Initializer
+    init() {
+
         let configuration = URLSessionConfiguration.default
         configuration.protocolClasses = [MockURLProtocol.self]
         self.urlSession = URLSession(configuration: configuration)
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        
-        self.baseURL = nil
-        self.urlSession = nil
     }
 }
 
@@ -34,9 +27,8 @@ extension URLSessionHTTPSessionTests {
     final class MockURLProtocol: URLProtocol {
         
         // Properties
-        @MainActor
-        static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data?))?
-        
+        nonisolated(unsafe) static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data?))?
+
         // URL protocol
         override class func canInit(with request: URLRequest) -> Bool {
             true
@@ -68,7 +60,6 @@ extension URLSessionHTTPSessionTests {
             return request
         }
         
-        @MainActor
         override func startLoading() {
             
             guard let handler = MockURLProtocol.requestHandler else {
@@ -99,48 +90,46 @@ extension URLSessionHTTPSessionTests {
 // MARK: - Tests
 extension URLSessionHTTPSessionTests {
     
-    @MainActor
-    func test_submitRequest_willCorrectlyCreateURLRequest_andSubmitIt() async throws {
-        
-        let httpMethods: [HTTPMethod : String] = [
-            .get : "GET",
-            .head : "HEAD",
-            .post : "POST",
-            .put : "PUT",
-            .delete : "DELETE",
-            .connect : "CONNECT",
-            .options : "OPTIONS",
-            .trace : "TRACE",
-            .patch : "PATCH"
+    @Test(
+        "submitRequest creates and submits correct URLRequest",
+        arguments: [
+            HTTPMethod.get : "GET",
+            HTTPMethod.head : "HEAD",
+            HTTPMethod.post : "POST",
+            HTTPMethod.put : "PUT",
+            HTTPMethod.delete : "DELETE",
+            HTTPMethod.connect : "CONNECT",
+            HTTPMethod.options : "OPTIONS",
+            HTTPMethod.trace : "TRACE",
+            HTTPMethod.patch : "PATCH"
         ]
-        
-        for (httpMethod, httpMethodString) in httpMethods {
-            
-            var receivedURLRequest: URLRequest?
-            MockURLProtocol.requestHandler = { urlRequest in
-                receivedURLRequest = urlRequest
-                return (HTTPURLResponse(), nil)
-            }
-            
-            let request = MockHTTPRequest(
-                httpMethod: httpMethod,
-                body: Data(UUID().uuidString.utf8)
-            )
-            _ = try await urlSession.submit(request: request, to: baseURL)
-                    
-            let expectedURLString = baseURL.absoluteString
-                + "/"
-                + request.pathComponents.joined(separator: "/")
-                + "?"
-                + request.queryItems!.map { "\($0)=\($1)" }.joined(separator: "/")
-            var expectedHeaders = request.headers
-            expectedHeaders?["Content-Length"] = "36"
-            
-            XCTAssertNotNil(receivedURLRequest)
-            XCTAssertEqual(receivedURLRequest?.url?.absoluteString, expectedURLString)
-            XCTAssertEqual(receivedURLRequest?.httpMethod, httpMethodString)
-            XCTAssertEqual(receivedURLRequest?.httpBody, request.body)
-            XCTAssertEqual(receivedURLRequest?.allHTTPHeaderFields, expectedHeaders)
+    )
+    func submitRequestCreatesAndSubmitsCorrectURLRequest(httpMethod: HTTPMethod, httpMethodString: String) async throws {
+
+        var receivedURLRequest: URLRequest?
+        MockURLProtocol.requestHandler = { urlRequest in
+            receivedURLRequest = urlRequest
+            return (HTTPURLResponse(), nil)
         }
+
+        let request = MockHTTPRequest(
+            httpMethod: httpMethod,
+            body: Data(UUID().uuidString.utf8)
+        )
+        _ = try await urlSession.submit(request: request, to: baseURL)
+
+        let expectedURLString = baseURL.absoluteString
+        + "/"
+        + request.pathComponents.joined(separator: "/")
+        + "?"
+        + request.queryItems!.map { "\($0)=\($1)" }.joined(separator: "/")
+        var expectedHeaders = request.headers
+        expectedHeaders?["Content-Length"] = "36"
+
+        #expect(receivedURLRequest != nil)
+        #expect(receivedURLRequest?.url?.absoluteString == expectedURLString)
+        #expect(receivedURLRequest?.httpMethod == httpMethodString)
+        #expect(receivedURLRequest?.httpBody == request.body)
+        #expect(receivedURLRequest?.allHTTPHeaderFields == expectedHeaders)
     }
 }

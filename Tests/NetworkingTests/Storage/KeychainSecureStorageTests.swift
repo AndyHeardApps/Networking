@@ -1,45 +1,44 @@
 #if canImport(Security)
-import XCTest
+import Foundation
+import Testing
 @testable import Networking
 
-final class KeychainSecureStorageTests: XCTestCase {
+@Suite(
+    "Keychain secure storage",
+    .tags(.http, .webSocket)
+)
+final class KeychainSecureStorageTests {
 
     // MARK: - Properties
-    private var storage: KeychainSecureStorage!
-}
+    private let storage: KeychainSecureStorage
 
-// MARK: - Setup
-extension KeychainSecureStorageTests {
+    // MARK: - Initializer
+    init() {
 
-    override func setUp() {
-        super.setUp()
-
-        storage = KeychainSecureStorage()
+        self.storage = KeychainSecureStorage()
     }
 
-    override func tearDown() {
-        super.tearDown()
-
+    deinit {
         storage.clear()
-        storage = nil
     }
 }
 
 // MARK: - Tests
 extension KeychainSecureStorageTests {
 
-    func test_storage_willStoreValueAndReadValue_andDeleteValueCorrectly() {
+    @Test("Read, write and delete")
+    func readWriteAndDelete() {
 
         let key = "testKey"
         let value = "testValue"
 
-        XCTAssertNil(storage[key])
+        #expect(storage[key] == nil)
         storage[key] = value
 
-        XCTAssertEqual(storage[key], value)
+        #expect(storage[key] == value)
         storage[key] = nil
 
-        XCTAssertNil(storage[key])
+        #expect(storage[key] == nil)
     }
 }
 #endif

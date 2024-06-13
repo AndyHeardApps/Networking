@@ -1,49 +1,46 @@
-import XCTest
+import Foundation
+import Testing
 @testable import Networking
 
-@available(iOS 17.0, *)
-final class URLSessionWebSocketTaskWebSocketInterfaceTests: XCTestCase {
-    
+@Suite(
+    "URLSessionWebSocketTask WebSocketInterface",
+    .tags(.webSocket)
+)
+struct URLSessionWebSocketTaskWebSocketInterfaceTests {
+
     // MARK: - Properties
-    private var server: MockWebSocketServer!
     private let url = URL(string: "ws://localhost:12345")!
-}
+    private let server: MockWebSocketServer
 
-// MARK: - Setup
-extension URLSessionWebSocketTaskWebSocketInterfaceTests {
-
-    override func setUp() async throws {
-        try await super.setUp()
+    // MARK: - Initializer
+    init() async throws {
 
         self.server = MockWebSocketServer()
-        try await  server.start()
-    }
-
-    override func tearDown() {
-        super.tearDown()
-
-        self.server = nil
+        try await server.start()
     }
 }
 
 // MARK: - Tests
-@available(iOS 17.0, *)
 extension URLSessionWebSocketTaskWebSocketInterfaceTests {
     
-    func test_interfaceState_willReturnCorrectValues() async throws {
-        
+    @Test("interfaceState returns correct values")
+    @available(iOS 17.0, *)
+    func interfaceStateReturnsCorrectValues() async throws {
+
         let task: WebSocketInterface = URLSession.shared.webSocketTask(with: url)
 
-        XCTAssertEqual(task.interfaceState, .idle)
+        #expect(task.interfaceState == .idle)
         task.open()
-        XCTAssertEqual(task.interfaceState, .running)
+        #expect(task.interfaceState == .running)
         task.close(closeCode: .goingAway, reason: nil)
         try await Task.sleep(for: .milliseconds(10))
-        XCTAssertEqual(task.interfaceState, .completed)
+        #expect(task.interfaceState == .completed)
     }
     
-    func test_sendAndReceiveData() async throws {
-        
+    @Test("Send and receive data")
+    @available(iOS 17.0, *)
+    func sendAndReceiveData() async throws {
+
         let task: WebSocketInterface = URLSession.shared.webSocketTask(with: url)
 
         let dataArray = [
@@ -60,13 +57,15 @@ extension URLSessionWebSocketTaskWebSocketInterfaceTests {
         
         var index = 0
         for try await recievedData in task.output.prefix(3) {
-            XCTAssertEqual(recievedData, dataArray[index])
+            #expect(recievedData == dataArray[index])
             index += 1
         }
     }
     
-    func test_taskCancellation_willReportErrorGracefully() async throws {
-        
+    @Test("Task cancellation reports error gracefully")
+    @available(iOS 17.0, *)
+    func taskCancellationReportsErrorGracefully() async throws {
+
         let task: WebSocketInterface = URLSession.shared.webSocketTask(with: url)
         task.open()
         
@@ -74,12 +73,14 @@ extension URLSessionWebSocketTaskWebSocketInterfaceTests {
         task.close(closeCode: .normalClosure, reason: "Going away")
         
         try await Task.sleep(for: .milliseconds(10))
-        XCTAssertNotNil(task.interfaceCloseCode)
-        XCTAssertEqual(task.interfaceCloseReason, "Going away")
+        #expect(task.interfaceCloseCode != nil)
+        #expect(task.interfaceCloseReason == "Going away")
     }
     
-    func test_sendPing() async throws {
-        
+    @Test("Send ping")
+    @available(iOS 17.0, *)
+    func sendPing() async throws {
+
         let task: WebSocketInterface = URLSession.shared.webSocketTask(with: url)
         task.open()
 

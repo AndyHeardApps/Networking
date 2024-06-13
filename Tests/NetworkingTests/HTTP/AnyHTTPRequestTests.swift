@@ -1,13 +1,19 @@
-import XCTest
+import Foundation
+import Testing
 @testable import Networking
 
-final class AnyHTTPRequestTests: XCTestCase {}
+@Suite(
+    "AnyHTTPRequest",
+    .tags(.http)
+)
+struct AnyHTTPRequestTests {}
 
 // MARK: - Tests
 extension AnyHTTPRequestTests {
     
-    func test_initWithParameters_willAssignProperties_andCodingCorrectly() throws {
-        
+    @Test("Memberwise initializer assigns properties and coding correctly")
+    func memberwiseInitializerAssignsPropertiesAndCodingCorrectly() throws {
+
         let body = Data(UUID().uuidString.utf8)
         let request = AnyHTTPRequest(
             httpMethod: .connect,
@@ -24,12 +30,12 @@ extension AnyHTTPRequestTests {
             }
         )
         
-        XCTAssertEqual(request.httpMethod, .connect)
-        XCTAssertEqual(request.pathComponents, ["path1", "path2"])
-        XCTAssertEqual(request.headers, ["header1" : "headerValue1", "header2" : "headerValue2"])
-        XCTAssertEqual(request.queryItems, ["query1" : "queryValue1", "query2" : "queryValue2"])
-        XCTAssertEqual(request.body, body)
-        XCTAssertTrue(request.requiresAuthorization)
+        #expect(request.httpMethod == .connect)
+        #expect(request.pathComponents == ["path1", "path2"])
+        #expect(request.headers == ["header1" : "headerValue1", "header2" : "headerValue2"])
+        #expect(request.queryItems == ["query1" : "queryValue1", "query2" : "queryValue2"])
+        #expect(request.body == body)
+        #expect(request.requiresAuthorization)
 
         var headers: [String : String] = [:]
         let encodedContent = try request.encode(
@@ -38,7 +44,7 @@ extension AnyHTTPRequestTests {
             using: .default
         )
         
-        XCTAssertEqual(encodedContent, Data(body.reversed()))
+        #expect(encodedContent == Data(body.reversed()))
 
         let mockData = Data(UUID().uuidString.utf8)
         let decodedContent = try request.decode(
@@ -47,11 +53,12 @@ extension AnyHTTPRequestTests {
             using: .default
         )
         
-        XCTAssertEqual(decodedContent, mockData + mockData)
+        #expect(decodedContent == mockData + mockData)
     }
     
-    func test_initWithDataBodyParameters_willAssignProperties_andCodingCorrectly() throws {
-        
+    @Test("Memberwise initialize with Data body assigns properties and coding correctly")
+    func memberwiseInitializeWithDataBodyAssignsPropertiesAndCodingCorrectly() throws {
+
         let body = Data(UUID().uuidString.utf8)
         let request = AnyHTTPRequest(
             httpMethod: .connect,
@@ -65,12 +72,12 @@ extension AnyHTTPRequestTests {
             }
         )
         
-        XCTAssertEqual(request.httpMethod, .connect)
-        XCTAssertEqual(request.pathComponents, ["path1", "path2"])
-        XCTAssertEqual(request.headers, ["header1" : "headerValue1", "header2" : "headerValue2"])
-        XCTAssertEqual(request.queryItems, ["query1" : "queryValue1", "query2" : "queryValue2"])
-        XCTAssertEqual(request.body, body)
-        XCTAssertTrue(request.requiresAuthorization)
+        #expect(request.httpMethod == .connect)
+        #expect(request.pathComponents == ["path1", "path2"])
+        #expect(request.headers == ["header1" : "headerValue1", "header2" : "headerValue2"])
+        #expect(request.queryItems == ["query1" : "queryValue1", "query2" : "queryValue2"])
+        #expect(request.body == body)
+        #expect(request.requiresAuthorization)
 
         var headers: [String : String] = [:]
         let encodedContent = try request.encode(
@@ -79,7 +86,7 @@ extension AnyHTTPRequestTests {
             using: .default
         )
         
-        XCTAssertEqual(encodedContent, body)
+        #expect(encodedContent == body)
 
         let mockData = Data(UUID().uuidString.utf8)
         let decodedContent = try request.decode(
@@ -88,11 +95,12 @@ extension AnyHTTPRequestTests {
             using: .default
         )
         
-        XCTAssertEqual(decodedContent, mockData + mockData)
+        #expect(decodedContent == mockData + mockData)
     }
     
-    func test_initWithRequest_willAssignProperties_andCodingCorrectly() throws {
-        
+    @Test("Request initializer assigns properties and coding correctly")
+    func requestInitializerAssignsPropertiesAndCodingCorrectly() throws {
+
         let mockRequest = MockHTTPRequest { body, _, _ in
             Data(body.reversed())
         } decode: { data, _, _ in
@@ -101,62 +109,29 @@ extension AnyHTTPRequestTests {
 
         let anyHTTPRequest = AnyHTTPRequest(mockRequest)
         
-        XCTAssertEqual(anyHTTPRequest.httpMethod, mockRequest.httpMethod)
-        XCTAssertEqual(anyHTTPRequest.pathComponents, mockRequest.pathComponents)
-        XCTAssertEqual(anyHTTPRequest.headers, mockRequest.headers)
-        XCTAssertEqual(anyHTTPRequest.queryItems, mockRequest.queryItems)
-        XCTAssertEqual(anyHTTPRequest.body, mockRequest.body)
-        XCTAssertEqual(anyHTTPRequest.requiresAuthorization, mockRequest.requiresAuthorization)
+        #expect(anyHTTPRequest.httpMethod == mockRequest.httpMethod)
+        #expect(anyHTTPRequest.pathComponents == mockRequest.pathComponents)
+        #expect(anyHTTPRequest.headers == mockRequest.headers)
+        #expect(anyHTTPRequest.queryItems == mockRequest.queryItems)
+        #expect(anyHTTPRequest.body == mockRequest.body)
+        #expect(anyHTTPRequest.requiresAuthorization == mockRequest.requiresAuthorization)
 
         let body = Data(UUID().uuidString.utf8)
         var headers: [String : String] = [:]
         let encodedRequestContent = try mockRequest.encode(body: body, headers: &headers, using: .default)
         let encodedAnyHTTPRequestContent = try anyHTTPRequest.encode(body: body, headers: &headers, using: .default)
         
-        XCTAssertEqual(encodedRequestContent, encodedAnyHTTPRequestContent)
+        #expect(encodedRequestContent == encodedAnyHTTPRequestContent)
         
         let mockData = Data(UUID().uuidString.utf8)
         let decodedRequestContent = try mockRequest.decode(data: mockData, statusCode: .ok, using: .default)
         let decodedAnyHTTPRequestContent = try anyHTTPRequest.decode(data: mockData, statusCode: .ok, using: .default)
 
-        XCTAssertEqual(decodedRequestContent, decodedAnyHTTPRequestContent)
-    }
-    
-    func test_initWithDefaultParameters_willAssignProperties_andCodingCorrectly() throws {
-        
-        struct BasicRequest: HTTPRequest {
-            
-            let httpMethod: HTTPMethod
-            let pathComponents: [String]
-            let body: [String : Int]?
-            
-            func decode(
-                data: Data,
-                statusCode: Networking.HTTPStatusCode,
-                using coders: Networking.DataCoders
-            ) throws {}
-        }
-        
-        let request = BasicRequest(
-            httpMethod: .get,
-            pathComponents: [],
-            body: ["key" : 1]
-        )
-        
-        XCTAssertNil(request.headers)
-        XCTAssertNil(request.queryItems)
-        XCTAssertFalse(request.requiresAuthorization)
-        var headers = request.headers ?? [:]
-        let encodedBody = try request.encode(
-            body: request.body!,
-            headers: &headers,
-            using: .default
-        )
-        XCTAssertEqual(encodedBody, Data("{\"key\":1}".utf8))
-        XCTAssertEqual(headers, ["Content-Type" : "application/json"])
+        #expect(decodedRequestContent == decodedAnyHTTPRequestContent)
     }
 
-    func test_initWithNeverRequest_willAssignProperties_andCodingCorrectly() throws {
+    @Test("Request initializer with Never body assigns properties and coding correctly")
+    func requestInitializerWithNeverBodyAssignsPropertiesAndCodingCorrectly() throws {
 
         struct NeverRequest: HTTPRequest {
 
@@ -176,8 +151,43 @@ extension AnyHTTPRequestTests {
         )
         let request = AnyHTTPRequest(neverRequest)
 
-        XCTAssertNil(request.headers)
-        XCTAssertNil(request.queryItems)
-        XCTAssertFalse(request.requiresAuthorization)
+        #expect(request.headers == nil)
+        #expect(request.queryItems == nil)
+        #expect(request.requiresAuthorization == false)
+    }
+
+    @Test("Default protocol values")
+    func defaultProtocolValues() throws {
+
+        struct BasicRequest: HTTPRequest {
+            
+            let httpMethod: HTTPMethod
+            let pathComponents: [String]
+            let body: [String : Int]?
+            
+            func decode(
+                data: Data,
+                statusCode: Networking.HTTPStatusCode,
+                using coders: Networking.DataCoders
+            ) throws {}
+        }
+        
+        let request = BasicRequest(
+            httpMethod: .get,
+            pathComponents: [],
+            body: ["key" : 1]
+        )
+        
+        #expect(request.headers == nil)
+        #expect(request.queryItems == nil)
+        #expect(request.requiresAuthorization == false)
+        var headers = request.headers ?? [:]
+        let encodedBody = try request.encode(
+            body: request.body!,
+            headers: &headers,
+            using: .default
+        )
+        #expect(encodedBody == Data("{\"key\":1}".utf8))
+        #expect(headers == ["Content-Type" : "application/json"])
     }
 }

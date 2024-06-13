@@ -1,28 +1,22 @@
-import XCTest
+import Foundation
+import Testing
 @testable import Networking
 
-final class OAuthHTTPAuthorizationProviderTests: XCTestCase {
-    
-    // MARK: - Properties
-    private var secureStorage: SecureStorage!
-    private var authorizationProvider: OAuthHTTPAuthorizationProvider<MockAuthorizationRequest, MockReauthorizationRequest>!
-}
+@Suite(
+    "OAuth HTTP authorization provider",
+    .tags(.http)
+)
+struct OAuthHTTPAuthorizationProviderTests {
 
-// MARK: - Setup
-extension OAuthHTTPAuthorizationProviderTests {
-    
-    override func setUp() {
-        super.setUp()
-        
+    // MARK: - Properties
+    private let secureStorage: SecureStorage
+    private let authorizationProvider: OAuthHTTPAuthorizationProvider<MockAuthorizationRequest, MockReauthorizationRequest>
+
+    // MARK: - Initializer
+    init() {
+
         self.secureStorage = MockSecureStorage()
         self.authorizationProvider = OAuthHTTPAuthorizationProvider(storage: secureStorage)
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        
-        self.secureStorage = nil
-        self.authorizationProvider = nil
     }
 }
 
@@ -80,63 +74,68 @@ extension OAuthHTTPAuthorizationProviderTests {
 
 // MARK: - Tests
 extension OAuthHTTPAuthorizationProviderTests {
- 
-    func test_makeReauthorizationRequest_willReturnNil_whenNoRefreshTokenIsAvailable() {
-        
+
+    @Test("makeReauthorizationRequest returns nil when no refresh token is available")
+    func makReauthorizationRequestReturnsNilWhenNoRefreshTokenIsAvailable() {
+
         secureStorage["oauth.refreshToken"] = nil
-        
+
         let reauthorizationRequest = authorizationProvider.makeReauthorizationRequest()
-        
-        XCTAssertNil(reauthorizationRequest)
+
+        #expect(reauthorizationRequest == nil)
     }
-    
-    func test_makeReauthorizationRequest_willReturnCorrectRequest_whenRefreshTokenIsAvailable() {
-        
+
+    @Test("makeReauthorizationRequest returns request when refresh token is available")
+    func makeReauthorizationRequestReturnsRequestWhenRefreshTokenIsAvailable() {
+
         secureStorage["oauth.refreshToken"] = "refreshToken"
-        
+
         let reauthorizationRequest = authorizationProvider.makeReauthorizationRequest()
-        
-        XCTAssertNotNil(reauthorizationRequest)
-        XCTAssertEqual(reauthorizationRequest?.headers, ["TestRefreshToken" : "refreshToken"])
+
+        #expect(reauthorizationRequest != nil)
+        #expect(reauthorizationRequest?.headers == ["TestRefreshToken" : "refreshToken"])
     }
-    
-    func test_handleAuthorizationResponse_willExtractTokensFromResponse_andStoreInSecureStorage() {
-        
-        XCTAssertNil(secureStorage["oauth.accessToken"])
-        XCTAssertNil(secureStorage["oauth.refreshToken"])
+
+    @Test("handleAuthorizationResponse extracts and stores tokens in authorization response")
+    func handleAuthorizationResponseExtractsAndStoresTokensInAuthorizationResponse() {
+
+        #expect(secureStorage["oauth.accessToken"] == nil)
+        #expect(secureStorage["oauth.refreshToken"] == nil)
 
         let authorizationRequest = MockAuthorizationRequest(shouldProvideTokens: true)
-        
+
         let response = HTTPResponse(content: (), statusCode: .ok, headers: [:])
         authorizationProvider.handle(authorizationResponse: response, from: authorizationRequest)
-        
-        XCTAssertEqual(secureStorage["oauth.accessToken"], authorizationRequest.accessToken(from: response))
-        XCTAssertEqual(secureStorage["oauth.refreshToken"], authorizationRequest.refreshToken(from: response))
+
+        #expect(secureStorage["oauth.accessToken"] == authorizationRequest.accessToken(from: response))
+        #expect(secureStorage["oauth.refreshToken"] == authorizationRequest.refreshToken(from: response))
     }
-    
-    func test_handleAuthorizationResponse_willNotOverrideAndRemoveExistingTokensInSecureStorage_whenTokensAreNil() {
-        
+
+    @Test("handleAuthorizationResponse does not overwrite existing tokens with nil")
+    func handleAuthorizationResponseDoesNotOverwriteExistingTokensWithNil() {
+
         let existingAccessToken = "existingAccessToken"
         let existingRefreshToken = "existingRefreshToken"
         secureStorage["oauth.accessToken"] = existingAccessToken
         secureStorage["oauth.refreshToken"] = existingRefreshToken
-        
+
         let authorizationRequest = MockAuthorizationRequest(shouldProvideTokens: false)
-        
+
         let response = HTTPResponse(content: (), statusCode: .ok, headers: [:])
         authorizationProvider.handle(authorizationResponse: response, from: authorizationRequest)
-        
-        XCTAssertNil(authorizationRequest.accessToken(from: response))
-        XCTAssertNil(authorizationRequest.refreshToken(from: response))
-        
-        XCTAssertEqual(secureStorage["oauth.accessToken"], existingAccessToken)
-        XCTAssertEqual(secureStorage["oauth.refreshToken"], existingRefreshToken)
+
+        #expect(authorizationRequest.accessToken(from: response) == nil)
+        #expect(authorizationRequest.refreshToken(from: response) == nil)
+
+        #expect(secureStorage["oauth.accessToken"] == existingAccessToken)
+        #expect(secureStorage["oauth.refreshToken"] == existingRefreshToken)
     }
-    
-    func test_handleReauthorizationResponse_willExtractTokensFromResponse_andStoreInSecureStorage() {
-        
-        XCTAssertNil(secureStorage["oauth.accessToken"])
-        XCTAssertNil(secureStorage["oauth.refreshToken"])
+
+    @Test("handleReauthorizationResponse extracts and stores tokens in authorization response")
+    func handleReauthorizationResponseExtractsAndStoresTokensInAuthorizationResponse() {
+
+        #expect(secureStorage["oauth.accessToken"] == nil)
+        #expect(secureStorage["oauth.refreshToken"] == nil)
 
         var reauthorizationRequest = MockReauthorizationRequest(refreshToken: "")
         reauthorizationRequest.shouldProvideTokens = true
@@ -144,12 +143,13 @@ extension OAuthHTTPAuthorizationProviderTests {
         let response = HTTPResponse(content: (), statusCode: .ok, headers: [:])
         authorizationProvider.handle(reauthorizationResponse: response, from: reauthorizationRequest)
         
-        XCTAssertEqual(secureStorage["oauth.accessToken"], reauthorizationRequest.accessToken(from: response))
-        XCTAssertEqual(secureStorage["oauth.refreshToken"], reauthorizationRequest.refreshToken(from: response))
+        #expect(secureStorage["oauth.accessToken"] == reauthorizationRequest.accessToken(from: response))
+        #expect(secureStorage["oauth.refreshToken"] == reauthorizationRequest.refreshToken(from: response))
     }
     
-    func test_handleReauthorizationResponse_willNotOverrideAndRemoveExistingTokensInSecureStorage_whenTokensAreNil() {
-        
+    @Test("handleReauthorizationResponse does not overwrite existing tokens with nil")
+    func handleReauthorizationResponseDoesNotOverwriteExistingTokensWithNil() {
+
         let existingAccessToken = "existingAccessToken"
         let existingRefreshToken = "existingRefreshToken"
         secureStorage["oauth.accessToken"] = existingAccessToken
@@ -161,90 +161,94 @@ extension OAuthHTTPAuthorizationProviderTests {
         let response = HTTPResponse(content: (), statusCode: .ok, headers: [:])
         authorizationProvider.handle(reauthorizationResponse: response, from: reauthorizationRequest)
         
-        XCTAssertNil(reauthorizationRequest.accessToken(from: response))
-        XCTAssertNil(reauthorizationRequest.refreshToken(from: response))
-        
-        XCTAssertEqual(secureStorage["oauth.accessToken"], existingAccessToken)
-        XCTAssertEqual(secureStorage["oauth.refreshToken"], existingRefreshToken)
+        #expect(reauthorizationRequest.accessToken(from: response) == nil)
+        #expect(reauthorizationRequest.refreshToken(from: response) == nil)
+
+        #expect(secureStorage["oauth.accessToken"] == existingAccessToken)
+        #expect(secureStorage["oauth.refreshToken"] == existingRefreshToken)
     }
     
-    func test_authorizeRequest_willAddAccessTokenToRequestHeaders_whenAccessTokenIsAvailable_andRequestAlreadyHasHeaders() {
-        
+    @Test("authorizeRequest adds access token to existing headers")
+    func authorizeRequestAddsAccessTokenToExistingHeaders() {
+
         let existingAccessToken = "existingAccessToken"
         secureStorage["oauth.accessToken"] = existingAccessToken
         
         let request = MockHTTPRequest(headers: ["header1" : "headerValue1"])
-        XCTAssertNil(request.headers?["Authorization"])
-        
+        #expect(request.headers?["Authorization"] == nil)
+
         let authorizedRequest = authorizationProvider.authorize(request)
         
-        XCTAssertEqual(authorizedRequest.headers?["Authorization"], "Bearer \(existingAccessToken)")
-        XCTAssertEqual(authorizedRequest.httpMethod, request.httpMethod)
-        XCTAssertEqual(authorizedRequest.pathComponents, request.pathComponents)
-        XCTAssertEqual(authorizedRequest.headers?["header1"], "headerValue1")
-        XCTAssertEqual(authorizedRequest.headers?.count, 2)
-        XCTAssertEqual(authorizedRequest.queryItems, request.queryItems)
-        XCTAssertEqual(authorizedRequest.body, request.body)
-        XCTAssertEqual(authorizedRequest.requiresAuthorization, request.requiresAuthorization)
+        #expect(authorizedRequest.headers?["Authorization"] == "Bearer \(existingAccessToken)")
+        #expect(authorizedRequest.httpMethod == request.httpMethod)
+        #expect(authorizedRequest.pathComponents == request.pathComponents)
+        #expect(authorizedRequest.headers?["header1"] == "headerValue1")
+        #expect(authorizedRequest.headers?.count == 2)
+        #expect(authorizedRequest.queryItems == request.queryItems)
+        #expect(authorizedRequest.body == request.body)
+        #expect(authorizedRequest.requiresAuthorization == request.requiresAuthorization)
     }
     
-    func test_authorizeRequest_willAddAccessTokenToRequestHeaders_whenAccessTokenIsAvailable_andRequestHasNilHeaders() {
-        
+    @Test("authorizeRequest adds access token to nil headers")
+    func authorizeRequestAddsAccessTokenToNilHeaders() {
+
         let existingAccessToken = "existingAccessToken"
         secureStorage["oauth.accessToken"] = existingAccessToken
         
         let request = MockHTTPRequest(headers: nil)
-        XCTAssertNil(request.headers?["Authorization"])
-        
+        #expect(request.headers?["Authorization"] == nil)
+
         let authorizedRequest = authorizationProvider.authorize(request)
         
-        XCTAssertEqual(authorizedRequest.headers?["Authorization"], "Bearer \(existingAccessToken)")
-        XCTAssertEqual(authorizedRequest.httpMethod, request.httpMethod)
-        XCTAssertEqual(authorizedRequest.pathComponents, request.pathComponents)
-        XCTAssertEqual(authorizedRequest.headers?.count, 1)
-        XCTAssertEqual(authorizedRequest.queryItems, request.queryItems)
-        XCTAssertEqual(authorizedRequest.body, request.body)
-        XCTAssertEqual(authorizedRequest.requiresAuthorization, request.requiresAuthorization)
+        #expect(authorizedRequest.headers?["Authorization"] == "Bearer \(existingAccessToken)")
+        #expect(authorizedRequest.httpMethod == request.httpMethod)
+        #expect(authorizedRequest.pathComponents == request.pathComponents)
+        #expect(authorizedRequest.headers?.count == 1)
+        #expect(authorizedRequest.queryItems == request.queryItems)
+        #expect(authorizedRequest.body == request.body)
+        #expect(authorizedRequest.requiresAuthorization == request.requiresAuthorization)
     }
-    
-    func test_authorizeRequest_willReturnUnmodifiedRequest_wehnAccessTokenIsNotAvailable() {
-        
-        XCTAssertNil(secureStorage["oauth.accessToken"])
-        
+
+    @Test("authorizeRequest returns original request when token not available")
+    func authorizeRequestReturnsOriginalRequestWhenTokenNotAvailable() {
+
+        #expect(secureStorage["oauth.accessToken"] == nil)
+
         let request = MockHTTPRequest()
         let authorizedRequest = authorizationProvider.authorize(request)
 
-        XCTAssertEqual(authorizedRequest.httpMethod, request.httpMethod)
-        XCTAssertEqual(authorizedRequest.pathComponents, request.pathComponents)
-        XCTAssertEqual(authorizedRequest.headers, request.headers)
-        XCTAssertEqual(authorizedRequest.queryItems, request.queryItems)
-        XCTAssertEqual(authorizedRequest.body, request.body)
-        XCTAssertEqual(authorizedRequest.requiresAuthorization, request.requiresAuthorization)
+        #expect(authorizedRequest.httpMethod == request.httpMethod)
+        #expect(authorizedRequest.pathComponents == request.pathComponents)
+        #expect(authorizedRequest.headers == request.headers)
+        #expect(authorizedRequest.queryItems == request.queryItems)
+        #expect(authorizedRequest.body == request.body)
+        #expect(authorizedRequest.requiresAuthorization == request.requiresAuthorization)
     }
     
-    func test_authorizeRequest_willReturnUnmodifiedRequest_wehnRequestDoesNotRequireAuthorizationIsNotAvailable() {
+    @Test("authorizeRequest returns original request when authorization is not required")
+    func authorizeRequestReturnsOriginalRequestWhenAuthorizationIsNotRequired() {
         
         let existingAccessToken = "existingAccessToken"
         secureStorage["oauth.accessToken"] = existingAccessToken
 
-        XCTAssertNotNil(secureStorage["oauth.accessToken"])
+        #expect(secureStorage["oauth.accessToken"] != nil)
         
         let request = MockHTTPRequest(requiresAuthorization: false)
         let authorizedRequest = authorizationProvider.authorize(request)
 
-        XCTAssertEqual(authorizedRequest.httpMethod, request.httpMethod)
-        XCTAssertEqual(authorizedRequest.pathComponents, request.pathComponents)
-        XCTAssertEqual(authorizedRequest.headers, request.headers)
-        XCTAssertEqual(authorizedRequest.queryItems, request.queryItems)
-        XCTAssertEqual(authorizedRequest.body, request.body)
-        XCTAssertEqual(authorizedRequest.requiresAuthorization, request.requiresAuthorization)
+        #expect(authorizedRequest.httpMethod == request.httpMethod)
+        #expect(authorizedRequest.pathComponents == request.pathComponents)
+        #expect(authorizedRequest.headers == request.headers)
+        #expect(authorizedRequest.queryItems == request.queryItems)
+        #expect(authorizedRequest.body == request.body)
+        #expect(authorizedRequest.requiresAuthorization == request.requiresAuthorization)
     }
 
-    
-    func test_init_willUseKeychainBackedStorage() {
+    @Test("Default initializer uses Keychain backed storage")
+    func defaultInitializerUsesKeychainBackedStorage() {
+
+        let authorizationProvider = OAuthHTTPAuthorizationProvider<MockAuthorizationRequest, MockReauthorizationRequest>()
         
-        authorizationProvider = OAuthHTTPAuthorizationProvider()
-        
-        XCTAssertTrue(authorizationProvider.storage is KeychainSecureStorage)
+        #expect(authorizationProvider.storage is KeychainSecureStorage)
     }
 }
