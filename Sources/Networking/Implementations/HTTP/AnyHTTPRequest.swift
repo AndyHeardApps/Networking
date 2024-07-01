@@ -10,6 +10,7 @@ public struct AnyHTTPRequest<Body: Sendable, Response: Sendable>: HTTPRequest {
     public let pathComponents: [String]
     public let headers: [String : String]?
     public let queryItems: [String : String]?
+    public let timeoutInterval: TimeInterval?
     private let _body: () -> Body
     public var body: Body {
         _body()
@@ -24,6 +25,7 @@ public struct AnyHTTPRequest<Body: Sendable, Response: Sendable>: HTTPRequest {
         pathComponents: [String],
         headers: [String : String]?,
         queryItems: [String : String]?,
+        timeoutInterval: TimeInterval?,
         body: @autoclosure @escaping () -> Body,
         requiresAuthorization: Bool,
         encode: @escaping (Body, inout [String : String], DataCoders) throws -> Data,
@@ -34,6 +36,7 @@ public struct AnyHTTPRequest<Body: Sendable, Response: Sendable>: HTTPRequest {
         self.pathComponents = pathComponents
         self.headers = headers
         self.queryItems = queryItems
+        self.timeoutInterval = timeoutInterval
         self._body = body
         self.requiresAuthorization = requiresAuthorization
         self._encode = encode
@@ -49,6 +52,7 @@ public struct AnyHTTPRequest<Body: Sendable, Response: Sendable>: HTTPRequest {
         self.pathComponents = request.pathComponents
         self.headers = request.headers
         self.queryItems = request.queryItems
+        self.timeoutInterval = request.timeoutInterval
         self._body = { request.body }
         self.requiresAuthorization = request.requiresAuthorization
         self._encode = request.encode
@@ -85,6 +89,7 @@ extension AnyHTTPRequest where Body == Data {
         pathComponents: [String],
         headers: [String : String]?,
         queryItems: [String : String]?,
+        timeoutInterval: TimeInterval?,
         body: Data,
         requiresAuthorization: Bool,
         decode: @escaping (Data, HTTPStatusCode, DataCoders) throws -> Response
@@ -94,6 +99,7 @@ extension AnyHTTPRequest where Body == Data {
         self.pathComponents = pathComponents
         self.headers = headers
         self.queryItems = queryItems
+        self.timeoutInterval = timeoutInterval
         self._body = { body }
         self.requiresAuthorization = requiresAuthorization
         self._encode = { body, _, _ in

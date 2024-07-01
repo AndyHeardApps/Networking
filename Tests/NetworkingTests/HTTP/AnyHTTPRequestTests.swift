@@ -14,6 +14,7 @@ extension AnyHTTPRequestTests {
             pathComponents: ["path1", "path2"],
             headers: ["header1" : "headerValue1", "header2" : "headerValue2"],
             queryItems: ["query1" : "queryValue1", "query2" : "queryValue2"],
+            timeoutInterval: 100,
             body: body,
             requiresAuthorization: true,
             encode: { body, headers, coders in
@@ -28,6 +29,7 @@ extension AnyHTTPRequestTests {
         XCTAssertEqual(request.pathComponents, ["path1", "path2"])
         XCTAssertEqual(request.headers, ["header1" : "headerValue1", "header2" : "headerValue2"])
         XCTAssertEqual(request.queryItems, ["query1" : "queryValue1", "query2" : "queryValue2"])
+        XCTAssertEqual(request.timeoutInterval, 100)
         XCTAssertEqual(request.body, body)
         XCTAssertTrue(request.requiresAuthorization)
 
@@ -58,6 +60,7 @@ extension AnyHTTPRequestTests {
             pathComponents: ["path1", "path2"],
             headers: ["header1" : "headerValue1", "header2" : "headerValue2"],
             queryItems: ["query1" : "queryValue1", "query2" : "queryValue2"],
+            timeoutInterval: 100,
             body: body,
             requiresAuthorization: true,
             decode: { data, statusCode, coders in
@@ -69,6 +72,7 @@ extension AnyHTTPRequestTests {
         XCTAssertEqual(request.pathComponents, ["path1", "path2"])
         XCTAssertEqual(request.headers, ["header1" : "headerValue1", "header2" : "headerValue2"])
         XCTAssertEqual(request.queryItems, ["query1" : "queryValue1", "query2" : "queryValue2"])
+        XCTAssertEqual(request.timeoutInterval, 100)
         XCTAssertEqual(request.body, body)
         XCTAssertTrue(request.requiresAuthorization)
 
