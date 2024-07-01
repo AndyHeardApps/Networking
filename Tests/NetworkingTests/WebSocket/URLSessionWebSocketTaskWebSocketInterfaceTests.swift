@@ -10,6 +10,7 @@ final class URLSessionWebSocketTaskWebSocketInterfaceTests: XCTestCase {
 }
 
 // MARK: - Setup
+@available(iOS 17.0, *)
 extension URLSessionWebSocketTaskWebSocketInterfaceTests {
 
     override func setUp() async throws {
