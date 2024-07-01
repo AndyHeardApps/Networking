@@ -81,6 +81,7 @@ extension HTTPControllerDelegate {
             pathComponents: request.pathComponents,
             headers: headers,
             queryItems: request.queryItems,
+            timeoutInterval: request.timeoutInterval,
             body: bodyData,
             requiresAuthorization: request.requiresAuthorization,
             decode: request.decode
