@@ -8,6 +8,7 @@ struct MockHTTPRequest<Body: Sendable, Response: Sendable>: HTTPRequest, @unchec
     let pathComponents: [String]
     let headers: [String : String]?
     let queryItems: [String : String]?
+    let timeoutInterval: TimeInterval?
     let body: Body
     let requiresAuthorization: Bool
     private let _encode: (Body, inout [String : String], DataCoders) throws -> Data
@@ -19,6 +20,7 @@ struct MockHTTPRequest<Body: Sendable, Response: Sendable>: HTTPRequest, @unchec
         pathComponents: [String] = ["path1", "path2"],
         headers: [String : String]? = ["header1" : "headerValue1"],
         queryItems: [String : String]? = ["query1" : "queryValue1"],
+        timeoutInterval: TimeInterval? = nil,
         body: Body = Data(UUID().uuidString.utf8),
         requiresAuthorization: Bool = true,
         encode: @escaping (Body, inout [String : String], DataCoders) throws -> Data,
@@ -29,6 +31,7 @@ struct MockHTTPRequest<Body: Sendable, Response: Sendable>: HTTPRequest, @unchec
         self.pathComponents = pathComponents
         self.headers = headers
         self.queryItems = queryItems
+        self.timeoutInterval = timeoutInterval
         self.body = body
         self.requiresAuthorization = requiresAuthorization
         self._encode = encode
@@ -47,6 +50,7 @@ where Response == Void,
         pathComponents: [String] = ["path1", "path2"],
         headers: [String : String]? = ["header1" : "headerValue1"],
         queryItems: [String : String]? = ["query1" : "queryValue1"],
+        timeoutInterval: TimeInterval? = nil,
         body: Data = Data(UUID().uuidString.utf8),
         requiresAuthorization: Bool = true
     ) {
@@ -55,6 +59,7 @@ where Response == Void,
         self.pathComponents = pathComponents
         self.headers = headers
         self.queryItems = queryItems
+        self.timeoutInterval = timeoutInterval
         self.body = body
         self.requiresAuthorization = requiresAuthorization
         self._encode = { body, _, _ in body }

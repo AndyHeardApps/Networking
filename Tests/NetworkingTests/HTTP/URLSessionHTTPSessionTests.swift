@@ -135,12 +135,52 @@ extension URLSessionHTTPSessionTests {
                 + request.queryItems!.map { "\($0)=\($1)" }.joined(separator: "/")
             var expectedHeaders = request.headers
             expectedHeaders?["Content-Length"] = "36"
-            
+
             XCTAssertNotNil(receivedURLRequest)
             XCTAssertEqual(receivedURLRequest?.url?.absoluteString, expectedURLString)
             XCTAssertEqual(receivedURLRequest?.httpMethod, httpMethodString)
             XCTAssertEqual(receivedURLRequest?.httpBody, request.body)
+            let expectedTimeout = URLRequest(url: baseURL).timeoutInterval
+            XCTAssertEqual(receivedURLRequest?.timeoutInterval, expectedTimeout)
             XCTAssertEqual(receivedURLRequest?.allHTTPHeaderFields, expectedHeaders)
         }
+    }
+
+    @MainActor
+    func test_submitRequest_willCorrectlySetTimeoutInterval_ifPresent() async throws {
+        var receivedURLRequest: URLRequest?
+        MockURLProtocol.requestHandler = { urlRequest in
+            receivedURLRequest = urlRequest
+            return (HTTPURLResponse(), nil)
+        }
+
+        let request = MockHTTPRequest(
+            httpMethod: .post,
+            timeoutInterval: 180,
+            body: Data(UUID().uuidString.utf8)
+        )
+        _ = try await urlSession.submit(request: request, to: baseURL)
+
+        XCTAssertNotNil(receivedURLRequest)
+        XCTAssertEqual(receivedURLRequest?.timeoutInterval, 180)
+    }
+
+    @MainActor
+    func test_submitRequest_willUseDefaultTimeoutInterval_ifNotPresent() async throws {
+        var receivedURLRequest: URLRequest?
+        MockURLProtocol.requestHandler = { urlRequest in
+            receivedURLRequest = urlRequest
+            return (HTTPURLResponse(), nil)
+        }
+
+        let request = MockHTTPRequest(
+            httpMethod: .post,
+            body: Data(UUID().uuidString.utf8)
+        )
+        _ = try await urlSession.submit(request: request, to: baseURL)
+
+        XCTAssertNotNil(receivedURLRequest)
+        let expectedTimeout = URLRequest(url: baseURL).timeoutInterval
+        XCTAssertEqual(receivedURLRequest?.timeoutInterval, expectedTimeout)
     }
 }
