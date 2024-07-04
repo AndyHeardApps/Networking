@@ -51,6 +51,9 @@ extension URLSession {
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = request.httpMethod.asString
         urlRequest.allHTTPHeaderFields = request.headers
+        if let timeoutInterval = request.timeoutInterval {
+            urlRequest.timeoutInterval = timeoutInterval
+        }
         if !request.body.isEmpty {
             urlRequest.httpBody = request.body
         }

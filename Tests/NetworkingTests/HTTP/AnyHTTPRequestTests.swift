@@ -20,6 +20,7 @@ extension AnyHTTPRequestTests {
             pathComponents: ["path1", "path2"],
             headers: ["header1" : "headerValue1", "header2" : "headerValue2"],
             queryItems: ["query1" : "queryValue1", "query2" : "queryValue2"],
+            timeoutInterval: 100,
             body: body,
             requiresAuthorization: true,
             encode: { body, headers, coders in
@@ -34,6 +35,7 @@ extension AnyHTTPRequestTests {
         #expect(request.pathComponents == ["path1", "path2"])
         #expect(request.headers == ["header1" : "headerValue1", "header2" : "headerValue2"])
         #expect(request.queryItems == ["query1" : "queryValue1", "query2" : "queryValue2"])
+        #expect(request.timeoutInterval == 100)
         #expect(request.body == body)
         #expect(request.requiresAuthorization)
 
@@ -65,6 +67,7 @@ extension AnyHTTPRequestTests {
             pathComponents: ["path1", "path2"],
             headers: ["header1" : "headerValue1", "header2" : "headerValue2"],
             queryItems: ["query1" : "queryValue1", "query2" : "queryValue2"],
+            timeoutInterval: 100,
             body: body,
             requiresAuthorization: true,
             decode: { data, statusCode, coders in
@@ -76,6 +79,7 @@ extension AnyHTTPRequestTests {
         #expect(request.pathComponents == ["path1", "path2"])
         #expect(request.headers == ["header1" : "headerValue1", "header2" : "headerValue2"])
         #expect(request.queryItems == ["query1" : "queryValue1", "query2" : "queryValue2"])
+        #expect(request.timeoutInterval == 100)
         #expect(request.body == body)
         #expect(request.requiresAuthorization)
 

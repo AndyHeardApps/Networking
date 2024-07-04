@@ -30,7 +30,12 @@ public protocol HTTPRequest<Body, Response> {
     
     /// The query items of the request `URL`.
     var queryItems: [String : String]? { get }
-    
+
+    /// The timeout interval of the receiver. Uses the URLRequest default value if nil
+    ///
+    /// See URLRequest's `timeoutInterval` discussion for more info
+    var timeoutInterval: TimeInterval? { get }
+
     /// The body of the request.
     var body: Body { get }
     
@@ -85,6 +90,10 @@ extension HTTPRequest {
     
     public var requiresAuthorization: Bool {
         false
+    }
+
+    public var timeoutInterval: TimeInterval? {
+        nil
     }
 }
 

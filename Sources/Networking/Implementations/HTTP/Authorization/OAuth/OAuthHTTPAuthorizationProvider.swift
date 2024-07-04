@@ -48,6 +48,7 @@ extension OAuthHTTPAuthorizationProvider: HTTPReauthorizationProvider {
             pathComponents: request.pathComponents,
             headers: headers,
             queryItems: request.queryItems,
+            timeoutInterval: request.timeoutInterval,
             body: request.body,
             requiresAuthorization: request.requiresAuthorization,
             encode: request.encode,

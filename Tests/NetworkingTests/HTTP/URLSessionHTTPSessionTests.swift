@@ -130,6 +130,45 @@ extension URLSessionHTTPSessionTests {
         #expect(receivedURLRequest?.url?.absoluteString == expectedURLString)
         #expect(receivedURLRequest?.httpMethod == httpMethodString)
         #expect(receivedURLRequest?.httpBody == request.body)
+        #expect()
         #expect(receivedURLRequest?.allHTTPHeaderFields == expectedHeaders)
+    }
+
+    @MainActor
+    func test_submitRequest_willCorrectlySetTimeoutInterval_ifPresent() async throws {
+        var receivedURLRequest: URLRequest?
+        MockURLProtocol.requestHandler = { urlRequest in
+            receivedURLRequest = urlRequest
+            return (HTTPURLResponse(), nil)
+        }
+
+        let request = MockHTTPRequest(
+            httpMethod: .post,
+            timeoutInterval: 180,
+            body: Data(UUID().uuidString.utf8)
+        )
+        _ = try await urlSession.submit(request: request, to: baseURL)
+
+        XCTAssertNotNil(receivedURLRequest)
+        XCTAssertEqual(receivedURLRequest?.timeoutInterval, 180)
+    }
+
+    @MainActor
+    func test_submitRequest_willUseDefaultTimeoutInterval_ifNotPresent() async throws {
+        var receivedURLRequest: URLRequest?
+        MockURLProtocol.requestHandler = { urlRequest in
+            receivedURLRequest = urlRequest
+            return (HTTPURLResponse(), nil)
+        }
+
+        let request = MockHTTPRequest(
+            httpMethod: .post,
+            body: Data(UUID().uuidString.utf8)
+        )
+        _ = try await urlSession.submit(request: request, to: baseURL)
+
+        XCTAssertNotNil(receivedURLRequest)
+        let expectedTimeout = URLRequest(url: baseURL).timeoutInterval
+        XCTAssertEqual(receivedURLRequest?.timeoutInterval, expectedTimeout)
     }
 }
