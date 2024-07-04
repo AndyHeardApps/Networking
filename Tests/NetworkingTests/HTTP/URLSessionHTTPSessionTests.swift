@@ -130,12 +130,14 @@ extension URLSessionHTTPSessionTests {
         #expect(receivedURLRequest?.url?.absoluteString == expectedURLString)
         #expect(receivedURLRequest?.httpMethod == httpMethodString)
         #expect(receivedURLRequest?.httpBody == request.body)
-        #expect()
+        let expectedTimeout = URLRequest(url: baseURL).timeoutInterval
+        #expect(receivedURLRequest?.timeoutInterval == expectedTimeout)
         #expect(receivedURLRequest?.allHTTPHeaderFields == expectedHeaders)
     }
 
-    @MainActor
-    func test_submitRequest_willCorrectlySetTimeoutInterval_ifPresent() async throws {
+    @Test("submitRequest sets timeout if present")
+    func submitRequestSetsTimeoutIfPresent() async throws {
+      
         var receivedURLRequest: URLRequest?
         MockURLProtocol.requestHandler = { urlRequest in
             receivedURLRequest = urlRequest
@@ -149,12 +151,13 @@ extension URLSessionHTTPSessionTests {
         )
         _ = try await urlSession.submit(request: request, to: baseURL)
 
-        XCTAssertNotNil(receivedURLRequest)
-        XCTAssertEqual(receivedURLRequest?.timeoutInterval, 180)
+        #expect(receivedURLRequest != nil)
+        #expect(receivedURLRequest?.timeoutInterval == 180)
     }
 
-    @MainActor
-    func test_submitRequest_willUseDefaultTimeoutInterval_ifNotPresent() async throws {
+    @Test("submitRequest uses default timeout if not provided")
+    func submitRequestUsesDefaultTimeoutIfNotProvided() async throws {
+    
         var receivedURLRequest: URLRequest?
         MockURLProtocol.requestHandler = { urlRequest in
             receivedURLRequest = urlRequest
@@ -167,8 +170,8 @@ extension URLSessionHTTPSessionTests {
         )
         _ = try await urlSession.submit(request: request, to: baseURL)
 
-        XCTAssertNotNil(receivedURLRequest)
+        #expect(receivedURLRequest != nil)
         let expectedTimeout = URLRequest(url: baseURL).timeoutInterval
-        XCTAssertEqual(receivedURLRequest?.timeoutInterval, expectedTimeout)
+        #expect(receivedURLRequest?.timeoutInterval == expectedTimeout)
     }
 }

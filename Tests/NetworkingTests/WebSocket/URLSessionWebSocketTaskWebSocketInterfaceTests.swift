@@ -6,7 +6,6 @@ import Testing
     "URLSessionWebSocketTask WebSocketInterface",
     .tags(.webSocket)
 )
-@available(iOS 17.0, *)
 struct URLSessionWebSocketTaskWebSocketInterfaceTests {
 
     // MARK: - Properties
