@@ -88,8 +88,8 @@ extension DataCoders {
 
 // MARK: - Error
 extension DataCoders {
-    enum Error {
-        
+    enum Error: Equatable {
+
         case encoderNotSet(contentType: HTTPContentType)
         case decoderNotSet(contentType: HTTPContentType)
     }

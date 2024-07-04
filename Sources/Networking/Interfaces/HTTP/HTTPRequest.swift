@@ -2,7 +2,7 @@ import Foundation
 
 /// Defines a type-safe abstraction for a HTTP request.
 ///
-/// Any types implementing this protocol define a series of properties that point to an endpoint on a network. It is the job of a request to understand the data at the endpoint it is pointing to, and to be able to decode that data into some concrete Swift type. When a ``HTTPRequest`` is submitted through some ``HTTPController``, the ``encode(body:headers:using:)-1y6xr`` is used to convert the ``body-9mp51`` to `Data`, then the ``decode(data:statusCode:using:)`` function is called in order to be able to strongly type the response from the request. This tightly couples the request to the type of content it will provide.
+/// Any types implementing this protocol define a series of properties that point to an endpoint on a network. It is the job of a request to understand the data at the endpoint it is pointing to, and to be able to decode that data into some concrete Swift type. When a ``HTTPRequest`` is submitted through some ``HTTPController``, the ``encode(body:headers:using:)-1y6xr`` is used to convert the ``body-6nbh7`` to `Data`, then the ``decode(data:statusCode:using:)`` function is called in order to be able to strongly type the response from the request. This tightly couples the request to the type of content it will provide.
 ///
 /// Implementations should be lightweight, and are intended to be created and recycled quickly.
 ///
@@ -44,17 +44,17 @@ public protocol HTTPRequest<Body, Response> {
     
     // MARK: - Functions
     
-    /// Encodes the request ``HTTPRequest/body-9pm74`` in to `Data`. This is only called by a ``HTTPController`` if the body is not `Never`.
+    /// Encodes the request ``HTTPRequest/body-6nbh7`` in to `Data`. This is only called by a ``HTTPController`` if the body is not `Never`.
     ///
-    /// The default implementation (if the ``Body`` conforms to `Encodable`) encodes the ``body-9mp51`` to JSON and adds `application/json` to the `Content-Type` header.
+    /// The default implementation (if the <doc:/documentation/Networking/HTTPRequest/Body-swift.associatedtype> conforms to `Encodable`) encodes the <doc:/documentation/Networking/HTTPRequest/body-6nbh7> to JSON and adds `application/json` to the `Content-Type` header.
     ///
     /// Any custom implementations should be sure to set the `Content-Type` value.
     ///
     /// - Parameters:
     ///   - body: The body to encode to `Data`.
     ///   - headers: The headers provided as an `inout` parameter. These should be modified to include the  `Content-Type` of the encoding method.
-    ///   - coders: A collection of ``DataCoders`` to be used to encode the provided ``Body`` instance.
-    /// - Returns: A data representation of the ``HTTPRequest/body-9mp51``
+    ///   - coders: A collection of ``DataCoders`` to be used to encode the provided <doc:/documentation/Networking/HTTPRequest/Body-swift.associatedtype> instance.
+    /// - Returns: A data representation of the ``HTTPRequest/body-6nbh7``
     /// - Throws: Any errors that occured during encoding. This is most likely to be an `EncodingError` or due to a ``DataEncoder`` not being available for a specific ``HTTPContentType``.
     func encode(
         body: Body,

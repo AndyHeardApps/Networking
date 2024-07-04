@@ -1,33 +1,28 @@
-import XCTest
+import Foundation
+import Testing
 @testable import Networking
 
-final class HTTPControllerExtensionTests: XCTestCase {
+@Suite(
+    "HTTPController extensions",
+    .tags(.http)
+)
+struct HTTPControllerExtensionTests {
 
     // MARK: - Properties
-    private var httpController: MockHTTPController!
-}
+    private let httpController: MockHTTPController
 
-// MARK: - Setup
-extension HTTPControllerExtensionTests {
-
-    override func setUp() {
-        super.setUp()
-
+    // MARK: - Initializer
+    init() {
         self.httpController = MockHTTPController()
-    }
-
-    override func tearDown() {
-        super.tearDown()
-
-        self.httpController = nil
     }
 }
 
 // MARK: - Tests
 extension HTTPControllerExtensionTests {
  
-    func test_fetchContent_willReturnContentFromFetchResponse() async throws {
-        
+    @Test("fetchContent will return content from fetchResponse")
+    func fetchContentWillReturnContentFromFetchResponse() async throws {
+
         httpController.responseStatusCode = .ok
         httpController.responseData = UUID().uuidString.data(using: .utf8)!
         
@@ -39,6 +34,6 @@ extension HTTPControllerExtensionTests {
         
         let response = try await httpController.fetchContent(request)
         
-        XCTAssertEqual(response, Data(httpController.responseData.reversed()))
+        #expect(response == Data(httpController.responseData.reversed()))
     }
 }

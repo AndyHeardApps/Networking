@@ -1,7 +1,12 @@
-import XCTest
+import Foundation
+import Testing
 @testable import Networking
 
-final class QueryEncoderTests: XCTestCase {}
+@Suite(
+    "Query encoder",
+    .tags(.http)
+)
+struct QueryEncoderTests {}
 
 // MARK: - Tests
 extension QueryEncoderTests {
@@ -13,12 +18,13 @@ extension QueryEncoderTests {
         let double = 3.14159
     }
     
-    func test_encode_willCorrectlyEncodeValue() throws {
-        
+    @Test("Correctly encodes values")
+    func correctlyEncodesValues() throws {
+
         let encoder = QueryEncoder()
         let encodedValue = try encoder.encode(EncodableValue())
         
-        XCTAssertEqual(encodedValue, [
+        #expect(encodedValue == [
             "string" : "stringValue",
             "int" : "300",
             "bool" : "true",

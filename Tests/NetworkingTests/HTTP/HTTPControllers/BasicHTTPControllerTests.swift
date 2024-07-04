@@ -1,20 +1,21 @@
-import XCTest
+import Foundation
+import Testing
 @testable import Networking
 
-final class BasicHTTPControllerTests: XCTestCase {
+@Suite(
+    "Basic HTTPController",
+    .tags(.http)
+)
+struct BasicHTTPControllerTests {
 
     // MARK: - Properties
     private let baseURL = URL(string: "https://example.domain.com")!
-    private var httpSession: MockHTTPSession!
-    private var delegate: MockHTTPControllerDelegate!
-    private var httpController: BasicHTTPController!
-}
+    private let httpSession: MockHTTPSession
+    private let delegate: MockHTTPControllerDelegate
+    private let httpController: BasicHTTPController
 
-// MARK: - Setup
-extension BasicHTTPControllerTests {
-
-    override func setUp() {
-        super.setUp()
+    // MARK: - Initializer
+    init() {
 
         self.httpSession = MockHTTPSession()
         self.delegate = MockHTTPControllerDelegate()
@@ -25,21 +26,14 @@ extension BasicHTTPControllerTests {
             delegate: delegate
         )
     }
-
-    override func tearDown() {
-        super.tearDown()
-
-        self.httpSession = nil
-        self.delegate = nil
-        self.httpController = nil
-    }
 }
 
 // MARK: - Tests
 extension BasicHTTPControllerTests {
 
     // MARK: Request manipulation
-    func test_fetchResponse_willSubmitRequest_toHTTPSession_withoutAssertionFailure_whenAuthorizationIsNotRequired() async throws {
+    @Test("fetchResponse submits unaltered request when authorization is not required")
+    func fetchResponseSubmitsUnalteredRequestWhenAuthorizationIsNotRequired() async throws {
 
         let request = MockHTTPRequest(requiresAuthorization: false)
         httpSession.setBlankResponse(for: request)
@@ -49,31 +43,31 @@ extension BasicHTTPControllerTests {
         let lastReceivedRequest = httpSession.receivedRequests.last?.request
         let lastReceivedBaseURL = httpSession.receivedRequests.last?.baseURL
 
-        XCTAssertEqual(httpSession.receivedRequests.count, 1)
-        XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
-        XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
-        XCTAssertEqual(lastReceivedRequest?.headers, request.headers)
-        XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body as? Data, request.body)
-        XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
-        XCTAssertEqual(lastReceivedBaseURL, baseURL)
+        #expect(httpSession.receivedRequests.count == 1)
+        #expect(lastReceivedRequest?.httpMethod == request.httpMethod)
+        #expect(lastReceivedRequest?.pathComponents == request.pathComponents)
+        #expect(lastReceivedRequest?.headers == request.headers)
+        #expect(lastReceivedRequest?.queryItems == request.queryItems)
+        #expect(lastReceivedRequest?.body as? Data == request.body)
+        #expect(lastReceivedRequest?.requiresAuthorization == request.requiresAuthorization)
+        #expect(lastReceivedBaseURL == baseURL)
     }
 
-    func test_fetchResponse_willCauseAssertionFailure_whenAuthorizationIsRequired() async throws {
+    @Test("fetchResponse throws error when authorization is required")
+    func fetchResponseThrowsErrorWhenAuthorizationIsRequired() async throws {
 
         let request = MockHTTPRequest(requiresAuthorization: true)
         httpSession.setBlankResponse(for: request)
 
-        do {
+        await #expect(throws: HTTPStatusCode.unauthorized) {
             _ = try await httpController.fetchResponse(request)
-        } catch {
-            XCTAssertEqual(error as? HTTPStatusCode, .unauthorized)
         }
     }
     
     // MARK: - Encoding
-    func test_fetchResponse_willEncodeBodyUsingRequest_andReturnEncodedBody() async throws {
-        
+    @Test("fetchResponse will encode body using request")
+    func fetchResponseWillEncodeBodyUsingRequest() async throws {
+
         let expectedResponse = HTTPResponse(
             content: Data(UUID().uuidString.utf8),
             statusCode: .ok,
@@ -105,17 +99,18 @@ extension BasicHTTPControllerTests {
 
         _ = try await httpController.fetchResponse(request)
 
-        XCTAssertEqual(encodeData, request.body)
-        XCTAssertEqual(encodeHeaders, request.headers)
-        XCTAssertIdentical(encodeEncoder as? JSONEncoder, try DataCoders.default.requireEncoder(for: .json) as? JSONEncoder)
+        #expect(encodeData == request.body)
+        #expect(encodeHeaders == request.headers)
+        #expect(try encodeEncoder as? JSONEncoder === DataCoders.default.requireEncoder(for: .json) as? JSONEncoder)
 
-        XCTAssertTrue(delegate.controllerPreparingRequest is BasicHTTPController)
-        XCTAssertTrue(delegate.requestPreparedForSubmission is MockHTTPRequest<Data, Data>)
-        XCTAssertNotNil(delegate.codersUsedForRequestPreparation)
+        #expect(delegate.controllerPreparingRequest is BasicHTTPController)
+        #expect(delegate.requestPreparedForSubmission is MockHTTPRequest<Data, Data>)
+        #expect(delegate.codersUsedForRequestPreparation != nil)
     }
 
     // MARK: Decoding
-    func test_fetchResponse_willDecodeResponseUsingRequest_andReturnDecodedResponse() async throws {
+    @Test("fetchResponse will decode body using request")
+    func fetchResponseWillDecodeBodyUsingRequest() async throws {
 
         let responseData = Data(UUID().uuidString.utf8)
         let responseHeaders = ["header1" : "headerValue1"]
@@ -133,7 +128,7 @@ extension BasicHTTPControllerTests {
         ) { body, _, _ in
             body
         } decode: { data, statusCode, coders in
-          
+
             decodeData = data
             decodeStatusCode = statusCode
             decodeDecoder = try coders.requireDecoder(for: .json)
@@ -147,23 +142,25 @@ extension BasicHTTPControllerTests {
 
         let response = try await httpController.fetchResponse(request)
 
-        XCTAssertEqual(decodeData, expectedResponse.content)
-        XCTAssertEqual(decodeStatusCode, expectedResponse.statusCode)
-        XCTAssertIdentical(decodeDecoder as? JSONDecoder, try DataCoders.default.requireDecoder(for: .json) as? JSONDecoder)
+        #expect(decodeData == expectedResponse.content)
+        #expect(decodeStatusCode == expectedResponse.statusCode)
+        #expect(try decodeDecoder as? JSONDecoder === DataCoders.default.requireDecoder(for: .json) as? JSONDecoder)
 
-        XCTAssertEqual(response.content, responseData + responseData)
-        XCTAssertEqual(response.statusCode, expectedResponse.statusCode)
-        XCTAssertEqual(response.headers, expectedResponse.headers)
-        
-        XCTAssertTrue(delegate.controllerDecodingRequest is BasicHTTPController)
-        XCTAssertEqual(delegate.decodedResponse.map { $0.content + $0.content }, response.content)
-        XCTAssertEqual(delegate.decodedResponse?.statusCode, response.statusCode)
-        XCTAssertEqual(delegate.decodedResponse?.headers, response.headers)
-        XCTAssertTrue(delegate.decodedRequest is MockHTTPRequest<Data, Data>)
-        XCTAssertNotNil(delegate.codersUsedForRequestDecoding)    }
+        #expect(response.content == responseData + responseData)
+        #expect(response.statusCode == expectedResponse.statusCode)
+        #expect(response.headers == expectedResponse.headers)
+
+        #expect(delegate.controllerDecodingRequest is BasicHTTPController)
+        #expect(delegate.decodedResponse.map { $0.content + $0.content } == response.content)
+        #expect(delegate.decodedResponse?.statusCode == response.statusCode)
+        #expect(delegate.decodedResponse?.headers == response.headers)
+        #expect(delegate.decodedRequest is MockHTTPRequest<Data, Data>)
+        #expect(delegate.codersUsedForRequestDecoding != nil)
+    }
 
     // MARK: Encoding headers
-    func test_fetchResponse_willAddEncodingHeaders_toRequestBeforeSubmission_whenRequestHasExistingHeaders() async throws {
+    @Test("fetchResponse adds encoding headers to existing request headers")
+    func fetchResponseAddsEncodingHeadersToExistingRequestHeaders() async throws {
 
         let request = MockHTTPRequest(
             headers: ["headerKey2" : "headerValue2"],
@@ -186,16 +183,17 @@ extension BasicHTTPControllerTests {
             "headerKey2" : "headerValue2",
             "encodingKey" : "encodingValue"
         ]
-        XCTAssertEqual(httpSession.receivedRequests.count, 1)
-        XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
-        XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
-        XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders)
-        XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body as? Data, request.body)
-        XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
+        #expect(httpSession.receivedRequests.count == 1)
+        #expect(lastReceivedRequest?.httpMethod == request.httpMethod)
+        #expect(lastReceivedRequest?.pathComponents == request.pathComponents)
+        #expect(lastReceivedRequest?.headers == expectedHeaders)
+        #expect(lastReceivedRequest?.queryItems == request.queryItems)
+        #expect(lastReceivedRequest?.body as? Data == request.body)
+        #expect(lastReceivedRequest?.requiresAuthorization == request.requiresAuthorization)
     }
     
-    func test_fetchResponse_willAddEncodingHeaders_toRequestBeforeSubmission_whenRequestHasNoHeaders() async throws {
+    @Test("fetchResponse adds encoding headers to nil request headers")
+    func fetchResponseAddsEncodingHeadersToNilRequestHeaders() async throws {
 
         let request = MockHTTPRequest(
             headers: nil,
@@ -217,17 +215,18 @@ extension BasicHTTPControllerTests {
         let expectedHeaders = [
             "encodingKey" : "encodingValue"
         ]
-        XCTAssertEqual(httpSession.receivedRequests.count, 1)
-        XCTAssertEqual(lastReceivedRequest?.httpMethod, request.httpMethod)
-        XCTAssertEqual(lastReceivedRequest?.pathComponents, request.pathComponents)
-        XCTAssertEqual(lastReceivedRequest?.headers, expectedHeaders)
-        XCTAssertEqual(lastReceivedRequest?.queryItems, request.queryItems)
-        XCTAssertEqual(lastReceivedRequest?.body as? Data, request.body)
-        XCTAssertEqual(lastReceivedRequest?.requiresAuthorization, request.requiresAuthorization)
+        #expect(httpSession.receivedRequests.count == 1)
+        #expect(lastReceivedRequest?.httpMethod == request.httpMethod)
+        #expect(lastReceivedRequest?.pathComponents == request.pathComponents)
+        #expect(lastReceivedRequest?.headers == expectedHeaders)
+        #expect(lastReceivedRequest?.queryItems == request.queryItems)
+        #expect(lastReceivedRequest?.body as? Data == request.body)
+        #expect(lastReceivedRequest?.requiresAuthorization == request.requiresAuthorization)
     }
 
     // MARK: Error handling
-    func test_fetchResponse_willThrowErrorReturnedByDelegate() async throws {
+    @Test("fetchResponse throws errors returned by delegate")
+    func fetchResponseThrowsErrorsReturnedByDelegate() async throws {
 
         let request = MockHTTPRequest(
             requiresAuthorization: false
@@ -245,39 +244,35 @@ extension BasicHTTPControllerTests {
         delegate.errorToThrow = MockError()
         httpSession.set(response: response, for: request)
 
-        do {
+        try await #require(throws: MockError.self) {
             _ = try await httpController.fetchResponse(request)
-            XCTFail()
-        } catch {
-
-            XCTAssertTrue(delegate.controllerThrowingError is BasicHTTPController)
-            XCTAssertEqual(delegate.handledError as? HTTPStatusCode, .badRequest)
-            XCTAssertEqual(delegate.handledErrorResponse?.content, response.content)
-            XCTAssertEqual(delegate.handledErrorResponse?.statusCode, response.statusCode)
-            XCTAssertEqual(delegate.handledErrorResponse?.headers, response.headers)
-
-            XCTAssertTrue(error is MockError)
-            XCTAssertEqual(httpSession.receivedRequests.count, 1)
         }
+
+        #expect(delegate.controllerThrowingError is BasicHTTPController)
+        #expect(delegate.handledError as? HTTPStatusCode == .badRequest)
+        #expect(delegate.handledErrorResponse?.content == response.content)
+        #expect(delegate.handledErrorResponse?.statusCode == response.statusCode)
+        #expect(delegate.handledErrorResponse?.headers == response.headers)
+
+        #expect(httpSession.receivedRequests.count == 1)
     }
 
     // MARK: Error reporting
-    func test_fetchResponse_willReportErrorThrownByHTTPSession_withoutCallingDelegate() async throws {
+    @Test("fetchResponse throws errors from HTTPSession without calling delegate")
+    func fetchResponseThrowsErrorsFromHTTPSessionWithoutCallingDelegate() async throws {
 
         let request = MockHTTPRequest(requiresAuthorization: false)
         httpSession.shouldThrowErrorOnSubmit = true
 
-        do {
-            _ = try await httpController.fetchResponse(request)
-            XCTFail()
-        } catch {
 
-            XCTAssertNil(delegate.controllerThrowingError)
-            XCTAssertNil(delegate.handledError)
-            XCTAssertNil(delegate.handledErrorResponse)         
-            
-            XCTAssertTrue(error is MockError)
-            XCTAssertEqual(httpSession.receivedRequests.count, 1)
+        try await #require(throws: MockError.self) {
+            _ = try await httpController.fetchResponse(request)
         }
+
+        #expect(delegate.controllerThrowingError == nil)
+        #expect(delegate.handledError == nil)
+        #expect(delegate.handledErrorResponse == nil)
+
+        #expect(httpSession.receivedRequests.count == 1)
     }
 }

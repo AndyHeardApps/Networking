@@ -1,26 +1,25 @@
-import XCTest
+import Foundation
+import Testing
 @testable import Networking
 
-@available(iOS 17.0, *)
-final class BasicWebSocketControllerTests: XCTestCase {
-    
+@Suite(
+    "Basic web socket controller",
+    .tags(.webSocket)
+)
+struct BasicWebSocketControllerTests {
+
     // MARK: - Properties
-    private var session: MockWebSocketSession!
-    private var delegate: MockWebSocketControllerDelegate!
-    private var controller: BasicWebSocketController!
+    private let session: MockWebSocketSession
+    private let delegate: MockWebSocketControllerDelegate
+    private let controller: BasicWebSocketController
     private let request = MockWebSocketRequest(
         encode: { data, _ in Data(data.reversed()) },
         decode: { data, _ in data + data }
     )
-}
 
-// MARK: - Setup
-@available(iOS 17.0, *)
-extension BasicWebSocketControllerTests {
+    // MARK: - Initializer
+    init() {
 
-    override func setUp() {
-        super.setUp()
-        
         self.session = MockWebSocketSession()
         self.delegate = MockWebSocketControllerDelegate()
         self.controller = .init(
@@ -29,107 +28,98 @@ extension BasicWebSocketControllerTests {
             delegate: delegate
         )
     }
-    
-    override func tearDown() {
-        super.tearDown()
-        
-        self.session = nil
-        self.delegate = nil
-        self.controller = nil
-    }
 }
 
 // MARK: - Tests
-@available(iOS 17.0, *)
 extension BasicWebSocketControllerTests {
     
-    func test_openConnection_willUseSessionToCreateInterface() throws {
-                
+    @Test("openConnection uses session to create interface")
+    @available(iOS 17.0, *)
+    func openConnectionUsesSessionToCreateInterface() throws {
+
         _ = try controller.createConnection(with: request)
         
-        XCTAssertEqual(session.openedConnections.count, 1)
-        XCTAssertEqual(session.openedConnections.first?.0.pathComponents, request.pathComponents)
-        XCTAssertEqual(session.openedConnections.first?.0.headers, request.headers)
-        XCTAssertEqual(session.openedConnections.first?.0.queryItems, request.queryItems)
-        XCTAssertEqual(session.openedConnections.first?.1.absoluteString, "ws://example.domain.com")
+        #expect(session.openedConnections.count == 1)
+        #expect(session.openedConnections.first?.0.pathComponents == request.pathComponents)
+        #expect(session.openedConnections.first?.0.headers == request.headers)
+        #expect(session.openedConnections.first?.0.queryItems == request.queryItems)
+        #expect(session.openedConnections.first?.1.absoluteString == "ws://example.domain.com")
     }
     
-    func test_openConnection_willCallOpenOnInterface() throws {
-        
+    @Test("openConnection calls open on interface")
+    @available(iOS 17.0, *)
+    func openConnectionCallsOpenOnInterface() throws {
+
         let connection = try controller.createConnection(with: request)
                 
-        guard let interface = session.lastOpenedInterface else {
-            XCTFail()
-            return
-        }
-        
-        XCTAssertEqual(interface.interfaceState, .idle)
-        XCTAssertFalse(connection.isConnected)
+        let interface = try #require(session.lastOpenedInterface)
+
+        #expect(interface.interfaceState == .idle)
+        #expect(connection.isConnected == false)
         connection.open()
-        XCTAssertEqual(interface.interfaceState, .running)
-        XCTAssertTrue(connection.isConnected)
+        #expect(interface.interfaceState == .running)
+        #expect(connection.isConnected)
     }
     
-    func test_closeConnection_willCallCloseOnInterface() throws {
-        
+    @Test("closeConnection calls close on interface")
+    @available(iOS 17.0, *)
+    func closeConnectionCallsCloseOnInterface() throws {
+
         let connection = try controller.createConnection(with: request)
                 
-        guard let interface = session.lastOpenedInterface else {
-            XCTFail()
-            return
-        }
-        
+        let interface = try #require(session.lastOpenedInterface)
+
         connection.open()
-        XCTAssertEqual(interface.interfaceState, .running)
-        XCTAssertTrue(connection.isConnected)
+        #expect(interface.interfaceState == .running)
+        #expect(connection.isConnected)
         connection.close()
-        XCTAssertEqual(interface.interfaceState, .completed)
-        XCTAssertFalse(connection.isConnected)
+        #expect(interface.interfaceState == .completed)
+        #expect(connection.isConnected == false)
     }
     
-    func test_send_willEncode_andSubmitDataToInterface() async throws {
-        
+    @Test("send encodes and submits data to interface")
+    @available(iOS 17.0, *)
+    func sendEncodesAndSubmitsDataToInterface() async throws {
+
         let connection = try controller.createConnection(with: request)
 
-        guard let interface = session.lastOpenedInterface else {
-            XCTFail()
-            return
-        }
+        let interface = try #require(session.lastOpenedInterface)
 
         let message = Data(UUID().uuidString.utf8)
         try await connection.send(message)
         
-        XCTAssertEqual(interface.sentMessages, [.data(Data(message.reversed()))])
+        #expect(interface.sentMessages == [.data(Data(message.reversed()))])
     }
         
-    func test_send_willReportConnectionErrors() async throws {
-        
+    @Test("send reports connection errors")
+    @available(iOS 17.0, *)
+    func sendReportsConnectionErrors() async throws {
+
         let connection = try controller.createConnection(with: request)
 
-        guard let interface = session.lastOpenedInterface else {
-            XCTFail()
-            return
-        }
+        let interface = try #require(session.lastOpenedInterface)
 
         let message = Data(UUID().uuidString.utf8)
         interface.interfaceCloseCode = .abnormalClosure
         interface.interfaceCloseReason = "Test close reason"
         interface.sendError = MockError()
 
-        do {
+        let expectedError = BasicWebSocketController.Connection<Data, Data>.Error(
+            failure: "Send failed",
+            wrappedError: MockError(),
+            closeCode: .abnormalClosure,
+            reason: "Test close reason"
+        )
+        await #expect(throws: expectedError) {
             try await connection.send(message)
-            XCTFail()
-        } catch {
-            XCTAssertTrue(interface.sentMessages.isEmpty)
-            let connectionError = error as? BasicWebSocketController.Connection<Data, Data>.Error
-            XCTAssertEqual(connectionError?.failure, "Send failed")
-            XCTAssertTrue(connectionError?.wrappedError is MockError)
-            XCTAssertEqual(error.localizedDescription, "Send failed: MockError(): Test close reason: abnormalClosure")
         }
+        #expect(interface.sentMessages.isEmpty)
     }
         
-    func test_send_willReportEncodingErrors() async throws {
-        
+    @Test("send reports encoding errors")
+    @available(iOS 17.0, *)
+    func sendReportsEncodingErrors() async throws {
+
         let request = MockWebSocketRequest(
             encode: { data, _ in
                 throw EncodingError.invalidValue(data, .init(codingPath: [], debugDescription: "Test encoding error"))
@@ -139,31 +129,24 @@ extension BasicWebSocketControllerTests {
 
         let connection = try controller.createConnection(with: request)
 
-        guard let interface = session.lastOpenedInterface else {
-            XCTFail()
-            return
-        }
+        let interface = try #require(session.lastOpenedInterface)
 
         let message = Data(UUID().uuidString.utf8)
         
-        do {
+        await #expect(throws: EncodingError.self) {
             try await connection.send(message)
-            XCTFail()
-        } catch {
-            XCTAssertTrue(interface.sentMessages.isEmpty)
-            XCTAssertTrue(error is EncodingError)
         }
+        #expect(interface.sentMessages.isEmpty)
     }
 
-    func test_output_willDecode_andPublishDataFromInterface() async throws {
-        
+    @Test("output decodes and publishes data from interface")
+    @available(iOS 17.0, *)
+    func outputDecodesAndPublishesDataFromInterface() async throws {
+
         let connection = try controller.createConnection(with: request)
 
-        guard let interface = session.lastOpenedInterface else {
-            XCTFail()
-            return
-        }
-        
+        let interface = try #require(session.lastOpenedInterface)
+
         let task = Task {
             try await connection.output.first { _ in true }
         }
@@ -174,17 +157,16 @@ extension BasicWebSocketControllerTests {
         
         let recievedMessage = try await task.value
 
-        XCTAssertEqual(recievedMessage, message + message)
+        #expect(recievedMessage == message + message)
     }
     
-    func test_output_willWrapAndReportConnectionErrorsFromInterface() async throws {
-     
+    @Test("output wraps and reports connection errors from interface")
+    @available(iOS 17.0, *)
+    func outputWrapsAndReportsConnectionErrorsFromInterface() async throws {
+
         let connection = try controller.createConnection(with: request)
 
-        guard let interface = session.lastOpenedInterface else {
-            XCTFail()
-            return
-        }
+        let interface = try #require(session.lastOpenedInterface)
 
         let task = Task {
             try await connection.output.first { _ in true }
@@ -197,18 +179,21 @@ extension BasicWebSocketControllerTests {
         
         let recievedMessage = await task.result
 
-        XCTAssertThrowsError(try recievedMessage.get()) { error in
-            let connectionError = error as? BasicWebSocketController.Connection<Data, Data>.Error
-            XCTAssertEqual(connectionError?.failure, "Recieve failed")
-            XCTAssertTrue(connectionError?.wrappedError is MockError)
-            XCTAssertEqual(connectionError?.closeCode, .abnormalClosure)
-            XCTAssertEqual(connectionError?.reason, "Test close reason")
-            XCTAssertEqual(error.localizedDescription, "Recieve failed: MockError(): Test close reason: abnormalClosure")
+        let expectedError = BasicWebSocketController.Connection<Data, Data>.Error(
+            failure: "Recieve failed",
+            wrappedError: MockError(),
+            closeCode: .abnormalClosure,
+            reason: "Test close reason"
+        )
+        #expect(throws: expectedError) {
+            try recievedMessage.get()
         }
     }
     
-    func test_output_willReportDecodingErrorsFromInterface() async throws {
-     
+    @Test("output reports decoding errors from interface")
+    @available(iOS 17.0, *)
+    func outputReportsDecodingErrorsFromInterface() async throws {
+
         let request = MockWebSocketRequest(
             encode: { data, _ in Data(data.reversed()) },
             decode: { data, _ in
@@ -218,10 +203,7 @@ extension BasicWebSocketControllerTests {
 
         let connection = try controller.createConnection(with: request)
 
-        guard let interface = session.lastOpenedInterface else {
-            XCTFail()
-            return
-        }
+        let interface = try #require(session.lastOpenedInterface)
 
         let task = Task {
             try await connection.output.first { _ in true }
@@ -234,47 +216,46 @@ extension BasicWebSocketControllerTests {
         
         let recievedMessage = await task.result
 
-        XCTAssertThrowsError(try recievedMessage.get()) { error in
-            XCTAssertTrue(error is DecodingError)
+        
+        #expect(throws: DecodingError.self) {
+            try recievedMessage.get()
         }
     }
-    
-    func test_connection_willSendPings_basedOnDelegateProvidedInterval() async throws {
-        
+
+    @Test("connection sends pings based on delegate provided interval")
+    @available(iOS 17.0, *)
+    func connectionSendsPingsBasedOnDelegateProvidedInterval() async throws {
+
         delegate.pingInterval = .milliseconds(10)
         
         let connection = try controller.createConnection(with: request)
         
-        guard let interface = session.lastOpenedInterface else {
-            XCTFail()
-            return
-        }
+        let interface = try #require(session.lastOpenedInterface)
 
         connection.open()
         try await Task.sleep(for: .milliseconds(25))
         connection.close()
         try await Task.sleep(for: .milliseconds(50))
 
-        XCTAssertEqual(interface.sentMessages, [.ping, .ping])
+        #expect(interface.sentMessages == [.ping, .ping])
     }
     
-    func test_connection_willNotSendPings_basedOnDefaultDelegate() async throws {
-        
-        self.controller = .init(
+    @Test("connection will not send pings based on default delegate")
+    @available(iOS 17.0, *)
+    func connectionWillNotSendPingsBasedOnDefaultDelegate() async throws {
+
+        let controller = BasicWebSocketController(
             baseURL: .init(string: "ws://example.domain.com")!,
             session: session
         )
         
         let connection = try controller.createConnection(with: request)
         
-        guard let interface = session.lastOpenedInterface else {
-            XCTFail()
-            return
-        }
+        let interface = try #require(session.lastOpenedInterface)
 
         connection.open()
         try await Task.sleep(for: .milliseconds(50))
 
-        XCTAssertTrue(interface.sentMessages.isEmpty)
+        #expect(interface.sentMessages.isEmpty)
     }
 }
