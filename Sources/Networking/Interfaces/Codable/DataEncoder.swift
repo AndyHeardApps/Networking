@@ -3,7 +3,7 @@ import Foundation
 /// A type that defines a method for encoding objects to `Data`.
 ///
 /// The `JSONEncoder` and `PropertyListEncoder` Swift types conform to this protocol by default.
-public protocol DataEncoder: Sendable {
+public protocol DataEncoder {
 
     /// Converts an encodable object to `Data`.
     /// - Parameters:
@@ -13,5 +13,12 @@ public protocol DataEncoder: Sendable {
     func encode(_ value: some Encodable) throws -> Data
 }
 
+#if swift(>=6.0)
 extension JSONEncoder: DataEncoder {}
+extension JSONEncoder: @retroactive @unchecked Sendable {}
 extension PropertyListEncoder: DataEncoder {}
+extension PropertyListEncoder: @retroactive @unchecked Sendable {}
+#else
+extension JSONEncoder: DataEncoder & @unchecked Sendable {}
+extension PropertyListEncoder: DataEncoder & @unchecked Sendable {}
+#endif
