@@ -23,7 +23,8 @@ extension JSONDecoder: @retroactive @unchecked Sendable {}
 extension PropertyListDecoder: DataDecoder {}
 extension PropertyListDecoder: @retroactive @unchecked Sendable {}
 #else
-extension JSONDecoder: DataDecoder & @unchecked Sendable {}
-extension PropertyListDecoder: DataDecoder & @unchecked Sendable {}
-
+extension JSONDecoder: DataDecoder {}
+extension JSONDecoder: @unchecked Sendable {}
+extension PropertyListDecoder: DataDecoder {}
+extension PropertyListDecoder: @unchecked Sendable {}
 #endif

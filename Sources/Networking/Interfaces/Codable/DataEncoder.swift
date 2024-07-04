@@ -19,6 +19,8 @@ extension JSONEncoder: @retroactive @unchecked Sendable {}
 extension PropertyListEncoder: DataEncoder {}
 extension PropertyListEncoder: @retroactive @unchecked Sendable {}
 #else
-extension JSONEncoder: DataEncoder & @unchecked Sendable {}
-extension PropertyListEncoder: DataEncoder & @unchecked Sendable {}
+extension JSONEncoder: DataEncoder {}
+extension JSONEncoder: @unchecked Sendable {}
+extension PropertyListEncoder: DataEncoder {}
+extension PropertyListEncoder: @unchecked Sendable {}
 #endif
