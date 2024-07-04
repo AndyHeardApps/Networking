@@ -23,7 +23,7 @@ public protocol HTTPAuthorizationProvider<AuthorizationRequest>  {
     /// - Throws: Any error preventing request authorization.
     func authorize<Request: HTTPRequest>(_ request: Request) async throws -> any HTTPRequest<Request.Body, Request.Response>
 
-    /// Extracts authorization credentials from the provided ``AuthorizationRequest`` and associated ``HTTPResponse`` where possible, and stores them for later use in ``authorize(_:)``.
+    /// Extracts authorization credentials from the provided <doc:/documentation/Networking/HTTPAuthorizationProvider/AuthorizationRequest> and associated ``HTTPResponse`` where possible, and stores them for later use in ``authorize(_:)``.
     /// - Parameters:
     ///   - authorizationResponse: A ``HTTPResponse``, potentially containing authorization credentials that can be extracted.
     ///   - request: The ``HTTPRequest`` that produced the `authorizationResponse`.

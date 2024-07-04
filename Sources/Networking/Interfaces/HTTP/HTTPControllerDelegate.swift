@@ -7,7 +7,7 @@ public protocol HTTPControllerDelegate {
     ///
     /// This is called after any changes have been made by a ``HTTPAuthorizationProvider``.
     ///
-    /// The default implementation converts the ``HTTPRequest/body-9pm74`` of the provided `request` to JSON data using the ``HTTPRequest/encode(body:headers:using:)-1y6xr`` function.
+    /// The default implementation converts the ``HTTPRequest/body-6nbh7`` of the provided `request` to JSON data using the ``HTTPRequest/encode(body:headers:using:)-1y6xr`` function.
     /// - Parameters:
     ///   - controller: The calling ``HTTPController``.
     ///   - request: The ``HTTPRequest`` to be prepared for submission.

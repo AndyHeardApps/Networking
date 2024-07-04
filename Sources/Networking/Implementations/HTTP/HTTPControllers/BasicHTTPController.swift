@@ -1,6 +1,6 @@
 import Foundation
 
-/// A basic implementation of a ``HTTPController``, with no authorization on requests. This type will submit requests using the provided ``HTTPSession``, encoding the ``HTTPRequest/body-9mp51`` of the reqest using ``HTTPRequest/encode(body:headers:using:)-7qe3v`` and decoding the response using ``HTTPRequest/decode(data:statusCode:using:)``.
+/// A basic implementation of a ``HTTPController``, with no authorization on requests. This type will submit requests using the provided ``HTTPSession``, encoding the ``HTTPRequest/body-6nbh7`` of the reqest using ``HTTPRequest/encode(body:headers:using:)-7qe3v`` and decoding the response using ``HTTPRequest/decode(data:statusCode:using:)``.
 ///
 /// For further control over preparing the requests for submission or handling responses and errors, create a custom ``HTTPControllerDelegate`` and provide it in the initialiser. This allows you to decode API errors, add headers to every request or encrypt and decrypt content.
 ///

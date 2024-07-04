@@ -1,13 +1,19 @@
-import XCTest
+import Foundation
+import Testing
 @testable import Networking
 
-final class AnyWebSocketRequestTests: XCTestCase {}
+@Suite(
+    "AnyWebSocketRequest",
+    .tags(.webSocket)
+)
+struct AnyWebSocketRequestTests {}
 
 // MARK: - Tests
 extension AnyWebSocketRequestTests {
     
-    func test_initWithParameters_willAssignProperties_andCodingCorrectly() throws {
-        
+    @Test("Memberwise initializer assigns properties and coding correctly")
+    func memberwiseInitializerAssignsPropertiesAndCodingCorrectly() throws {
+
         let request = AnyWebSocketRequest<Data, Data>(
             pathComponents: ["path1", "path2"],
             headers: ["header1" : "headerValue1", "header2" : "headerValue2"],
@@ -16,9 +22,9 @@ extension AnyWebSocketRequestTests {
             decode: { data, _ in data + data }
         )
         
-        XCTAssertEqual(request.pathComponents, ["path1", "path2"])
-        XCTAssertEqual(request.headers, ["header1" : "headerValue1", "header2" : "headerValue2"])
-        XCTAssertEqual(request.queryItems, ["query1" : "queryValue1", "query2" : "queryValue2"])
+        #expect(request.pathComponents == ["path1", "path2"])
+        #expect(request.headers == ["header1" : "headerValue1", "header2" : "headerValue2"])
+        #expect(request.queryItems == ["query1" : "queryValue1", "query2" : "queryValue2"])
 
         let input = Data(UUID().uuidString.utf8)
         let encodedContent = try request.encode(
@@ -26,7 +32,7 @@ extension AnyWebSocketRequestTests {
             using: .default
         )
         
-        XCTAssertEqual(encodedContent, Data(input.reversed()))
+        #expect(encodedContent == Data(input.reversed()))
 
         let output = Data(UUID().uuidString.utf8)
         let decodedContent = try request.decode(
@@ -34,11 +40,12 @@ extension AnyWebSocketRequestTests {
             using: .default
         )
         
-        XCTAssertEqual(decodedContent, output + output)
+        #expect(decodedContent == output + output)
     }
         
-    func test_initWithRequest_willAssignProperties_andCodingCorrectly() throws {
-        
+    @Test("Request initializer assigns properties and coding correctly")
+    func requestInitializerAssignsPropertiesAndCodingCorrectly() throws {
+
         let mockRequest = MockWebSocketRequest(
             encode: { data, _ in Data(data.reversed()) },
             decode: { data, _ in data + data }
@@ -46,9 +53,9 @@ extension AnyWebSocketRequestTests {
 
         let anyWebSocketRequest = AnyWebSocketRequest(mockRequest)
         
-        XCTAssertEqual(anyWebSocketRequest.pathComponents, mockRequest.pathComponents)
-        XCTAssertEqual(anyWebSocketRequest.headers, mockRequest.headers)
-        XCTAssertEqual(anyWebSocketRequest.queryItems, mockRequest.queryItems)
+        #expect(anyWebSocketRequest.pathComponents == mockRequest.pathComponents)
+        #expect(anyWebSocketRequest.headers == mockRequest.headers)
+        #expect(anyWebSocketRequest.queryItems == mockRequest.queryItems)
 
         let input = Data(UUID().uuidString.utf8)
         let encodedContent = try anyWebSocketRequest.encode(
@@ -56,7 +63,7 @@ extension AnyWebSocketRequestTests {
             using: .default
         )
         
-        XCTAssertEqual(encodedContent, Data(input.reversed()))
+        #expect(encodedContent == Data(input.reversed()))
 
         let output = Data(UUID().uuidString.utf8)
         let decodedContent = try anyWebSocketRequest.decode(
@@ -64,11 +71,12 @@ extension AnyWebSocketRequestTests {
             using: .default
         )
         
-        XCTAssertEqual(decodedContent, output + output)
+        #expect(decodedContent == output + output)
     }
     
-    func test_initWithDefaultParameters_willAssignProperties_andCodingCorrectly() throws {
-        
+    @Test("Default protocol values")
+    func defaultProtocolValues() throws {
+
         struct BasicRequest: WebSocketRequest {
             typealias Input = [String : Int]
             typealias Output = [String : Int]
@@ -79,10 +87,10 @@ extension AnyWebSocketRequestTests {
         
         let request = BasicRequest(pathComponents: [])
         
-        XCTAssertNil(request.headers)
-        XCTAssertNil(request.queryItems)
+        #expect(request.headers == nil)
+        #expect(request.queryItems == nil)
 
-        XCTAssertEqual(try request.encode(input: ["key" : 1], using: .default), Data("{\"key\":1}".utf8))
-        XCTAssertEqual(try request.decode(data: Data("{\"key\":1}".utf8), using: .default), ["key" : 1])
+        #expect(try request.encode(input: ["key" : 1], using: .default) == Data("{\"key\":1}".utf8))
+        #expect(try request.decode(data: Data("{\"key\":1}".utf8), using: .default) == ["key" : 1])
     }
 }

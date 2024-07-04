@@ -235,12 +235,18 @@ extension BasicWebSocketController.Connection: WebSocketConnection {
 
 @available(iOS 17.0, *)
 extension BasicWebSocketController.Connection {
-    struct Error {
+    struct Error: Equatable {
         
         let failure: String
         let wrappedError: Swift.Error
         let closeCode: WebSocketInterfaceCloseCode?
         let reason: String?
+
+        static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.failure == rhs.failure &&
+            lhs.closeCode == rhs.closeCode &&
+            lhs.reason == rhs.reason
+        }
     }
 }
 
