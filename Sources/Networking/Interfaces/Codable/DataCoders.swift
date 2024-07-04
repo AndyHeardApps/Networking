@@ -19,9 +19,9 @@ public struct DataCoders: Sendable {
     }()
     
     // MARK: - Properties
-    private var encoders: [HTTPContentType : DataEncoder] = [:]
-    private var decoders: [HTTPContentType : DataDecoder] = [:]
-    
+    private var encoders: [HTTPContentType : DataEncoder & Sendable] = [:]
+    private var decoders: [HTTPContentType : DataDecoder & Sendable] = [:]
+
     // MARK: - Initialiser
     
     /// Creates a set of empty ``DataCoders``.
@@ -36,7 +36,7 @@ extension DataCoders {
     ///   - encoder: The ``DataEncoder`` to use for the provided content type.
     ///   - contentType: The ``HTTPContentType`` to use the encoder for.
     public mutating func set(
-        _ encoder: some DataEncoder,
+        _ encoder: some DataEncoder & Sendable,
         for contentType: HTTPContentType
     ) {
         
@@ -48,7 +48,7 @@ extension DataCoders {
     ///   - decoder: The ``DataDecoder`` to use for the provided content type.
     ///   - contentType: The ``HTTPContentType`` to use the decoder for.
     public mutating func set(
-        _ decoder: some DataDecoder,
+        _ decoder: some DataDecoder & Sendable,
         for contentType: HTTPContentType
     ) {
         

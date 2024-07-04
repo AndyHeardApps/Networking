@@ -3,7 +3,7 @@ import Foundation
 /// A type that defines a method for decoding objects from `Data`.
 ///
 /// The `JSONDecoder` and `PropertyListDecoder` Swift types conform to this protocol by default.
-public protocol DataDecoder: Sendable {
+public protocol DataDecoder {
     
     /// Converts a decodable object from `Data`.
     /// - Parameters:
@@ -17,5 +17,13 @@ public protocol DataDecoder: Sendable {
     ) throws -> T
 }
 
+#if swift(>=6.0)
 extension JSONDecoder: DataDecoder {}
+extension JSONDecoder: @retroactive @unchecked Sendable {}
 extension PropertyListDecoder: DataDecoder {}
+extension PropertyListDecoder: @retroactive @unchecked Sendable {}
+#else
+extension JSONDecoder: DataDecoder & @unchecked Sendable {}
+extension PropertyListDecoder: DataDecoder & @unchecked Sendable {}
+
+#endif
