@@ -109,7 +109,7 @@ extension BasicWebSocketController {
             }
             
             self.pingTask = .init {
-                while !Task.isCancelled, interface.interfaceCloseCode != .invalid {
+                while !Task.isCancelled, interface.interfaceCloseCode == .invalid {
                     
                     try? await Task.sleep(for: pingInterval)
                     guard interface.interfaceState == .running else { continue }
