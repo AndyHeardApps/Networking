@@ -109,11 +109,18 @@ extension BasicWebSocketController {
             }
             
             self.pingTask = .init {
-                while !Task.isCancelled {
+                while !Task.isCancelled, interface.interfaceCloseCode != .invalid {
                     
                     try? await Task.sleep(for: pingInterval)
                     guard interface.interfaceState == .running else { continue }
-                    try? await interface.sendPing()
+                    do {
+                        try await interface.sendPing()
+                    } catch {
+                        interface.close(
+                            closeCode: .abnormalClosure,
+                            reason: "Ping failed"
+                        )
+                    }
                 }
             }
         }
