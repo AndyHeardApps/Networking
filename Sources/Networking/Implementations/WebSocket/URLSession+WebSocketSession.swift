@@ -14,7 +14,9 @@ extension URLSession: WebSocketSession {
         )
         
         let task = webSocketTask(with: urlRequest)
-        
+        if let maximumMessageSize = request.maximumMessageSize {
+            task.maximumMessageSize = maximumMessageSize
+        }
         return task
     }
 }
