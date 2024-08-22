@@ -28,6 +28,9 @@ public protocol WebSocketRequest<Input, Output>: Sendable {
     /// The query items of the request `URL`.
     var queryItems: [String : String]? { get }
 
+    /// The maximum number of bytes to buffer before the receive call fails with an error.
+    var maximumMessageSize: Int? { get }
+
     // MARK: - Functions
     
     /// Encodes <doc:/documentation/Networking/WebSocketRequest/Input> instances in to `Data`. This is called by a ``WebSocketController``.
@@ -66,6 +69,10 @@ extension WebSocketRequest {
     }
     
     public var queryItems: [String : String]? {
+        nil
+    }
+
+    public var maximumMessageSize: Int? {
         nil
     }
 }
