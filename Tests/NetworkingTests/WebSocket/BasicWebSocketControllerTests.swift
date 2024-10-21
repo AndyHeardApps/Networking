@@ -4,7 +4,8 @@ import Testing
 
 @Suite(
     "Basic web socket controller",
-    .tags(.webSocket)
+    .tags(.webSocket),
+    .serialized
 )
 struct BasicWebSocketControllerTests {
 

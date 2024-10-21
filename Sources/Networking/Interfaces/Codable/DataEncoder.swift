@@ -13,14 +13,7 @@ public protocol DataEncoder {
     func encode(_ value: some Encodable) throws -> Data
 }
 
-#if swift(>=6.0)
 extension JSONEncoder: DataEncoder {}
 extension JSONEncoder: @retroactive @unchecked Sendable {}
 extension PropertyListEncoder: DataEncoder {}
 extension PropertyListEncoder: @retroactive @unchecked Sendable {}
-#else
-extension JSONEncoder: DataEncoder {}
-extension JSONEncoder: @unchecked Sendable {}
-extension PropertyListEncoder: DataEncoder {}
-extension PropertyListEncoder: @unchecked Sendable {}
-#endif
