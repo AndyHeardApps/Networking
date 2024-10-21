@@ -4,7 +4,8 @@ import Testing
 
 @Suite(
     "URLSession HTTPSession",
-    .tags(.http)
+    .tags(.http),
+    .serialized
 )
 struct URLSessionHTTPSessionTests {
 
@@ -106,41 +107,41 @@ extension URLSessionHTTPSessionTests {
     )
     func submitRequestCreatesAndSubmitsCorrectURLRequest(httpMethod: HTTPMethod, httpMethodString: String) async throws {
 
-        var receivedURLRequest: URLRequest?
-        MockURLProtocol.requestHandler = { urlRequest in
-            receivedURLRequest = urlRequest
-            return (HTTPURLResponse(), nil)
-        }
-
         let request = MockHTTPRequest(
             httpMethod: httpMethod,
             body: Data(UUID().uuidString.utf8)
         )
+
+        MockURLProtocol.requestHandler = { urlRequest in
+            
+            let expectedURLString = baseURL.absoluteString
+            + "/"
+            + request.pathComponents.joined(separator: "/")
+            + "?"
+            + request.queryItems!.map { "\($0)=\($1)" }.joined(separator: "/")
+            var expectedHeaders = request.headers
+            expectedHeaders?["Content-Length"] = "36"
+            
+            #expect(urlRequest.url?.absoluteString == expectedURLString)
+            #expect(urlRequest.httpMethod == httpMethodString)
+            #expect(urlRequest.httpBody == request.body)
+            let expectedTimeout = URLRequest(url: baseURL).timeoutInterval
+            #expect(urlRequest.timeoutInterval == expectedTimeout)
+            #expect(urlRequest.allHTTPHeaderFields == expectedHeaders)
+
+            return (HTTPURLResponse(), nil)
+        }
+        
         _ = try await urlSession.submit(request: request, to: baseURL)
-
-        let expectedURLString = baseURL.absoluteString
-        + "/"
-        + request.pathComponents.joined(separator: "/")
-        + "?"
-        + request.queryItems!.map { "\($0)=\($1)" }.joined(separator: "/")
-        var expectedHeaders = request.headers
-        expectedHeaders?["Content-Length"] = "36"
-
-        #expect(receivedURLRequest != nil)
-        #expect(receivedURLRequest?.url?.absoluteString == expectedURLString)
-        #expect(receivedURLRequest?.httpMethod == httpMethodString)
-        #expect(receivedURLRequest?.httpBody == request.body)
-        let expectedTimeout = URLRequest(url: baseURL).timeoutInterval
-        #expect(receivedURLRequest?.timeoutInterval == expectedTimeout)
-        #expect(receivedURLRequest?.allHTTPHeaderFields == expectedHeaders)
     }
 
     @Test("submitRequest sets timeout if present")
     func submitRequestSetsTimeoutIfPresent() async throws {
       
-        var receivedURLRequest: URLRequest?
         MockURLProtocol.requestHandler = { urlRequest in
-            receivedURLRequest = urlRequest
+            
+            #expect(urlRequest.timeoutInterval == 180)
+            
             return (HTTPURLResponse(), nil)
         }
 
@@ -150,9 +151,6 @@ extension URLSessionHTTPSessionTests {
             body: Data(UUID().uuidString.utf8)
         )
         _ = try await urlSession.submit(request: request, to: baseURL)
-
-        #expect(receivedURLRequest != nil)
-        #expect(receivedURLRequest?.timeoutInterval == 180)
     }
 
     @Test("submitRequest uses default timeout if not provided")

@@ -17,14 +17,7 @@ public protocol DataDecoder {
     ) throws -> T
 }
 
-#if swift(>=6.0)
 extension JSONDecoder: DataDecoder {}
 extension JSONDecoder: @retroactive @unchecked Sendable {}
 extension PropertyListDecoder: DataDecoder {}
 extension PropertyListDecoder: @retroactive @unchecked Sendable {}
-#else
-extension JSONDecoder: DataDecoder {}
-extension JSONDecoder: @unchecked Sendable {}
-extension PropertyListDecoder: DataDecoder {}
-extension PropertyListDecoder: @unchecked Sendable {}
-#endif

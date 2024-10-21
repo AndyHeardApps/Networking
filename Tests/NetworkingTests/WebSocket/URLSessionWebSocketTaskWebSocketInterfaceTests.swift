@@ -4,7 +4,8 @@ import Testing
 
 @Suite(
     "URLSessionWebSocketTask WebSocketInterface",
-    .tags(.webSocket)
+    .tags(.webSocket),
+    .serialized
 )
 struct URLSessionWebSocketTaskWebSocketInterfaceTests {
 

@@ -51,7 +51,7 @@ extension MockWebSocketSession.Interface {
     
     var output: AsyncThrowingStream<Data, Error> {
         
-        outputPublisher.values.stream
+        outputPublisher.values.eraseToThrowingStream()
     }
     
     func send(_ data: Data) async throws {
