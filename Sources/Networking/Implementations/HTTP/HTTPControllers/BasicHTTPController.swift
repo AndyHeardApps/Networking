@@ -5,7 +5,7 @@ import Foundation
 /// For further control over preparing the requests for submission or handling responses and errors, create a custom ``HTTPControllerDelegate`` and provide it in the initialiser. This allows you to decode API errors, add headers to every request or encrypt and decrypt content.
 ///
 /// Though the implementation is intentionally lightweight, it is best if an instance is created once for each `baseURL` on app launch, and held for reuse.
-public struct BasicHTTPController {
+public struct BasicHTTPController: Sendable {
     
     // MARK: - Properties
     

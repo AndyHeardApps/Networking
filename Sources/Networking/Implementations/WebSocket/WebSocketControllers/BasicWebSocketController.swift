@@ -8,7 +8,7 @@ import Foundation
 ///
 /// Though the implementation is intentionally lightweight, it is best if an instance is created once for each `baseURL` on app launch, and held for reuse.
 @available(iOS 17.0, *)
-public struct BasicWebSocketController {
+public struct BasicWebSocketController: Sendable {
     
     // MARK: - Properties
     

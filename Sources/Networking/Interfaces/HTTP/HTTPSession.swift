@@ -3,7 +3,7 @@ import Foundation
 /// Defines an interface for submitting a ``HTTPRequest`` with a ``HTTPRequest/Body`` type of `Data` against some `baseURL` and returning a ``HTTPResponse`` containing raw `Data`.
 ///
 /// By default, `URLSession` implements this protocol, build a `URLRequest` out of the ``HTTPRequest``.
-public protocol HTTPSession {
+public protocol HTTPSession: Sendable {
     
     // MARK: - Functions
     

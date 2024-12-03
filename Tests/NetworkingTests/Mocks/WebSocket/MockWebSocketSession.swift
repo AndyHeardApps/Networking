@@ -3,7 +3,7 @@ import Combine
 @testable import Networking
 
 @available(iOS 17.0, *)
-final class MockWebSocketSession {
+final class MockWebSocketSession: @unchecked Sendable {
     
     // MARK: - Properties
     private(set) var openedConnections: [(any WebSocketRequest, URL)] = []

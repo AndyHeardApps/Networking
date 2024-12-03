@@ -1,8 +1,8 @@
 import Foundation
 @testable import Networking
 
-final class MockHTTPReauthorizationProvider {
-    
+final class MockHTTPReauthorizationProvider: @unchecked Sendable {
+
     // MARK: - Properties
     var shouldMakeReauthorizationRequest = true
     var authorizationFailsUntilReauthorizationRequestIsMade = false

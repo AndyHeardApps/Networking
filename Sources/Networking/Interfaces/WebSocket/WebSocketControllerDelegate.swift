@@ -2,7 +2,7 @@ import Foundation
 
 /// Provides callbacks to customise ``WebSocketRequest`` objects before they are opened, and allows customisation of ping and pong message timings.
 @available(iOS 17.0, *)
-public protocol WebSocketControllerDelegate {
+public protocol WebSocketControllerDelegate: Sendable {
 
     // MARK: - Functions
     

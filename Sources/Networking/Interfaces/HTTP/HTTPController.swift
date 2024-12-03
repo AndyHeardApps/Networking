@@ -3,7 +3,7 @@ import Foundation
 /// Defines an entrypoint for fetching content from a ``HTTPRequest``.
 ///
 /// There are three default types that implement this protocol, ``BasicHTTPController``, ``AuthorizingHTTPController``, and ``ReauthorizingHTTPController``. These can be used depending on how much security an API requires.
-public protocol HTTPController {
+public protocol HTTPController: Sendable {
     
     // MARK: - Functions
     

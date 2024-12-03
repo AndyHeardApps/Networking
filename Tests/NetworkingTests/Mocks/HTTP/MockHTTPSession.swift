@@ -1,7 +1,7 @@
 import Foundation
 @testable import Networking
 
-final class MockHTTPSession {
+final class MockHTTPSession: @unchecked Sendable {
     
     // MARK: - Properties
     private(set) var receivedRequests: [(request: any HTTPRequest, baseURL: URL)] = []

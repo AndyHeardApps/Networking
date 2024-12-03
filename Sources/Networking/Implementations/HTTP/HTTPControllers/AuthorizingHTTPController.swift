@@ -7,7 +7,7 @@ import Foundation
 /// This difference between ``BasicHTTPController`` and ``AuthorizingHTTPController`` is that every request submitted through this type with ``HTTPRequest/requiresAuthorization`` equal to `true` will try and have authorizing credentials attached using the provided ``HTTPAuthorizationProvider`` before it is submitted.
 ///
 /// Requests are handed to the ``HTTPAuthorizationProvider/authorize(_:)`` function before they are submitted, and instances of ``HTTPAuthorizationProvider/AuthorizationRequest`` and assocated ``HTTPResponse`` from successful requests are passed to the ``HTTPAuthorizationProvider/handle(authorizationResponse:from:)`` function.
-public struct AuthorizingHTTPController<Authorization: HTTPAuthorizationProvider> {
+public struct AuthorizingHTTPController<Authorization: HTTPAuthorizationProvider>: Sendable {
     
     // MARK: - Properties
     

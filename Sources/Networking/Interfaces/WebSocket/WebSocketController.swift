@@ -3,7 +3,7 @@ import Foundation
 /// Defines a type that can create web socket connections.
 ///
 /// The ``BasicWebSocketController`` is the only default implementation.
-public protocol WebSocketController {
+public protocol WebSocketController: Sendable {
     
     /// Creates a new web socket connection from the provided request.
     /// - Parameter request: The request that defines the endpoint to open the web socket connection with.

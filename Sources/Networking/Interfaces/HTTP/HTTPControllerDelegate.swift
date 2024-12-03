@@ -1,7 +1,7 @@
 import Foundation
 
 /// Provides callbacks to customise ``HTTPRequest`` encoding and decoding, as well as error handling.
-public protocol HTTPControllerDelegate {
+public protocol HTTPControllerDelegate: Sendable {
     
     /// Prepares a ``HTTPRequest`` for submission.
     ///
