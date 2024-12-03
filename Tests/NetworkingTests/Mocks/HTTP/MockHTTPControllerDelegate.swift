@@ -1,7 +1,7 @@
 import Foundation
 @testable import Networking
 
-final class MockHTTPControllerDelegate {
+final class MockHTTPControllerDelegate: @unchecked Sendable {
     
     // MARK: - Properties
     private(set) var controllerPreparingRequest: HTTPController?

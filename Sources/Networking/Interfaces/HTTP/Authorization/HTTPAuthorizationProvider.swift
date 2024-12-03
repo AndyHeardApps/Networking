@@ -8,7 +8,7 @@
 /// The ``authorize(_:)`` function is called by an ``AuthorizingHTTPController`` before a request is submitted. Any previously stored credentials should be applied where possible. Only requests with ``HTTPRequest/requiresAuthorization`` equal to `true` will be handed to an ``HTTPAuthorizationProvider``.
 ///
 /// Custom ``HTTPController`` implementations should be sure to correctly authorize requests before submission, making to only authorize requests that require it, and should correctly hand responses to the ``handle(authorizationResponse:from:)`` function.
-public protocol HTTPAuthorizationProvider<AuthorizationRequest>  {
+public protocol HTTPAuthorizationProvider<AuthorizationRequest>: Sendable  {
     
     /// The type of ``HTTPRequest`` that an ``HTTPAuthorizationProvider`` is able to make use of, alongside a ``HTTPResponse``, to extract authorization credentials.
     associatedtype AuthorizationRequest: HTTPRequest

@@ -1,7 +1,7 @@
 import Foundation
 import Networking
 
-final class MockHTTPController {
+final class MockHTTPController: @unchecked Sendable {
     
     // MARK: - Properties
     var responseData: Data = .init()

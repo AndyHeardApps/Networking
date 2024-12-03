@@ -1,6 +1,6 @@
 @testable import Networking
 
-final class MockSecureStorage {
+final class MockSecureStorage: @unchecked Sendable {
     
     // MARK: - Properties
     private(set) var storage: [String : String] = [:]

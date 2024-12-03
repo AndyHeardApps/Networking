@@ -1,7 +1,7 @@
 import Networking
 
 @available(iOS 17.0, *)
-final class MockWebSocketControllerDelegate {
+final class MockWebSocketControllerDelegate: @unchecked Sendable {
     
     // MARK: - Properties
     var pingInterval: ContinuousClock.Instant.Duration?

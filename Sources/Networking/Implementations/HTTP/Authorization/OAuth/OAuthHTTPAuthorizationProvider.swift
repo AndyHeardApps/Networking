@@ -5,7 +5,7 @@ import Foundation
 /// The `AuthorizationRequest` is usually the login request that returns access and refresh tokens, and the `ReauthorizationRequest` is usually the request that uses the refresh token to retrieve a new token pair.
 ///
 /// Tokens are stored in the keychain by default under the keys `com.AndyHeardApps.Networking.oauthStorage.oauth.accessToken` and `com.AndyHeardApps.Networking.oauthStorage.oauth.accessToken`. They are not removed on logout.
-public struct OAuthHTTPAuthorizationProvider<AuthorizationRequest, ReauthorizationRequest>
+public struct OAuthHTTPAuthorizationProvider<AuthorizationRequest, ReauthorizationRequest>: Sendable
 where AuthorizationRequest: OAuthHTTPAuthorizationRequest,
       ReauthorizationRequest: OAuthHTTPReauthorizationRequest
 {

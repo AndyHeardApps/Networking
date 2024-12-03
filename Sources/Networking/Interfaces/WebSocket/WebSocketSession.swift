@@ -1,7 +1,7 @@
 import Foundation
 
 /// Defines a type that can create web socket interfaces for sending an recieving raw `Data` through a websocket, and send `ping` and recieve `pong` messages.
-public protocol WebSocketSession {
+public protocol WebSocketSession: Sendable {
     
     /// Creates a new ``WebSocketInterface`` object to the provided ``WebSocketRequest`` resolved against the base `URL`.
     ///

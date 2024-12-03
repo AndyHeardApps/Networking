@@ -1,7 +1,7 @@
 import Foundation
 @testable import Networking
 
-final class MockHTTPAuthorizationProvider {
+final class MockHTTPAuthorizationProvider: @unchecked Sendable {
     
     // MARK: - Properties
     private(set) var handledAuthorizationResponse: HTTPResponse<MockAccessToken>?
